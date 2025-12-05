@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <link rel="stylesheet" href="style.css">
+    <title>Поиск</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+    * {
+        box-sizing: border-box;
+    }
+    
+    body {
+        font-size: 24px; /* Крупный основной текст */
+        line-height: 1.5;
+        padding: 20px;
+        max-width: 800px;
+        margin: 0 auto;
+        font-family: Arial, sans-serif;
+    }
+    
+    h1 {
+        font-size: 36px;
+        text-align: center;
+        margin-bottom: 30px;
+    }
+    
+    #searchInput {
+        font-size: 28px; /* Очень большое поле ввода */
+        padding: 20px;
+        width: 100%;
+        margin: 20px 0;
+        border: 3px solid #2ea44f;
+        border-radius: 10px;
+    }
+    
+    button {
+        font-size: 26px;
+        padding: 20px 30px;
+        background: #2ea44f;
+        color: white;
+        border: none;
+        border-radius: 10px;
+        width: 100%;
+        cursor: pointer;
+    }
+    
+    button:hover {
+        background: #22863a;
+    }
+    
+    #result {
+        font-size: 26px;
+        margin: 30px 0;
+        padding: 20px;
+        background: ##40698d;
+        border-radius: 10px;
+    }
+    
+    .search-item {
+        padding: 10px;
+        border-bottom: 1px solid #ccc;
+    }
+    
+    small {
+        font-size: 18px;
+        color: #666;
+    }
+    
+    /* Для очень маленьких экранов */
+    @media (max-width: 480px) {
+        body {
+            font-size: 20px;
+            padding: 15px;
+        }
+        
+        h1 {
+            font-size: 30px;
+        }
+        
+        #searchInput {
+            font-size: 24px;
+            padding: 15px;
+        }
+        
+        button {
+            font-size: 22px;
+            padding: 15px 20px;
+        }
+    }
+</style>
+    <script>
+        // База данных ссылок в виде объекта
+        const searchIndex = {
+            "мрамор": "вещества/мрамор.html",
+            "золото": "вещества/золото.html", 
+            "пирит": "вещества/пирит.html",
+            "висмут": "вещества/висмут.html",
+            "кварц": "вещества/кварц.html",
+            "аметист": "вещества/аметист.html",
+            "эррор санс": "персонажи/эррор!санс.html",
+            "медь": "вещества/медь.html"
+            // Добавляй новые статьи сюда
+        };
+
+        function search() {
+            const query = document.getElementById('searchInput').value.toLowerCase();
+            const resultDiv = document.getElementById('result');
+            
+            resultDiv.innerHTML = '';
+            
+            if (query.length < 2) {
+                resultDiv.innerHTML = "Введите хотя бы 2 символа...";
+                return;
+            }
+            
+            let found = false;
+            for (const [name, path] of Object.entries(searchIndex)) {
+                if (name.toLowerCase().includes(query)) {
+                    resultDiv.innerHTML += `<div class="search-item">
+                        Найдено: <a href="${path}">${name}</a>
+                    </div>`;
+                    found = true;
+                }
+            }
+            
+            if (!found) {
+                resultDiv.innerHTML = "Ничего не найдено. Попробуйте другой запрос.";
+            }
+        }
+        
+        // Автопоиск при вводе (опционально)
+        function setupAutoSearch() {
+            const searchInput = document.getElementById('searchInput');
+            searchInput.addEventListener('input', search);
+        }
+        
+        // Включаем автопоиск при загрузке страницы
+        window.onload = setupAutoSearch;
+    </script>
+</head>
+<body>
+    <h1>Поиск по базе знаний</h1>
+    
+    <input type="text" id="searchInput" placeholder="Введите название...">
+    <button onclick="search()">Найти</button>
+    
+    <div id="result"></div>
+
+    <p><small>Доступные запросы: мрамор, золото, пирит и т.д.</small></p>
+    <a href="index.html">назад на главную</a>
+</body>
+</html>
+
+
+
+
+
