@@ -60,11 +60,55 @@
             margin: 25px 0;
         }
         
+        .search-result {
+            margin-top: 15px;
+            padding: 15px;
+            background: #2d3748;
+            border-radius: 8px;
+            border: 1px solid #4a5568;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        .result-item {
+            padding: 10px;
+            margin: 5px 0;
+            background: #3c4a5c;
+            border-radius: 5px;
+            border: 1px solid #4a5568;
+        }
+        
+        .result-item a {
+            color: #90cdf4;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        
+        .result-item:hover {
+            background: #4a5568;
+            border-color: #63b3ed;
+        }
+        
+        .no-results {
+            color: #a0aec0;
+            font-style: italic;
+            text-align: center;
+            padding: 20px;
+        }
+        
         .empty-note {
             color: #a0aec0;
             font-style: italic;
             text-align: center;
             margin: 20px 0;
+        }
+        
+        .highlight {
+            background: rgba(99, 179, 237, 0.3);
+            color: #90cdf4;
+            padding: 2px 4px;
+            border-radius: 4px;
+            font-weight: bold;
         }
     </style>
 </head>
@@ -77,7 +121,9 @@
         <h3 style="color: #90cdf4; margin-bottom: 15px; text-align: center;">🔍 Поиск по персонажам</h3>
         <input type="text" id="characterSearch" placeholder="Введите имя персонажа...">
         <button onclick="searchCharacters()">Найти</button>
-        <div id="characterResult" style="margin-top: 15px;"></div>
+        <div id="characterResult" class="search-result">
+            <div class="no-results">Введите запрос для поиска</div>
+        </div>
     </div>
 
     <!-- Игровые вселенные -->
@@ -111,28 +157,140 @@
         <div class="category-title">📚 Книги и аниме</div>
         <div class="empty-note">Раздел в разработке</div>
     </div>
+    
+    <div class="category-section">
+      <div class="category-title">😎 Крутой чел</div>
+     <div class="item-card"><a href="Zeroksi1.html">Zeroksi1 или Qmeni или 🔪Killer Sans🔪</a></div> 
+    </div>
 
     <p style="text-align: center; margin-top: 40px;">
         <a href="../index.html">← Назад на главную</a>
     </p>
 
     <script>
-        const characterIndex = {
-            "киллер санс": "киллер!санс.html",
-            "эррор санс": "эррор!санс.html"
-            // Добавлять новых персонажей сюда
-        };
+        // База данных персонажей с поддержкой альтернативных имён
+        const characters = [
+            {
+                mainName: "Киллер!Санс",
+                file: "киллер!санс.html",
+                aliases: ["киллер санс", "killer sans", "killer!sans","киллер!санс"]
+            },
+            {
+                mainName: "Эррор!Санс", 
+                file: "эррор!санс.html",
+                aliases: ["эррор!санс", "error!sans", "эррор санс"]
+            },
+            {
+                mainName: "Эррор404!Санс",
+                file: "эррор404!санс.html", 
+                aliases: ["эррор!404 санс", "error!404 sans","эррор 404 санс"]
+            },
+            {
+                mainName: "Zeroksi1",
+                file: "Zeroksi1.html",
+                aliases: ["Qmeni", "🔪Killer Sans🔪", "Zeroksi1"]
+            }
+            // ДОБАВЛЯЙ НОВЫХ ПЕРСОНАЖЕЙ ЗДЕСЬ по шаблону:
+            // {
+            //     mainName: "ОСНОВНОЕ ИМЯ",
+            //     file: "ФАЙЛ.html",
+            //     aliases: ["вариант1", "вариант2", "вариант3"]
+            // },
+        ];
 
+        // Функция для подсветки найденного текста
+        function highlightText(text, query) {
+            if (!query || !text) return text;
+            
+            const regex = new RegExp(`(${query})`, 'gi');
+            return text.replace(regex, '<span class="highlight">$1</span>');
+        }
+
+        // Основная функция поиска
         function searchCharacters() {
-            const query = document.getElementById('characterSearch').value.toLowerCase();
+            const query = document.getElementById('characterSearch').value.toLowerCase().trim();
             const resultDiv = document.getElementById('characterResult');
             
-            if (characterIndex[query]) {
-                resultDiv.innerHTML = `Найдено: <a href="${characterIndex[query]}" style="color: #63b3ed; font-weight: 600;">${query}</a>`;
+            // Очищаем предыдущие результаты
+            resultDiv.innerHTML = '';
+            
+            // Если ввели меньше 2 символов
+            if (query.length < 2) {
+                resultDiv.innerHTML = '<div class="no-results">Введите хотя бы 2 символа для поиска</div>';
+                return;
+            }
+            
+            // Ищем совпадения (в основном имени ИЛИ в альтернативных именах)
+            const results = characters.filter(character => 
+                character.mainName.toLowerCase().includes(query) ||
+                character.aliases.some(alias => alias.toLowerCase().includes(query))
+            );
+            
+            // Показываем результаты
+            if (results.length > 0) {
+                results.forEach(character => {
+                    const item = document.createElement('div');
+                    item.className = 'result-item';
+                    
+                    // Находим, где именно нашлось совпадение
+                    let foundIn = character.mainName;
+                    let foundText = character.mainName;
+                    
+                    // Проверяем альтернативные имена
+                    for (const alias of character.aliases) {
+                        if (alias.toLowerCase().includes(query)) {
+                            foundIn = alias;
+                            foundText = `${character.mainName} (также известен как: ${alias})`;
+                            break;
+                        }
+                    }
+                    
+                    // Подсвечиваем найденный текст
+                    const highlightedText = highlightText(foundText, query);
+                    
+                    item.innerHTML = `
+                        <a href="${character.file}">${highlightedText}</a>
+                        <div style="color: #a0aec0; font-size: 0.85em; margin-top: 5px;">
+                            Файл: ${character.file}
+                        </div>
+                    `;
+                    resultDiv.appendChild(item);
+                });
+                
+                // Добавляем количество найденных
+                const count = document.createElement('div');
+                count.style.cssText = 'color: #63b3ed; margin-top: 10px; font-weight: 600;';
+                count.textContent = `Найдено: ${results.length} персонажей`;
+                resultDiv.appendChild(count);
             } else {
-                resultDiv.innerHTML = "Персонаж не найден.";
+                resultDiv.innerHTML = `
+                    <div class="no-results">
+                        Персонаж не найден. Попробуйте "киллер", "эррор", "zeroksi1"...
+                    </div>
+                `;
             }
         }
+
+        // ДОБАВЛЯЕМ ПОИСК ПРИ ВВОДЕ (реальный частичный поиск)
+        document.getElementById('characterSearch').addEventListener('input', function() {
+            const query = this.value.trim();
+            
+            // Ищем только при 2+ символах
+            if (query.length >= 2) {
+                searchCharacters();
+            } else if (query.length === 0) {
+                // Очищаем результаты если поле пустое
+                document.getElementById('characterResult').innerHTML = 
+                    '<div class="no-results">Введите запрос для поиска</div>';
+            }
+        });
+
+        // ДОБАВЛЯЕМ ПОИСК ПРИ НАЖАТИИ ENTER
+        document.getElementById('characterSearch').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                searchCharacters();
+            }
+        });
     </script>
 </body>
 </html>
