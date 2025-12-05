@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://genotheerror.github.io/Data-base/sitemap.xml
