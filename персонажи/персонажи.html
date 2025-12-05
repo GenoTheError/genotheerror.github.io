@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Персонажи - База Знаний</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .category-section {
+            margin: 25px 0;
+        }
+        
+        .category-title {
+            color: #90cdf4;
+            font-size: 1.3em;
+            margin-bottom: 15px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #2d3748;
+        }
+        
+        .subcategory {
+            margin: 20px 0 15px 15px;
+            color: #63b3ed;
+            font-size: 1.1em;
+        }
+        
+        .items-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 10px;
+            margin: 10px 0 20px 20px;
+        }
+        
+        .item-card {
+            background: #2d3748;
+            border: 1px solid #4a5568;
+            border-radius: 6px;
+            padding: 12px;
+            text-align: center;
+            transition: all 0.2s ease;
+        }
+        
+        .item-card:hover {
+            border-color: #63b3ed;
+            background: #3c4a5c;
+        }
+        
+        .item-card a {
+            color: #e2e8f0;
+            text-decoration: none;
+            font-weight: 500;
+            display: block;
+        }
+        
+        .search-compact {
+            background: #1a202c;
+            padding: 20px;
+            border-radius: 10px;
+            border: 1px solid #2d3748;
+            margin: 25px 0;
+        }
+        
+        .empty-note {
+            color: #a0aec0;
+            font-style: italic;
+            text-align: center;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>👥 Персонажи</h1>
+    <p>Герои, злодеи и просто интересные персонажи из разных вселенных</p>
+
+    <!-- Поиск по персонажам -->
+    <div class="search-compact">
+        <h3 style="color: #90cdf4; margin-bottom: 15px; text-align: center;">🔍 Поиск по персонажам</h3>
+        <input type="text" id="characterSearch" placeholder="Введите имя персонажа...">
+        <button onclick="searchCharacters()">Найти</button>
+        <div id="characterResult" style="margin-top: 15px;"></div>
+    </div>
+
+    <!-- Игровые вселенные -->
+    <div class="category-section">
+        <div class="category-title">🎮 Игровые вселенные</div>
+        
+        <div class="subcategory">Undertale</div>
+        
+        <div class="subcategory" style="margin-left: 20px;">Сансы</div>
+        <div class="items-grid">
+            <div class="item-card"><a href="киллер!санс.html">Киллер!Санс</a></div>
+            <div class="item-card"><a href="эррор!санс.html">Эррор!Санс</a></div>
+            <div class="item-card"><a href="эррор404!санс.html">Эррор404!Санс</a></div>
+        </div>
+        
+        <div class="subcategory">Minecraft</div>
+        <div class="items-grid">
+            <div class="item-card"><a href="#" style="color: #a0aec0;">Стив</a></div>
+            <div class="item-card"><a href="#" style="color: #a0aec0;">Эндермен</a></div>
+        </div>
+    </div>
+
+    <!-- Кино и сериалы -->
+    <div class="category-section">
+        <div class="category-title">🎬 Кино и сериалы</div>
+        <div class="empty-note">Раздел в разработке</div>
+    </div>
+
+    <!-- Книги и аниме -->
+    <div class="category-section">
+        <div class="category-title">📚 Книги и аниме</div>
+        <div class="empty-note">Раздел в разработке</div>
+    </div>
+
+    <p style="text-align: center; margin-top: 40px;">
+        <a href="../index.html">← Назад на главную</a>
+    </p>
+
+    <script>
+        const characterIndex = {
+            "киллер санс": "киллер!санс.html",
+            "эррор санс": "эррор!санс.html"
+            // Добавлять новых персонажей сюда
+        };
+
+        function searchCharacters() {
+            const query = document.getElementById('characterSearch').value.toLowerCase();
+            const resultDiv = document.getElementById('characterResult');
+            
+            if (characterIndex[query]) {
+                resultDiv.innerHTML = `Найдено: <a href="${characterIndex[query]}" style="color: #63b3ed; font-weight: 600;">${query}</a>`;
+            } else {
+                resultDiv.innerHTML = "Персонаж не найден.";
+            }
+        }
+    </script>
+</body>
+</html>
