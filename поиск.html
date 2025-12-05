@@ -1,157 +1,367 @@
 <!DOCTYPE html>
-<html>
+<html lang="ru">
 <head>
-  <link rel="stylesheet" href="style.css">
-    <title>Поиск</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<style>
-    * {
-        box-sizing: border-box;
-    }
-    
-    body {
-        font-size: 24px; /* Крупный основной текст */
-        line-height: 1.5;
-        padding: 20px;
-        max-width: 800px;
-        margin: 0 auto;
-        font-family: Arial, sans-serif;
-    }
-    
-    h1 {
-        font-size: 36px;
-        text-align: center;
-        margin-bottom: 30px;
-    }
-    
-    #searchInput {
-        font-size: 28px; /* Очень большое поле ввода */
-        padding: 20px;
-        width: 100%;
-        margin: 20px 0;
-        border: 3px solid #2ea44f;
-        border-radius: 10px;
-    }
-    
-    button {
-        font-size: 26px;
-        padding: 20px 30px;
-        background: #2ea44f;
-        color: white;
-        border: none;
-        border-radius: 10px;
-        width: 100%;
-        cursor: pointer;
-    }
-    
-    button:hover {
-        background: #22863a;
-    }
-    
-    #result {
-        font-size: 26px;
-        margin: 30px 0;
-        padding: 20px;
-        background: ##40698d;
-        border-radius: 10px;
-    }
-    
-    .search-item {
-        padding: 10px;
-        border-bottom: 1px solid #ccc;
-    }
-    
-    small {
-        font-size: 18px;
-        color: #666;
-    }
-    
-    /* Для очень маленьких экранов */
-    @media (max-width: 480px) {
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Глобальный поиск - База знаний</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+        
         body {
             font-size: 20px;
-            padding: 15px;
+            line-height: 1.5;
+            padding: 20px;
+            max-width: 800px;
+            margin: 0 auto;
+            font-family: Arial, sans-serif;
+            background: #1a202c;
+            color: #e2e8f0;
         }
         
         h1 {
-            font-size: 30px;
+            font-size: 32px;
+            text-align: center;
+            margin-bottom: 25px;
+            color: #90cdf4;
+        }
+        
+        .search-container {
+            background: #2d3748;
+            padding: 25px;
+            border-radius: 12px;
+            border: 2px solid #4a5568;
+            margin-bottom: 25px;
         }
         
         #searchInput {
-            font-size: 24px;
-            padding: 15px;
+            font-size: 22px;
+            padding: 18px;
+            width: 100%;
+            margin-bottom: 15px;
+            border: 2px solid #4299e1;
+            border-radius: 8px;
+            background: #1a202c;
+            color: #e2e8f0;
+            transition: all 0.3s ease;
+        }
+        
+        #searchInput:focus {
+            outline: none;
+            border-color: #63b3ed;
+            box-shadow: 0 0 0 3px rgba(99, 179, 237, 0.2);
+        }
+        
+        #searchInput::placeholder {
+            color: #a0aec0;
         }
         
         button {
-            font-size: 22px;
-            padding: 15px 20px;
+            font-size: 18px;
+            padding: 14px 20px;
+            background: #4299e1;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            width: 100%;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
         }
-    }
-</style>
-    <script>
-        // База данных ссылок в виде объекта
-        const searchIndex = {
-            "мрамор": "вещества/мрамор.html",
-            "золото": "вещества/золото.html", 
-            "пирит": "вещества/пирит.html",
-            "висмут": "вещества/висмут.html",
-            "кварц": "вещества/кварц.html",
-            "аметист": "вещества/аметист.html",
-            "эррор санс": "персонажи/эррор!санс.html",
-            "медь": "вещества/медь.html"
-            // Добавляй новые статьи сюда
-        };
+        
+        button:hover {
+            background: #3182ce;
+        }
+        
+        .search-result {
+            background: #2d3748;
+            border-radius: 10px;
+            border: 1px solid #4a5568;
+            margin: 20px 0;
+            overflow: hidden;
+        }
+        
+        .result-header {
+            background: #4a5568;
+            padding: 12px 15px;
+            color: #90cdf4;
+            font-weight: 600;
+            font-size: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .results-count {
+            background: #4299e1;
+            color: white;
+            padding: 3px 8px;
+            border-radius: 10px;
+            font-size: 14px;
+        }
+        
+        .result-list {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        
+        .search-item {
+            padding: 15px;
+            border-bottom: 1px solid #4a5568;
+            transition: all 0.2s ease;
+        }
+        
+        .search-item:hover {
+            background: #3c4a5c;
+        }
+        
+        .search-item:last-child {
+            border-bottom: none;
+        }
+        
+        .item-title {
+            color: #63b3ed;
+            font-weight: 600;
+            font-size: 1.1em;
+            margin-bottom: 5px;
+        }
+        
+        .item-title a {
+            color: #63b3ed;
+            text-decoration: none;
+            display: block;
+        }
+        
+        .item-title a:hover {
+            color: #90cdf4;
+            text-decoration: underline;
+        }
+        
+        .item-category {
+            color: #a0aec0;
+            font-size: 0.85em;
+            padding-left: 10px;
+            border-left: 3px solid #4a5568;
+            margin-top: 5px;
+        }
+        
+        .no-results {
+            padding: 30px 20px;
+            text-align: center;
+            color: #a0aec0;
+            font-style: italic;
+        }
+        
+        .hint {
+            color: #a0aec0;
+            font-size: 14px;
+            text-align: center;
+            margin: 10px 0;
+        }
+        
+        .back-link {
+            display: block;
+            text-align: center;
+            margin-top: 25px;
+            color: #63b3ed;
+            text-decoration: none;
+            font-size: 16px;
+        }
+        
+        .back-link:hover {
+            text-decoration: underline;
+        }
+        
+        /* Подсветка найденного текста */
+        .highlight {
+            background: rgba(99, 179, 237, 0.3);
+            color: #90cdf4;
+            padding: 2px 4px;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+        
+        /* Для очень маленьких экранов */
+        @media (max-width: 480px) {
+            body {
+                font-size: 18px;
+                padding: 15px;
+            }
+            
+            h1 {
+                font-size: 26px;
+            }
+            
+            #searchInput {
+                font-size: 18px;
+                padding: 12px;
+            }
+            
+            button {
+                font-size: 16px;
+                padding: 12px;
+            }
+            
+            .search-container {
+                padding: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>🔍 Глобальный поиск по базе знаний</h1>
+    
+    <div class="search-container">
+        <input type="text" id="searchInput" placeholder="Начните вводить название...">
+        <button onclick="performSearch()">Найти</button>
+    </div>
+    
+    <div id="result" class="search-result">
+        <div class="result-header">
+            <span>Результаты поиска</span>
+            <div id="resultsCount" class="results-count">0</div>
+        </div>
+        <div id="resultList" class="result-list">
+            <div class="no-results">Введите запрос для поиска</div>
+        </div>
+    </div>
+    
+    <div class="hint">Поиск работает при вводе от 2 символов</div>
+    
+    <a href="index.html" class="back-link">← Назад на главную</a>
 
-        function search() {
-            const query = document.getElementById('searchInput').value.toLowerCase();
-            const resultDiv = document.getElementById('result');
+    <script>
+        // Глобальная база данных для поиска по ВСЕМУ сайту
+        const globalSearchDatabase = [
+            // Вещества
+            { name: "мрамор", link: "вещества/мрамор.html", category: "Горные породы" },
+            { name: "золото", link: "вещества/золото.html", category: "Металлы" },
+            { name: "пирит", link: "вещества/пирит.html", category: "Минералы" },
+            { name: "висмут", link: "вещества/висмут.html", category: "Металлы" },
+            { name: "кварц", link: "вещества/кварц.html", category: "Минералы" },
+            { name: "аметист", link: "вещества/аметист.html", category: "Минералы" },
+            { name: "медь", link: "вещества/медь.html", category: "Металлы" },
+             { name: "обсидиан", link: "вещества/обсидиан.html", category: "Горные породы" },
+             { name: "", link: ".html", category: "" },
+             { name: "", link: ".html", category: "" },
+             { name: "", link: ".html", category: "" },
+             { name: "", link: ".html", category: "" },
+             { name: "", link: ".html", category: "" },
+             { name: "", link: ".html", category: "" },
+             { name: "", link: ".html", category: "" },
+             { name: "", link: ".html", category: "" },
+             { name: "", link: ".html", category: "" },
+             { name: "", link: ".html", category: "" },
+             { name: "", link: ".html", category: "" },
             
-            resultDiv.innerHTML = '';
+            // Персонажи
+            { name: "эррор санс", link: "персонажи/эррор!санс.html", category: "Персонажи" },
             
+            // Игры (когда добавишь)
+            // { name: "Minecraft", link: "игры/minecraft.html", category: "Игры" },
+            
+            // SCP (когда добавишь)
+            // { name: "SCP-173", link: "scp/scp-173.html", category: "SCP" },
+            
+            // Руны (когда добавишь)
+            // { name: "Ансуз", link: "руны/ансуз.html", category: "Руны" }
+            
+            // ДОБАВЛЯЙ НОВЫЕ ЗАПИСИ СЮДА по шаблону:
+            // { name: "НАЗВАНИЕ", link: "ПУТЬ/К ФАЙЛУ.html", category: "КАТЕГОРИЯ" },
+        ];
+
+        // Функция для подсветки найденного текста
+        function highlightText(text, query) {
+            if (!query || !text) return text;
+            
+            const regex = new RegExp(`(${query})`, 'gi');
+            return text.replace(regex, '<span class="highlight">$1</span>');
+        }
+
+        // Основная функция поиска
+        function performSearch() {
+            const query = document.getElementById('searchInput').value.toLowerCase().trim();
+            const resultList = document.getElementById('resultList');
+            const resultsCount = document.getElementById('resultsCount');
+            
+            // Очищаем предыдущие результаты
+            resultList.innerHTML = '';
+            
+            // Если ввели меньше 2 символов
             if (query.length < 2) {
-                resultDiv.innerHTML = "Введите хотя бы 2 символа...";
+                resultList.innerHTML = '<div class="no-results">Введите хотя бы 2 символа для поиска</div>';
+                resultsCount.textContent = '0';
                 return;
             }
             
-            let found = false;
-            for (const [name, path] of Object.entries(searchIndex)) {
-                if (name.toLowerCase().includes(query)) {
-                    resultDiv.innerHTML += `<div class="search-item">
-                        Найдено: <a href="${path}">${name}</a>
-                    </div>`;
-                    found = true;
-                }
-            }
+            // Ищем совпадения (частичный поиск по названию и категории)
+            const results = globalSearchDatabase.filter(item => 
+                item.name.toLowerCase().includes(query) ||
+                item.category.toLowerCase().includes(query)
+            );
             
-            if (!found) {
-                resultDiv.innerHTML = "Ничего не найдено. Попробуйте другой запрос.";
+            // Показываем результаты
+            if (results.length > 0) {
+                results.forEach(item => {
+                    const itemElement = document.createElement('div');
+                    itemElement.className = 'search-item';
+                    
+                    // Создаем подсвеченные текст
+                    const highlightedName = highlightText(item.name, query);
+                    const highlightedCategory = highlightText(item.category, query);
+                    
+                    itemElement.innerHTML = `
+                        <div class="item-title">
+                            <a href="${item.link}">${highlightedName}</a>
+                        </div>
+                        <div class="item-category">${highlightedCategory}</div>
+                    `;
+                    
+                    resultList.appendChild(itemElement);
+                });
+                
+                // Обновляем счетчик
+                resultsCount.textContent = results.length;
+                
+            } else {
+                resultList.innerHTML = `
+                    <div class="no-results">
+                        Ничего не найдено по запросу: <strong>"${query}"</strong>
+                    </div>
+                `;
+                resultsCount.textContent = '0';
             }
         }
-        
-        // Автопоиск при вводе (опционально)
-        function setupAutoSearch() {
-            const searchInput = document.getElementById('searchInput');
-            searchInput.addEventListener('input', search);
-        }
-        
-        // Включаем автопоиск при загрузке страницы
-        window.onload = setupAutoSearch;
-    </script>
-</head>
-<body>
-    <h1>Поиск по базе знаний</h1>
-    
-    <input type="text" id="searchInput" placeholder="Введите название...">
-    <button onclick="search()">Найти</button>
-    
-    <div id="result"></div>
 
-    <p><small>Доступные запросы: мрамор, золото, пирит и т.д.</small></p>
-    <a href="index.html">назад на главную</a>
+        // Автопоиск при вводе (с небольшой задержкой для плавности)
+        let searchTimeout;
+        document.getElementById('searchInput').addEventListener('input', function() {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(performSearch, 200);
+        });
+
+        // Поиск при нажатии Enter
+        document.getElementById('searchInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                clearTimeout(searchTimeout);
+                performSearch();
+            }
+        });
+
+        // Фокус на поле ввода при загрузке
+        window.onload = function() {
+            document.getElementById('searchInput').focus();
+        };
+        
+        // Горячая клавиша / для быстрого фокуса на поиске
+        document.addEventListener('keydown', function(e) {
+            if (e.key === '/' && document.activeElement !== document.getElementById('searchInput')) {
+                e.preventDefault();
+                document.getElementById('searchInput').focus();
+            }
+        });
+    </script>
 </body>
 </html>
-
-
-
-
-
