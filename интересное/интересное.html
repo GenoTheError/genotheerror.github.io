@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Интересное - База Знаний</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .category-section {
+            margin: 25px 0;
+        }
+        
+        .category-title {
+            color: #90cdf4;
+            font-size: 1.3em;
+            margin-bottom: 15px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #2d3748;
+        }
+        
+        .subcategory {
+            margin: 20px 0 15px 15px;
+            color: #63b3ed;
+            font-size: 1.1em;
+        }
+        
+        .items-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 10px;
+            margin: 10px 0 20px 20px;
+        }
+        
+        .item-card {
+            background: #2d3748;
+            border: 1px solid #4a5568;
+            border-radius: 6px;
+            padding: 12px;
+            text-align: center;
+            transition: all 0.2s ease;
+        }
+        
+        .item-card:hover {
+            border-color: #63b3ed;
+            background: #3c4a5c;
+        }
+        
+        .item-card a {
+            color: #e2e8f0;
+            text-decoration: none;
+            font-weight: 500;
+            display: block;
+        }
+        
+        .search-compact {
+            background: #1a202c;
+            padding: 20px;
+            border-radius: 10px;
+            border: 1px solid #2d3748;
+            margin: 25px 0;
+        }
+        
+        .search-result {
+            margin-top: 15px;
+            padding: 15px;
+            background: #2d3748;
+            border-radius: 8px;
+            border: 1px solid #4a5568;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        .result-item {
+            padding: 10px;
+            margin: 5px 0;
+            background: #3c4a5c;
+            border-radius: 5px;
+            border: 1px solid #4a5568;
+        }
+        
+        .result-item a {
+            color: #90cdf4;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        
+        .result-item:hover {
+            background: #4a5568;
+            border-color: #63b3ed;
+        }
+        
+        .no-results {
+            color: #a0aec0;
+            font-style: italic;
+            text-align: center;
+            padding: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>❔️ Интересное</h1>
+    <p>Штуки и факты,которые меня заинтересовали</p>
+
+    <!-- Поиск по интересному -->
+    <div class="search-compact">
+        <h3 style="color: #90cdf4; margin-bottom: 15px; text-align: center;">🔍 Поиск по интересным мне темам</h3>
+        <input type="text" id="substanceSearch" placeholder="Введите название...">
+        <button onclick="searchSubstances()">Найти</button>
+        <div id="substanceResult" class="search-result"></div>
+    </div>
+
+    <!-- Природные ... как это назвать? -->
+    <div class="category-section">
+        <div class="category-title">Природные</div>
+        <div class="items-grid">
+            <div class="item-card"><a href="черемша.html">Черемша</a></div>
+            <div class="item-card"><a href="кислица.html">Кислица</a></div>
+        </div>
+        
+
+    <p style="text-align: center; margin-top: 40px;">
+        <a href="../index.html">← Назад на главную</a>
+    </p>
+
+    <script>
+        // База интересного (можно расширять)
+        const substances = [
+             { name: "черемша", link: "черемша.html", category: "Природные" },
+             { name: "кислица", link: "кислица.html", category: "Природные" },
+        ];
+
+        // Функция поиска
+        function searchSubstances() {
+            const query = document.getElementById('substanceSearch').value.toLowerCase().trim();
+            const resultDiv = document.getElementById('substanceResult');
+            
+            // Очищаем предыдущие результаты
+            resultDiv.innerHTML = '';
+            
+            // Если ввели меньше 2 символов
+            if (query.length < 2) {
+                resultDiv.innerHTML = '<div class="no-results">Введите хотя бы 2 символа для поиска</div>';
+                return;
+            }
+            
+            // Ищем совпадения (частичные)
+            const results = substances.filter(substance => 
+                substance.name.toLowerCase().includes(query)
+            );
+            
+            // Показываем результаты
+            if (results.length > 0) {
+                results.forEach(substance => {
+                    const item = document.createElement('div');
+                    item.className = 'result-item';
+                    item.innerHTML = `
+                        <a href="${substance.link}">${substance.name}</a>
+                        <div style="color: #a0aec0; font-size: 0.9em; margin-top: 5px;">
+                            Категория: ${substance.category}
+                        </div>
+                    `;
+                    resultDiv.appendChild(item);
+                });
+                
+                // Добавляем количество найденных
+                const count = document.createElement('div');
+                count.style.cssText = 'color: #63b3ed; margin-top: 10px; font-weight: 600;';
+                count.textContent = `Найдено: ${results.length} интересного`;
+                resultDiv.appendChild(count);
+            } else {
+                resultDiv.innerHTML = '<div class="no-results">Ничего не найдено. Попробуйте "черемша","кислица"...</div>';
+            }
+        }
+
+        // ДОБАВЛЯЕМ ПОИСК ПРИ ВВОДЕ (реальный частичный поиск)
+        document.getElementById('substanceSearch').addEventListener('input', function() {
+            const query = this.value.trim();
+            
+            // Ищем только при 2+ символах
+            if (query.length >= 2) {
+                searchSubstances();
+            } else if (query.length === 0) {
+                // Очищаем результаты если поле пустое
+                document.getElementById('substanceResult').innerHTML = '';
+            }
+        });
+
+        // ДОБАВЛЯЕМ ПОИСК ПРИ НАЖАТИИ ENTER
+        document.getElementById('substanceSearch').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                searchSubstances();
+            }
+        });
+    </script>
+</body>
+</html>
