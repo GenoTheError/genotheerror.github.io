@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Еда - База Знаний</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .category-section {
+            margin: 25px 0;
+        }
+        
+        .category-title {
+            color: #90cdf4;
+            font-size: 1.3em;
+            margin-bottom: 15px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #2d3748;
+        }
+        
+        .subcategory {
+            margin: 20px 0 15px 15px;
+            color: #63b3ed;
+            font-size: 1.1em;
+        }
+        
+        .items-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 10px;
+            margin: 10px 0 20px 20px;
+        }
+        
+        .item-card {
+            background: #2d3748;
+            border: 1px solid #4a5568;
+            border-radius: 6px;
+            padding: 12px;
+            text-align: center;
+            transition: all 0.2s ease;
+        }
+        
+        .item-card:hover {
+            border-color: #63b3ed;
+            background: #3c4a5c;
+        }
+        
+        .item-card a {
+            color: #e2e8f0;
+            text-decoration: none;
+            font-weight: 500;
+            display: block;
+        }
+        
+        .search-compact {
+            background: #1a202c;
+            padding: 20px;
+            border-radius: 10px;
+            border: 1px solid #2d3748;
+            margin: 25px 0;
+        }
+        
+        .search-result {
+            margin-top: 15px;
+            padding: 15px;
+            background: #2d3748;
+            border-radius: 8px;
+            border: 1px solid #4a5568;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        .result-item {
+            padding: 10px;
+            margin: 5px 0;
+            background: #3c4a5c;
+            border-radius: 5px;
+            border: 1px solid #4a5568;
+        }
+        
+        .result-item a {
+            color: #90cdf4;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        
+        .result-item:hover {
+            background: #4a5568;
+            border-color: #63b3ed;
+        }
+        
+        .no-results {
+            color: #a0aec0;
+            font-style: italic;
+            text-align: center;
+            padding: 20px;
+        }
+        
+        .empty-note {
+            color: #a0aec0;
+            font-style: italic;
+            text-align: center;
+            margin: 20px 0;
+        }
+        
+        .highlight {
+            background: rgba(99, 179, 237, 0.3);
+            color: #90cdf4;
+            padding: 2px 4px;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+        
+        li {
+          font-size: 20px;
+         }
+    </style>
+</head>
+<body>
+<h1>Блюда и рецепты</h1>
+<p>Еда,блюда,рецепты,кулинарные советы и многое другое!</p>
+    <div class="search-compact">
+        <h3 style="color: #90cdf4; margin-bottom: 15px; text-align: center;">🔍 Поиск по еде</h3>
+        <input type="text" id="dishesSearch" placeholder="Введите название блюда...">
+        <button onclick="searchDishes()">Найти</button>
+        <div id="dishesResult" class="search-result">
+            <div class="no-results">Введите запрос для поиска</div>
+        </div>
+    </div>
+    <div class="category-section">
+     <div class="category-title">Супы</div>
+      <div class="subcategory">Борщи</div>
+      <ul>
+      <li><a href="супы/борщи/русский-борщ.html">Русский Борщ</a></li>
+      <li>проверка 2</li>
+      </ul>
+    </div>
+    <p><a href="../index.html">← На главную страницу</a></p>
+<script>
+    // База данных еды - ПЕРЕИМЕНОВАЛ dishes (блюда), а не characters
+    const dishesDatabase = [
+        {
+    mainName: "Борщ русский",
+    file: "супы/борщи/русский-борщ.html",
+    aliases: ["красный борщ", "традиционный борщ"]
+},
+{
+    mainName: "Квас",
+    file: "напитки/квас.html",
+    aliases: ["домашний квас", "хлебный квас"]
+}
+        // ДОБАВЛЯЙ НОВЫЕ БЛЮДА ЗДЕСЬ:
+        // {
+        //     mainName: "ОСНОВНОЕ НАЗВАНИЕ",
+        //     file: "категория/файл.html",
+        //     aliases: ["вариант1", "вариант2"]
+        // },
+    ];
+
+    // Функция для подсветки найденного текста
+    function highlightText(text, query) {
+        if (!query || !text) return text;
+        
+        const regex = new RegExp(`(${query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+        return text.replace(regex, '<span class="highlight">$1</span>');
+    }
+
+    // Основная функция поиска
+    function searchDishes() {
+        const query = document.getElementById('dishesSearch').value.toLowerCase().trim();
+        const resultDiv = document.getElementById('dishesResult');
+        
+        // Очищаем предыдущие результаты
+        resultDiv.innerHTML = '';
+        
+        // Если ввели меньше 2 символов
+        if (query.length < 2) {
+            resultDiv.innerHTML = '<div class="no-results">Введите хотя бы 2 символа для поиска</div>';
+            return;
+        }
+        
+        // Ищем совпадения
+        const results = dishesDatabase.filter(dish => 
+            dish.mainName.toLowerCase().includes(query) ||
+            dish.aliases.some(alias => alias.toLowerCase().includes(query))
+        );
+        
+        // Показываем результаты
+        if (results.length > 0) {
+            results.forEach(dish => {
+                const item = document.createElement('div');
+                item.className = 'result-item';
+                
+                // Находим, где именно нашлось совпадение
+                let foundText = dish.mainName;
+                let foundInAlias = false;
+                
+                // Проверяем альтернативные имена
+                for (const alias of dish.aliases) {
+                    if (alias.toLowerCase().includes(query)) {
+                        foundText = `${dish.mainName} (также: ${alias})`;
+                        foundInAlias = true;
+                        break;
+                    }
+                }
+                
+                // Подсвечиваем найденный текст
+                const highlightedText = highlightText(foundText, query);
+                
+                item.innerHTML = `
+                    <a href="${dish.file}">${highlightedText}</a>
+                    <div style="color: #a0aec0; font-size: 0.85em; margin-top: 5px;">
+                        Категория: ${dish.file.split('/')[1] || 'еда'}
+                    </div>
+                `;
+                resultDiv.appendChild(item);
+            });
+            
+            // Добавляем количество найденных
+            const count = document.createElement('div');
+            count.style.cssText = 'color: #63b3ed; margin-top: 10px; font-weight: 600;';
+            count.textContent = `Найдено порций еды: ${results.length}`;
+            resultDiv.appendChild(count);
+        } else {
+            resultDiv.innerHTML = `
+                <div class="no-results">
+                    Блюдо не найдено. Попробуйте "борщ", "суп", "салат"...
+                </div>
+            `;
+        }
+    }
+
+    // Поиск при вводе (с задержкой)
+    let searchTimer;
+    document.getElementById('dishesSearch').addEventListener('input', function() {
+        clearTimeout(searchTimer);
+        const query = this.value.trim();
+        
+        if (query.length >= 2) {
+            searchTimer = setTimeout(searchDishes, 200);
+        } else if (query.length === 0) {
+            document.getElementById('dishesResult').innerHTML = 
+                '<div class="no-results">Введите запрос для поиска</div>';
+        }
+    });
+
+    // Поиск при нажатии Enter
+    document.getElementById('dishesSearch').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            clearTimeout(searchTimer);
+            searchDishes();
+        }
+    });
+
+    // Фокус на поле поиска при загрузке
+    window.onload = function() {
+        document.getElementById('dishesSearch').focus();
+    };
+</script>
+</body>
+</html>
