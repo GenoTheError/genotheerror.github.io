@@ -1,0 +1,996 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>3D Конструктор - Полные коллизии между объектами</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            font-family: 'Segoe UI', 'Roboto', system-ui, -apple-system, sans-serif;
+            touch-action: none;
+        }
+        
+        /* Уменьшенная плашка */
+        .control-panel {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(20, 20, 35, 0.94);
+            backdrop-filter: blur(12px);
+            border-top-left-radius: 16px;
+            border-top-right-radius: 16px;
+            padding: 8px 12px;
+            z-index: 20;
+            box-shadow: 0 -4px 15px rgba(0,0,0,0.4);
+            border-top: 1px solid rgba(255,255,255,0.15);
+        }
+        
+        .input-row {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 8px;
+            flex-wrap: wrap;
+        }
+        
+        .input-group {
+            flex: 1;
+            min-width: 160px;
+        }
+        
+        .input-group input {
+            width: 100%;
+            padding: 8px 12px;
+            font-size: 14px;
+            border: none;
+            border-radius: 25px;
+            background: rgba(0, 0, 0, 0.6);
+            color: white;
+            outline: none;
+            box-sizing: border-box;
+        }
+        
+        .input-group input:focus {
+            background: rgba(30, 30, 50, 0.9);
+            box-shadow: 0 0 0 2px #ff9800;
+        }
+        
+        button {
+            background: #ff9800;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 25px;
+            font-weight: bold;
+            color: #1e1e2a;
+            cursor: pointer;
+            transition: 0.2s;
+            font-size: 13px;
+            font-weight: 600;
+            touch-action: manipulation;
+        }
+        
+        button:active {
+            transform: scale(0.96);
+        }
+        
+        .buttons-row {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-bottom: 8px;
+        }
+        
+        .toggles-row {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-bottom: 8px;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .toggle-group {
+            display: flex;
+            gap: 12px;
+            background: rgba(0,0,0,0.5);
+            padding: 4px 12px;
+            border-radius: 30px;
+            flex-wrap: wrap;
+        }
+        
+        .toggle-group label {
+            color: white;
+            font-size: 12px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            touch-action: manipulation;
+        }
+        
+        .mode-badge {
+            background: #2c3e2c;
+            padding: 4px 10px;
+            border-radius: 30px;
+            font-size: 11px;
+            font-weight: bold;
+            color: #a5d6a5;
+        }
+        
+        .mode-btn {
+            background: #3a6ea5;
+            color: white;
+            padding: 6px 14px;
+            font-size: 12px;
+        }
+        .mode-btn.active {
+            background: #ff9800;
+            color: #1e1e2a;
+        }
+        
+        .small-btn {
+            background: #5a5a7a;
+            padding: 4px 12px;
+            font-size: 11px;
+        }
+        .small-btn.active {
+            background: #ff9800;
+        }
+        
+        .dropdown-hint {
+            margin-top: 6px;
+            border-top: 1px solid rgba(255,255,255,0.15);
+            padding-top: 6px;
+        }
+        
+        .hint-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            padding: 4px 0;
+            color: #ffb347;
+            font-weight: 600;
+            font-size: 12px;
+            touch-action: manipulation;
+        }
+        
+        .hint-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out;
+            background: rgba(0,0,0,0.4);
+            border-radius: 12px;
+            margin-top: 4px;
+            font-size: 11px;
+            color: #ddd;
+        }
+        
+        .hint-content.open {
+            max-height: 400px;
+            overflow-y: auto;
+            padding: 8px;
+        }
+        
+        .hint-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+        
+        .hint-category h4 {
+            margin: 0 0 4px 0;
+            color: #ff9800;
+            font-size: 11px;
+        }
+        
+        .hint-category ul {
+            margin: 0;
+            padding-left: 16px;
+        }
+        
+        .hint-category li {
+            margin: 2px 0;
+            line-height: 1.3;
+        }
+        
+        .example-command {
+            font-family: monospace;
+            background: #2a2a3a;
+            padding: 1px 4px;
+            border-radius: 10px;
+            font-size: 10px;
+        }
+        
+        @media (max-width: 550px) {
+            .control-panel { padding: 6px 10px; }
+            .toggle-group { gap: 10px; padding: 3px 10px; }
+            .mode-badge { font-size: 10px; padding: 3px 8px; }
+            button { padding: 6px 12px; font-size: 11px; }
+            .input-group input { padding: 6px 10px; font-size: 13px; }
+            .buttons-row { gap: 6px; }
+            .mode-btn { padding: 5px 10px; font-size: 11px; }
+        }
+        
+        .top-status-bar {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            display: flex;
+            gap: 8px;
+            z-index: 25;
+        }
+        
+        .status-chip {
+            background: rgba(0,0,0,0.7);
+            backdrop-filter: blur(5px);
+            padding: 4px 10px;
+            border-radius: 25px;
+            font-size: 10px;
+            font-weight: bold;
+            color: white;
+            font-family: monospace;
+            border: 1px solid rgba(255,255,255,0.3);
+        }
+        
+        .status-chip.camera {
+            border-color: #ff9800;
+        }
+        
+        .status-chip.interact {
+            border-color: #4caf50;
+        }
+        
+        .status-chip.collision {
+            border-color: #2196f3;
+        }
+        
+        .drag-instruction {
+            position: absolute;
+            bottom: 85px;
+            left: 10px;
+            background: rgba(0,0,0,0.5);
+            padding: 2px 8px;
+            border-radius: 15px;
+            font-size: 9px;
+            color: #ffaa66;
+            pointer-events: none;
+            z-index: 15;
+            font-family: monospace;
+        }
+    </style>
+</head>
+<body>
+    <div class="top-status-bar">
+        <div class="status-chip camera" id="cameraStatus">📷 Камера: ВКЛ</div>
+        <div class="status-chip interact" id="interactStatus">🤚 Перетаск: ВКЛ</div>
+        <div class="status-chip collision" id="objectCollisionStatus">🔄 Коллиз.об: ВКЛ</div>
+    </div>
+    <div class="drag-instruction">✨ Зажмите предмет и двигайте - можно поднимать вверх!</div>
+    
+    <div class="control-panel">
+        <div class="input-row">
+            <div class="input-group">
+                <input type="text" id="commandInput" placeholder="куб красный, сфера синяя, конус золотой..." autocomplete="off">
+            </div>
+            <button id="spawnBtn">✨ Создать</button>
+        </div>
+        
+        <div class="buttons-row">
+            <button id="cameraControlBtn" class="mode-btn active">🎥 Камера: ВКЛ</button>
+            <button id="interactModeBtn" class="mode-btn active">🤚 Перетаск: ВКЛ</button>
+            <button id="objectCollisionBtn" class="mode-btn active" style="background:#2196f3;">🔄 Коллиз.об: ВКЛ</button>
+        </div>
+        
+        <div class="toggles-row">
+            <div class="toggle-group">
+                <label>
+                    <input type="checkbox" id="gravityToggle" checked> 💫 Грав.
+                </label>
+                <label>
+                    <input type="checkbox" id="collisionToggle" checked> 🧱 Пол
+                </label>
+            </div>
+            <div class="mode-badge" id="physicsStatus">Грав:ВКЛ Пол:ВКЛ</div>
+        </div>
+        
+        <div class="dropdown-hint">
+            <div class="hint-header" id="hintToggle">
+                <span>📖 ПОКАЗАТЬ СПРАВКУ</span>
+                <span>▼</span>
+            </div>
+            <div class="hint-content" id="hintContent">
+                <div class="hint-grid">
+                    <div class="hint-category">
+                        <h4>📦 Фигуры:</h4>
+                        <ul>
+                            <li><span class="example-command">куб</span> / box</li>
+                            <li><span class="example-command">сфера</span> / sphere</li>
+                            <li><span class="example-command">конус</span> / cone</li>
+                            <li><span class="example-command">цилиндр</span> / cylinder</li>
+                            <li><span class="example-command">тор</span> / torus</li>
+                            <li><span class="example-command">пирамида</span> / pyramid</li>
+                        </ul>
+                    </div>
+                    <div class="hint-category">
+                        <h4>🎨 Цвета:</h4>
+                        <ul>
+                            <li>красный, синий, зеленый</li>
+                            <li>желтый, фиолетовый</li>
+                            <li>оранжевый, розовый</li>
+                            <li>голубой, золотой</li>
+                            <li>белый, черный</li>
+                        </ul>
+                    </div>
+                </div>
+                <div style="margin-top: 6px; text-align: center; font-size: 10px;">
+                    💡 <strong>"куб красный"</strong> · <strong>"сфера синяя"</strong> · <strong>"тор золотой"</strong><br>
+                    🖱️ <strong>Коллиз.об ВКЛ</strong> - объекты не проходят друг сквозь друга<br>
+                    🧱 <strong>Коллиз.об ВЫКЛ</strong> - объекты могут пересекаться
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.128.0/build/three.module.js",
+                "three/addons/": "https://unpkg.com/three@0.128.0/examples/jsm/"
+            }
+        }
+    </script>
+
+    <script type="module">
+        import * as THREE from 'three';
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+        import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
+        
+        // --- СЦЕНА ---
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x0a1030);
+        scene.fog = new THREE.FogExp2(0x0a1030, 0.006);
+        
+        const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+        camera.position.set(6, 4.5, 8);
+        camera.lookAt(0, 1.5, 0);
+        
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.shadowMap.enabled = true;
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        document.body.appendChild(renderer.domElement);
+        
+        const labelRenderer = new CSS2DRenderer();
+        labelRenderer.setSize(window.innerWidth, window.innerHeight);
+        labelRenderer.domElement.style.position = 'absolute';
+        labelRenderer.domElement.style.top = '0px';
+        labelRenderer.domElement.style.left = '0px';
+        labelRenderer.domElement.style.pointerEvents = 'none';
+        document.body.appendChild(labelRenderer.domElement);
+        
+        // --- УПРАВЛЕНИЕ КАМЕРОЙ ---
+        const controls = new OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.06;
+        controls.zoomSpeed = 1.0;
+        controls.rotateSpeed = 1.0;
+        controls.panSpeed = 0.8;
+        controls.enableTouchRotate = true;
+        controls.enableZoom = true;
+        controls.enablePan = true;
+        
+        let cameraEnabled = true;
+        
+        function setCameraEnabled(enabled) {
+            cameraEnabled = enabled;
+            controls.enabled = enabled;
+            const cameraBtn = document.getElementById('cameraControlBtn');
+            const cameraStatusSpan = document.getElementById('cameraStatus');
+            if (enabled) {
+                cameraBtn.textContent = "🎥 Камера: ВКЛ";
+                cameraBtn.classList.add("active");
+                cameraStatusSpan.innerHTML = "📷 Камера: ВКЛ";
+                cameraStatusSpan.style.borderColor = "#ff9800";
+            } else {
+                cameraBtn.textContent = "🔒 Камера: ВЫКЛ";
+                cameraBtn.classList.remove("active");
+                cameraStatusSpan.innerHTML = "🔒 Камера: ВЫКЛ";
+                cameraStatusSpan.style.borderColor = "#888";
+            }
+        }
+        
+        // --- ОСВЕЩЕНИЕ ---
+        const ambientLight = new THREE.AmbientLight(0x404066);
+        scene.add(ambientLight);
+        const dirLight = new THREE.DirectionalLight(0xffffff, 1.2);
+        dirLight.position.set(4, 6, 2);
+        dirLight.castShadow = true;
+        dirLight.receiveShadow = true;
+        dirLight.shadow.mapSize.width = 1024;
+        dirLight.shadow.mapSize.height = 1024;
+        dirLight.shadow.camera.near = 0.5;
+        dirLight.shadow.camera.far = 15;
+        dirLight.shadow.camera.left = -6;
+        dirLight.shadow.camera.right = 6;
+        dirLight.shadow.camera.top = 6;
+        dirLight.shadow.camera.bottom = -6;
+        scene.add(dirLight);
+        
+        const fillLight = new THREE.PointLight(0x88aaff, 0.4);
+        fillLight.position.set(-2, 3, 3);
+        scene.add(fillLight);
+        const backLight = new THREE.PointLight(0xffaa66, 0.3);
+        backLight.position.set(1, 2, -3);
+        scene.add(backLight);
+        
+        // Пол и декор
+        const gridHelper = new THREE.GridHelper(18, 20, 0x88aaff, 0x446688);
+        gridHelper.position.y = -0.02;
+        gridHelper.material.transparent = true;
+        gridHelper.material.opacity = 0.5;
+        scene.add(gridHelper);
+        
+        const visualFloor = new THREE.Mesh(
+            new THREE.PlaneGeometry(14, 14),
+            new THREE.MeshStandardMaterial({ color: 0x23233a, roughness: 0.7, metalness: 0.1 })
+        );
+        visualFloor.rotation.x = -Math.PI / 2;
+        visualFloor.position.y = -0.05;
+        visualFloor.receiveShadow = true;
+        scene.add(visualFloor);
+        
+        const shadowReceiver = new THREE.Mesh(
+            new THREE.PlaneGeometry(14, 14),
+            new THREE.ShadowMaterial({ opacity: 0.4, color: 0x000000, transparent: true })
+        );
+        shadowReceiver.rotation.x = -Math.PI / 2;
+        shadowReceiver.position.y = 0;
+        shadowReceiver.receiveShadow = true;
+        scene.add(shadowReceiver);
+        
+        // Константы физики
+        const GROUND_Y = 0.25;
+        let gravityEnabled = true;
+        let collisionWithFloorEnabled = true;
+        let objectCollisionEnabled = true; // НОВАЯ ПЕРЕМЕННАЯ - коллизии между объектами
+        const GRAVITY = -14.0;
+        
+        // --- ДАННЫЕ ОБЪЕКТОВ ---
+        let objects = [];
+        let dragDropEnabled = true;
+        
+        // Переменные для перетаскивания
+        let raycaster = new THREE.Raycaster();
+        let dragObject = null;
+        let dragStartPoint = new THREE.Vector3();
+        let isDragging = false;
+        let mouse = new THREE.Vector2();
+        
+        // Получение радиуса/полуширины для коллизий
+        function getObjectRadius(obj) {
+            if (obj.shapeType === 'sphere') return 0.45;
+            if (obj.shapeType === 'torus') return 0.45;
+            if (obj.shapeType === 'cone') return 0.5;
+            if (obj.shapeType === 'cylinder') return 0.45;
+            if (obj.shapeType === 'pyramid') return 0.55;
+            return 0.4; // cube
+        }
+        
+        function getObjectHalfHeight(obj) {
+            if (obj.shapeType === 'sphere') return 0.45;
+            if (obj.shapeType === 'torus') return 0.2;
+            if (obj.shapeType === 'cone') return 0.45;
+            if (obj.shapeType === 'cylinder') return 0.4;
+            if (obj.shapeType === 'pyramid') return 0.425;
+            return 0.4;
+        }
+        
+        // Проверка коллизии между двумя объектами (с учетом радиуса/размера)
+        function checkCollision(obj1, obj2) {
+            const pos1 = obj1.mesh.position;
+            const pos2 = obj2.mesh.position;
+            const r1 = getObjectRadius(obj1);
+            const r2 = getObjectRadius(obj2);
+            const dx = pos1.x - pos2.x;
+            const dz = pos1.z - pos2.z;
+            const distance = Math.sqrt(dx * dx + dz * dz);
+            const minDist = r1 + r2;
+            
+            // Вертикальная проверка (перекрытие по Y)
+            const h1 = getObjectHalfHeight(obj1);
+            const h2 = getObjectHalfHeight(obj2);
+            const yOverlap = (pos1.y + h1) > (pos2.y - h2) && (pos2.y + h2) > (pos1.y - h1);
+            
+            return distance < minDist && yOverlap;
+        }
+        
+        // Разрешение коллизии - отталкивание объектов
+        function resolveCollision(obj1, obj2) {
+            const pos1 = obj1.mesh.position;
+            const pos2 = obj2.mesh.position;
+            const r1 = getObjectRadius(obj1);
+            const r2 = getObjectRadius(obj2);
+            
+            const dx = pos1.x - pos2.x;
+            const dz = pos1.z - pos2.z;
+            const distance = Math.sqrt(dx * dx + dz * dz);
+            const minDist = r1 + r2;
+            
+            if (distance < minDist) {
+                const angle = Math.atan2(dz, dx);
+                const overlap = minDist - distance;
+                const moveX = Math.cos(angle) * overlap * 0.5;
+                const moveZ = Math.sin(angle) * overlap * 0.5;
+                
+                // Если один из объектов перетаскивается, двигаем только другой
+                if (dragObject === obj1 && isDragging) {
+                    pos2.x -= moveX * 2;
+                    pos2.z -= moveZ * 2;
+                } else if (dragObject === obj2 && isDragging) {
+                    pos1.x += moveX * 2;
+                    pos1.z += moveZ * 2;
+                } else {
+                    pos1.x += moveX;
+                    pos1.z += moveZ;
+                    pos2.x -= moveX;
+                    pos2.z -= moveZ;
+                }
+                
+                // Ограничения по границам арены
+                const limit = 5.5;
+                pos1.x = Math.min(limit, Math.max(-limit, pos1.x));
+                pos1.z = Math.min(limit, Math.max(-limit, pos1.z));
+                pos2.x = Math.min(limit, Math.max(-limit, pos2.x));
+                pos2.z = Math.min(limit, Math.max(-limit, pos2.z));
+            }
+        }
+        
+        // Функция для обработки всех коллизий между объектами
+        function handleObjectCollisions() {
+            if (!objectCollisionEnabled) return;
+            
+            for (let i = 0; i < objects.length; i++) {
+                for (let j = i + 1; j < objects.length; j++) {
+                    if (checkCollision(objects[i], objects[j])) {
+                        resolveCollision(objects[i], objects[j]);
+                    }
+                }
+            }
+        }
+        
+        // Функция для получения точки перетаскивания
+        function getDragPointOnObject(obj, event, camera) {
+            if (event.touches) {
+                mouse.x = (event.touches[0].clientX / renderer.domElement.clientWidth) * 2 - 1;
+                mouse.y = -(event.touches[0].clientY / renderer.domElement.clientHeight) * 2 + 1;
+            } else {
+                mouse.x = (event.clientX / renderer.domElement.clientWidth) * 2 - 1;
+                mouse.y = -(event.clientY / renderer.domElement.clientHeight) * 2 + 1;
+            }
+            raycaster.setFromCamera(mouse, camera);
+            const intersects = raycaster.intersectObject(obj.mesh);
+            if (intersects.length > 0) {
+                return intersects[0].point.clone();
+            }
+            return null;
+        }
+        
+        // Функция для перемещения объекта
+        function getNewPositionFromMouse(obj, event, camera, originalPoint) {
+            if (event.touches) {
+                mouse.x = (event.touches[0].clientX / renderer.domElement.clientWidth) * 2 - 1;
+                mouse.y = -(event.touches[0].clientY / renderer.domElement.clientHeight) * 2 + 1;
+            } else {
+                mouse.x = (event.clientX / renderer.domElement.clientWidth) * 2 - 1;
+                mouse.y = -(event.clientY / renderer.domElement.clientHeight) * 2 + 1;
+            }
+            
+            raycaster.setFromCamera(mouse, camera);
+            const viewDir = new THREE.Vector3().subVectors(camera.position, originalPoint).normalize();
+            const plane = new THREE.Plane().setFromNormalAndCoplanarPoint(viewDir, originalPoint);
+            const newPoint = new THREE.Vector3();
+            if (raycaster.ray.intersectPlane(plane, newPoint)) {
+                return newPoint;
+            }
+            return null;
+        }
+        
+        function startDrag(obj, event, camera) {
+            if (!dragDropEnabled) return false;
+            const hitPoint = getDragPointOnObject(obj, event, camera);
+            if (hitPoint) {
+                dragObject = obj;
+                dragStartPoint.copy(hitPoint);
+                isDragging = true;
+                return true;
+            }
+            return false;
+        }
+        
+        function onDragMove(event, camera) {
+            if (!dragObject || !isDragging) return;
+            
+            const newPoint = getNewPositionFromMouse(dragObject, event, camera, dragStartPoint);
+            if (newPoint) {
+                const delta = new THREE.Vector3().subVectors(newPoint, dragStartPoint);
+                let newPos = dragObject.mesh.position.clone().add(delta);
+                
+                // Ограничения по X,Z
+                newPos.x = Math.min(5.8, Math.max(-5.8, newPos.x));
+                newPos.z = Math.min(5.8, Math.max(-5.8, newPos.z));
+                
+                // Ограничение по полу
+                let halfHeight = getObjectHalfHeight(dragObject);
+                if (collisionWithFloorEnabled && (newPos.y - halfHeight) < GROUND_Y) {
+                    newPos.y = GROUND_Y + halfHeight;
+                }
+                newPos.y = Math.min(8, newPos.y);
+                
+                dragObject.mesh.position.copy(newPos);
+                dragObject.label.position.copy(newPos);
+                dragObject.label.position.y += halfHeight + 0.25;
+                dragObject.velocityY = 0;
+                dragObject.velocityX = 0;
+                dragObject.velocityZ = 0;
+                
+                dragStartPoint.copy(newPoint);
+            }
+        }
+        
+        function endDrag() {
+            if (dragObject && isDragging) {
+                dragObject = null;
+                isDragging = false;
+            }
+        }
+        
+        // Создание метки
+        function createLabel(text, colorHex = "#ffffff") {
+            const div = document.createElement('div');
+            div.textContent = text;
+            div.style.color = colorHex;
+            div.style.fontSize = '10px';
+            div.style.fontWeight = 'bold';
+            div.style.textShadow = '1px 1px 0px black';
+            div.style.background = 'rgba(0,0,0,0.65)';
+            div.style.padding = '2px 6px';
+            div.style.borderRadius = '16px';
+            div.style.border = `1px solid ${colorHex}`;
+            div.style.whiteSpace = 'nowrap';
+            div.style.fontFamily = 'sans-serif';
+            return new CSS2DObject(div);
+        }
+        
+        // Цветовая карта
+        const colorMap = {
+            "красный": 0xdd5555, "red": 0xdd5555,
+            "синий": 0x5588ff, "blue": 0x5588ff,
+            "зеленый": 0x66cc66, "зелёный": 0x66cc66, "green": 0x66cc66,
+            "желтый": 0xffcc44, "жёлтый": 0xffcc44, "yellow": 0xffcc44,
+            "фиолетовый": 0xaa66ff, "purple": 0xaa66ff,
+            "оранжевый": 0xff8844, "orange": 0xff8844,
+            "розовый": 0xff88aa, "pink": 0xff88aa,
+            "голубой": 0x44ccff, "cyan": 0x44ccff,
+            "белый": 0xeeeeee, "white": 0xeeeeee,
+            "черный": 0x333333, "black": 0x333333,
+            "золотой": 0xffaa33, "gold": 0xffaa33
+        };
+        
+        // Создание геометрии
+        function createGeometry(type) {
+            switch(type) {
+                case 'cube': return new THREE.BoxGeometry(0.8, 0.8, 0.8);
+                case 'sphere': return new THREE.SphereGeometry(0.45, 32, 32);
+                case 'cone': return new THREE.ConeGeometry(0.5, 0.9, 32);
+                case 'cylinder': return new THREE.CylinderGeometry(0.45, 0.45, 0.8, 32);
+                case 'torus': return new THREE.TorusGeometry(0.45, 0.12, 32, 64);
+                case 'pyramid': return new THREE.ConeGeometry(0.55, 0.85, 4);
+                default: return new THREE.BoxGeometry(0.8, 0.8, 0.8);
+            }
+        }
+        
+        // Добавление предмета
+        function addObject(shapeType, colorHex, colorName = "предмет") {
+            const geometry = createGeometry(shapeType);
+            const material = new THREE.MeshStandardMaterial({ color: colorHex, roughness: 0.3, metalness: 0.2 });
+            const mesh = new THREE.Mesh(geometry, material);
+            mesh.castShadow = true;
+            mesh.receiveShadow = true;
+            mesh.userData = { type: shapeType, colorName: colorName };
+            
+            const startX = (Math.random() - 0.5) * 4;
+            const startZ = (Math.random() - 0.5) * 4;
+            const startY = 1.5 + Math.random() * 1.5;
+            mesh.position.set(startX, startY, startZ);
+            scene.add(mesh);
+            
+            const shapeNames = { cube: 'куб', sphere: 'сфера', cone: 'конус', cylinder: 'цилиндр', torus: 'тор', pyramid: 'пирамида' };
+            const labelText = `${shapeNames[shapeType] || shapeType} ${colorName}`;
+            const label = createLabel(labelText, '#' + colorHex.toString(16).padStart(6,'0'));
+            
+            let halfHeight = getObjectHalfHeight({ shapeType });
+            label.position.copy(mesh.position);
+            label.position.y += halfHeight + 0.2;
+            scene.add(label);
+            
+            const objData = {
+                mesh: mesh,
+                velocityY: 0,
+                velocityX: 0,
+                velocityZ: 0,
+                isOnGround: false,
+                shapeType: shapeType,
+                label: label,
+                mass: 1.0
+            };
+            objects.push(objData);
+            return objData;
+        }
+        
+        // Парсинг команды
+        function parseCommand(text) {
+            text = text.trim().toLowerCase();
+            if (text === "") return;
+            
+            let shape = "cube";
+            let colorKey = "серый";
+            let colorHex = 0xaaaaaa;
+            
+            const shapeMap = {
+                "куб": "cube", "box": "cube",
+                "сфера": "sphere", "sphere": "sphere",
+                "конус": "cone", "cone": "cone",
+                "цилиндр": "cylinder", "cylinder": "cylinder",
+                "тор": "torus", "torus": "torus",
+                "пирамида": "pyramid", "pyramid": "pyramid"
+            };
+            
+            const words = text.split(/\s+/);
+            for (let w of words) {
+                if (shapeMap[w]) {
+                    shape = shapeMap[w];
+                    break;
+                }
+            }
+            
+            for (let w of words) {
+                if (colorMap[w]) {
+                    colorHex = colorMap[w];
+                    colorKey = w;
+                    break;
+                }
+            }
+            
+            addObject(shape, colorHex, colorKey);
+        }
+        
+        // --- ФИЗИКА ---
+        function updatePhysics(deltaTime) {
+            if (deltaTime > 0.03) deltaTime = 0.03;
+            const grav = (gravityEnabled && collisionWithFloorEnabled) ? GRAVITY : (gravityEnabled ? GRAVITY : 0);
+            const airResist = 0.98;
+            
+            for (let obj of objects) {
+                if (dragObject === obj && isDragging) continue;
+                
+                let pos = obj.mesh.position;
+                let velY = obj.velocityY;
+                let velX = obj.velocityX;
+                let velZ = obj.velocityZ;
+                
+                if (gravityEnabled) {
+                    velY += grav * deltaTime;
+                    pos.y += velY * deltaTime;
+                    velX *= airResist;
+                    velZ *= airResist;
+                    pos.x += velX * deltaTime;
+                    pos.z += velZ * deltaTime;
+                }
+                
+                // Границы арены
+                const limit = 5.5;
+                if (pos.x > limit) { pos.x = limit; velX = -velX * 0.5; }
+                if (pos.x < -limit) { pos.x = -limit; velX = -velX * 0.5; }
+                if (pos.z > limit) { pos.z = limit; velZ = -velZ * 0.5; }
+                if (pos.z < -limit) { pos.z = -limit; velZ = -velZ * 0.5; }
+                
+                // Коллизия с полом
+                let halfHeight = getObjectHalfHeight(obj);
+                let bottomY = pos.y - halfHeight;
+                if (collisionWithFloorEnabled && gravityEnabled && bottomY <= GROUND_Y) {
+                    pos.y = GROUND_Y + halfHeight;
+                    if (velY < -0.3) velY = -velY * 0.4;
+                    else velY = 0;
+                    obj.isOnGround = true;
+                } else {
+                    obj.isOnGround = false;
+                }
+                
+                obj.velocityY = velY;
+                obj.velocityX = velX;
+                obj.velocityZ = velZ;
+                obj.mesh.position.copy(pos);
+                obj.label.position.copy(pos);
+                obj.label.position.y += halfHeight + 0.2;
+                
+                if (gravityEnabled && !obj.isOnGround && collisionWithFloorEnabled && !isDragging) {
+                    obj.mesh.rotation.x += velZ * 0.05;
+                    obj.mesh.rotation.z += velX * 0.05;
+                }
+            }
+            
+            // Обработка коллизий между объектами
+            handleObjectCollisions();
+        }
+        
+        // Обработчики ввода
+        function handlePointerDown(event) {
+            if (!dragDropEnabled) return;
+            
+            const rect = renderer.domElement.getBoundingClientRect();
+            let clientX, clientY;
+            if (event.touches) {
+                clientX = event.touches[0].clientX;
+                clientY = event.touches[0].clientY;
+            } else {
+                clientX = event.clientX;
+                clientY = event.clientY;
+            }
+            mouse.x = ((clientX - rect.left) / rect.width) * 2 - 1;
+            mouse.y = -((clientY - rect.top) / rect.height) * 2 + 1;
+            raycaster.setFromCamera(mouse, camera);
+            const intersects = raycaster.intersectObjects(objects.map(o => o.mesh));
+            
+            if (intersects.length > 0) {
+                const hit = intersects[0].object;
+                const objData = objects.find(o => o.mesh === hit);
+                if (objData) {
+                    event.preventDefault();
+                    startDrag(objData, event, camera);
+                }
+            }
+        }
+        
+        function handlePointerMove(event) {
+            if (dragObject && isDragging && dragDropEnabled) {
+                event.preventDefault();
+                onDragMove(event, camera);
+            }
+        }
+        
+        function handlePointerUp(event) {
+            if (dragObject && isDragging && dragDropEnabled) {
+                endDrag();
+            }
+        }
+        
+        renderer.domElement.addEventListener('mousedown', handlePointerDown);
+        window.addEventListener('mousemove', handlePointerMove);
+        window.addEventListener('mouseup', handlePointerUp);
+        renderer.domElement.addEventListener('touchstart', handlePointerDown, { passive: false });
+        window.addEventListener('touchmove', handlePointerMove, { passive: false });
+        window.addEventListener('touchend', handlePointerUp);
+        
+        // UI элементы
+        const gravityToggle = document.getElementById('gravityToggle');
+        const collisionToggle = document.getElementById('collisionToggle');
+        const interactModeBtn = document.getElementById('interactModeBtn');
+        const cameraControlBtn = document.getElementById('cameraControlBtn');
+        const objectCollisionBtn = document.getElementById('objectCollisionBtn');
+        const physicsStatusSpan = document.getElementById('physicsStatus');
+        const spawnBtn = document.getElementById('spawnBtn');
+        const commandInput = document.getElementById('commandInput');
+        const hintToggle = document.getElementById('hintToggle');
+        const hintContent = document.getElementById('hintContent');
+        
+        hintToggle.addEventListener('click', () => {
+            hintContent.classList.toggle('open');
+            const arrow = hintToggle.querySelector('span:last-child');
+            if (hintContent.classList.contains('open')) arrow.innerHTML = '▲';
+            else arrow.innerHTML = '▼';
+        });
+        
+        function updateUIStatus() {
+            let gravStr = gravityEnabled ? 'ВКЛ' : 'ВЫКЛ';
+            let collStr = collisionWithFloorEnabled ? 'ВКЛ' : 'ВЫКЛ';
+            physicsStatusSpan.textContent = `Грав:${gravStr} Пол:${collStr}`;
+            
+            const interactStatusSpan = document.getElementById('interactStatus');
+            if (dragDropEnabled) {
+                interactModeBtn.textContent = "🤚 Перетаск: ВКЛ";
+                interactModeBtn.classList.add("active");
+                interactStatusSpan.innerHTML = "🤚 Перетаск: ВКЛ";
+            } else {
+                interactModeBtn.textContent = "🔍 Перетаск: ВЫКЛ";
+                interactModeBtn.classList.remove("active");
+                interactStatusSpan.innerHTML = "🔍 Перетаск: ВЫКЛ";
+            }
+            
+            const objCollStatusSpan = document.getElementById('objectCollisionStatus');
+            if (objectCollisionEnabled) {
+                objectCollisionBtn.textContent = "🔄 Коллиз.об: ВКЛ";
+                objectCollisionBtn.classList.add("active");
+                objCollStatusSpan.innerHTML = "🔄 Коллиз.об: ВКЛ";
+                objCollStatusSpan.style.borderColor = "#2196f3";
+            } else {
+                objectCollisionBtn.textContent = "⬜ Коллиз.об: ВЫКЛ";
+                objectCollisionBtn.classList.remove("active");
+                objCollStatusSpan.innerHTML = "⬜ Коллиз.об: ВЫКЛ";
+                objCollStatusSpan.style.borderColor = "#888";
+            }
+        }
+        
+        interactModeBtn.addEventListener('click', () => {
+            dragDropEnabled = !dragDropEnabled;
+            if (!dragDropEnabled && dragObject) endDrag();
+            updateUIStatus();
+        });
+        
+        cameraControlBtn.addEventListener('click', () => {
+            setCameraEnabled(!cameraEnabled);
+        });
+        
+        objectCollisionBtn.addEventListener('click', () => {
+            objectCollisionEnabled = !objectCollisionEnabled;
+            updateUIStatus();
+        });
+        
+        gravityToggle.addEventListener('change', (e) => { gravityEnabled = e.target.checked; updateUIStatus(); });
+        collisionToggle.addEventListener('change', (e) => { 
+            collisionWithFloorEnabled = e.target.checked; 
+            updateUIStatus();
+            if (collisionWithFloorEnabled) {
+                objects.forEach(obj => {
+                    let halfHeight = getObjectHalfHeight(obj);
+                    if (obj.mesh.position.y - halfHeight < GROUND_Y) {
+                        let newY = GROUND_Y + halfHeight;
+                        obj.mesh.position.y = newY;
+                        obj.label.position.y = newY + halfHeight + 0.2;
+                        obj.velocityY = 0;
+                    }
+                });
+            }
+        });
+        
+        spawnBtn.addEventListener('click', () => { parseCommand(commandInput.value); commandInput.value = ''; });
+        commandInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') { parseCommand(commandInput.value); commandInput.value = ''; } });
+        
+        // Стартовые объекты
+        setTimeout(() => {
+            addObject('cube', 0x88aaff, 'голубой');
+            addObject('sphere', 0xffaa66, 'оранжевый');
+            addObject('cone', 0x66cc88, 'зеленый');
+            addObject('torus', 0xff88aa, 'розовый');
+        }, 300);
+        
+        setCameraEnabled(true);
+        updateUIStatus();
+        
+        // Анимация
+        let lastTime = performance.now();
+        function animate() {
+            const now = performance.now();
+            let delta = Math.min(0.033, (now - lastTime) / 1000);
+            lastTime = now;
+            updatePhysics(delta);
+            if (cameraEnabled) {
+                controls.update();
+            }
+            renderer.render(scene, camera);
+            labelRenderer.render(scene, camera);
+            requestAnimationFrame(animate);
+        }
+        animate();
+        
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            labelRenderer.setSize(window.innerWidth, window.innerHeight);
+        });
+    </script>
+</body>
+</html>
