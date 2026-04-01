@@ -1,0 +1,740 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Звуковой конструктор | Работа с локальными звуками</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            user-select: none;
+        }
+
+        body {
+            background: linear-gradient(135deg, #0a121c 0%, #060c14 100%);
+            font-family: 'Segoe UI', 'Inter', system-ui, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .sound-builder {
+            max-width: 800px;
+            width: 100%;
+            background: rgba(15, 25, 35, 0.95);
+            backdrop-filter: blur(16px);
+            border-radius: 48px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            padding: 24px 20px 28px;
+        }
+
+        h1 {
+            font-size: 1.7rem;
+            font-weight: 700;
+            margin: 0 0 4px;
+            text-align: center;
+            background: linear-gradient(135deg, #f5f9ff, #b8d4f0);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .sub {
+            text-align: center;
+            font-size: 0.8rem;
+            color: #7fa1bc;
+            margin-bottom: 20px;
+            padding-bottom: 6px;
+            border-bottom: 1px solid #2a4a66;
+            display: inline-block;
+            width: auto;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .activate-card {
+            background: linear-gradient(105deg, #ff9a3c, #ff6b2c);
+            border: none;
+            width: 100%;
+            padding: 14px;
+            border-radius: 60px;
+            font-weight: bold;
+            font-size: 1.1rem;
+            color: #1e2a2f;
+            cursor: pointer;
+            margin-bottom: 20px;
+            transition: all 0.2s;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            text-align: center;
+        }
+
+        .activate-card:hover {
+            transform: scale(1.01);
+            background: linear-gradient(105deg, #ffae54, #ff823c);
+        }
+
+        .folder-hint {
+            background: #1e3a4d;
+            border-radius: 12px;
+            padding: 12px 16px;
+            margin-bottom: 20px;
+            font-size: 0.8rem;
+            color: #ffd966;
+            border-left: 4px solid #ffb347;
+        }
+
+        .folder-hint code {
+            background: #0a1a24;
+            padding: 2px 6px;
+            border-radius: 6px;
+            color: #ffaa66;
+        }
+
+        .sound-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin: 16px 0;
+            max-height: 500px;
+            overflow-y: auto;
+            padding-right: 5px;
+        }
+
+        .sound-list::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .sound-list::-webkit-scrollbar-track {
+            background: #1e3a4d;
+            border-radius: 10px;
+        }
+
+        .sound-list::-webkit-scrollbar-thumb {
+            background: #ffb347;
+            border-radius: 10px;
+        }
+
+        .sound-item {
+            background: rgba(0, 0, 0, 0.6);
+            border-radius: 100px;
+            padding: 6px 16px 6px 12px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            border: 1px solid rgba(255, 200, 120, 0.2);
+            transition: all 0.2s;
+        }
+
+        .sound-item.active {
+            border-color: #ffb347;
+            background: linear-gradient(95deg, rgba(40, 70, 95, 0.9), rgba(30, 55, 75, 0.9));
+            box-shadow: 0 0 12px rgba(255, 180, 70, 0.3);
+        }
+
+        .sound-info {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            flex: 1.2;
+            cursor: pointer;
+            padding: 8px 10px;
+            border-radius: 60px;
+            transition: 0.1s;
+        }
+
+        .sound-info:active {
+            transform: scale(0.98);
+        }
+
+        .sound-emoji {
+            font-size: 2.2rem;
+            width: 52px;
+            text-align: center;
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
+        }
+
+        .sound-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #eef3fc;
+        }
+
+        .status-badge {
+            font-size: 0.7rem;
+            padding: 2px 8px;
+            border-radius: 20px;
+            background: #2c5a78;
+            color: #bbd9ff;
+        }
+
+        .status-badge.loaded {
+            background: #2e7d5e;
+            color: #a5f0c0;
+        }
+
+        .status-badge.error {
+            background: #8b3a3a;
+            color: #ffaeae;
+        }
+
+        .volume-control {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex: 1;
+            justify-content: flex-end;
+        }
+
+        input[type="range"] {
+            width: 160px;
+            height: 5px;
+            -webkit-appearance: none;
+            background: #2c5a78;
+            border-radius: 5px;
+            outline: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 18px;
+            height: 18px;
+            background: #ffcd7e;
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 0 6px #ffaa44;
+        }
+
+        .volume-value {
+            background: #051018;
+            padding: 4px 10px;
+            border-radius: 30px;
+            font-size: 0.7rem;
+            font-weight: bold;
+            color: #ffd966;
+            min-width: 48px;
+            text-align: center;
+            font-family: monospace;
+        }
+
+        .play-indicator {
+            width: 10px;
+            height: 10px;
+            border-radius: 10px;
+            background: #4a6e8c;
+            transition: 0.1s;
+            margin-left: 8px;
+        }
+
+        .sound-item.active .play-indicator {
+            background: #4cd964;
+            box-shadow: 0 0 8px #2ecc71;
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.6; transform: scale(0.9); }
+        }
+
+        .global-panel {
+            display: flex;
+            justify-content: center;
+            gap: 14px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            background: #1e3a4d;
+            border: none;
+            padding: 8px 22px;
+            border-radius: 40px;
+            font-weight: 600;
+            color: #d4ecff;
+            cursor: pointer;
+            transition: 0.2s;
+            font-size: 0.85rem;
+        }
+
+        .btn:hover {
+            background: #2e5775;
+            transform: scale(0.97);
+        }
+
+        .credit {
+            text-align: center;
+            font-size: 0.7rem;
+            color: #4a6f88;
+            margin-top: 22px;
+        }
+
+        @media (max-width: 600px) {
+            .sound-item {
+                flex-wrap: wrap;
+                border-radius: 40px;
+                padding: 8px;
+            }
+            input[type="range"] {
+                width: 130px;
+            }
+            .sound-name {
+                font-size: 0.95rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="sound-builder">
+    <h1>🎧 ЗВУКОВОЙ КОНСТРУКТОР 🌩️</h1>
+    <div style="text-align: center;"><div class="sub">⬅️ нажми на эмодзи чтобы включить звук | ползунок громкости</div></div>
+    
+    <button class="activate-card" id="activateBtn">🔊 АКТИВИРОВАТЬ И РАЗРЕШИТЬ ЗВУК 🔊</button>
+    <div class="sound-list" id="soundList"></div>
+    
+    <div class="global-panel">
+        <button class="btn" id="stopAllBtn">⏹️ ОСТАНОВИТЬ ВСЁ</button>
+        <button class="btn" id="resetVolBtn">🔄 СБРОСИТЬ ГРОМКОСТЬ</button>
+    </div>
+    <div class="credit">
+        💡 Нажмите на эмодзи чтобы включить/выключить звук<br>
+        🎚️ Ползунки регулируют громкость каждого звука отдельно
+    </div>
+    <p style="text-align: center;">
+        <a href="игры.html" class="back-link">← На Игры</a>
+    </p>
+</div>
+
+<script>
+    (function(){
+        // ============ РАБОТА С ЛОКАЛЬНЫМИ ЗВУКАМИ ============
+        // Звуки загружаются из папки "sounds" рядом с index.html
+        // Формат: thunder.mp3, rain.mp3, fire.mp3, wind.mp3, forest.mp3, waves.mp3
+        
+        const SOUNDS_CONFIG = [
+            { id: 'thunder', name: 'Гром (удар)', emoji: '⛈️', loop: false, fileName: 'гром.mp3' },
+            { id: 'rain', name: 'Дождь', emoji: '🌧️', loop: true, fileName: 'дождь.mp3' },
+            { id: 'fire', name: 'Огонь', emoji: '🔥', loop: true, fileName: 'огонь.mp3' },
+            { id: 'wind', name: 'Ветер', emoji: '💨', loop: true, fileName: 'ветер.mp3' },
+            { id: 'forest', name: 'Лес', emoji: '🌲', loop: true, fileName: 'лес.mp3' },
+            { id: 'waves', name: 'Волны', emoji: '🌊', loop: true, fileName: 'волны.mp3' }
+        ];
+        
+        let audioContext = null;
+        let isInitialized = false;
+        
+        // Хранилище для звуков
+        const audioTracks = new Map(); // id -> { gainNode, sourceNode, isPlaying, buffer, audioElement }
+        
+        // ВСТРОЕННЫЕ ДЕМО-ЗВУКИ (если локальные не найдены)
+        // Создаем простые, но различимые звуки через Web Audio для демонстрации
+        
+        function createDemoThunder(ctx) {
+            const duration = 2.5;
+            const sampleRate = ctx.sampleRate;
+            const length = sampleRate * duration;
+            const buffer = ctx.createBuffer(1, length, sampleRate);
+            const data = buffer.getChannelData(0);
+            
+            for (let i = 0; i < length; i++) {
+                let t = i / sampleRate;
+                let env = Math.exp(-t * 2.5) * (1 - t / duration);
+                // Низкий гул
+                let rumble = Math.sin(t * 40) * 0.6 + Math.sin(t * 18) * 0.4;
+                let crackle = (Math.random() * 2 - 1) * 0.5 * (t < 0.8 ? 1 : 0.2);
+                data[i] = (rumble + crackle) * env;
+            }
+            return buffer;
+        }
+        
+        function createDemoRain(ctx) {
+            const duration = 4;
+            const sampleRate = ctx.sampleRate;
+            const length = sampleRate * duration;
+            const buffer = ctx.createBuffer(2, length, sampleRate);
+            const left = buffer.getChannelData(0);
+            const right = buffer.getChannelData(1);
+            
+            for (let i = 0; i < length; i++) {
+                let noise = (Math.random() * 2 - 1) * 0.5;
+                let drop = Math.random() < 0.02 ? Math.random() * 0.6 : 0;
+                let val = (noise + drop) * 0.6;
+                left[i] = val * (0.9 + 0.1 * Math.sin(i * 0.01));
+                right[i] = val * (0.9 + 0.1 * Math.cos(i * 0.012));
+            }
+            return buffer;
+        }
+        
+        function createDemoFire(ctx) {
+            const duration = 3.5;
+            const sampleRate = ctx.sampleRate;
+            const length = sampleRate * duration;
+            const buffer = ctx.createBuffer(1, length, sampleRate);
+            const data = buffer.getChannelData(0);
+            
+            for (let i = 0; i < length; i++) {
+                let crackle = Math.random() < 0.1 ? (Math.random() * 0.5) : 0;
+                let hiss = (Math.random() * 2 - 1) * 0.25;
+                let rumble = Math.sin(i * 0.02) * 0.1;
+                data[i] = (crackle + hiss + rumble) * 0.7;
+            }
+            return buffer;
+        }
+        
+        function createDemoWind(ctx) {
+            const duration = 5;
+            const sampleRate = ctx.sampleRate;
+            const length = sampleRate * duration;
+            const buffer = ctx.createBuffer(1, length, sampleRate);
+            const data = buffer.getChannelData(0);
+            
+            for (let i = 0; i < length; i++) {
+                let t = i / sampleRate;
+                let freq = 180 + 50 * Math.sin(t * 0.5);
+                let whistle = Math.sin(i * 2 * Math.PI * freq / sampleRate) * 0.3;
+                let noise = (Math.random() * 2 - 1) * 0.3;
+                data[i] = (whistle + noise) * 0.5;
+            }
+            return buffer;
+        }
+        
+        function createDemoForest(ctx) {
+            const duration = 4;
+            const sampleRate = ctx.sampleRate;
+            const length = sampleRate * duration;
+            const buffer = ctx.createBuffer(2, length, sampleRate);
+            const left = buffer.getChannelData(0);
+            const right = buffer.getChannelData(1);
+            
+            for (let i = 0; i < length; i++) {
+                let bird = Math.random() < 0.01 ? Math.sin(i * 0.1) * 0.4 : 0;
+                let rustle = (Math.random() * 2 - 1) * 0.15;
+                let val = bird + rustle;
+                left[i] = val * 0.7;
+                right[i] = val * 0.7;
+            }
+            return buffer;
+        }
+        
+        function createDemoWaves(ctx) {
+            const duration = 5;
+            const sampleRate = ctx.sampleRate;
+            const length = sampleRate * duration;
+            const buffer = ctx.createBuffer(2, length, sampleRate);
+            const left = buffer.getChannelData(0);
+            const right = buffer.getChannelData(1);
+            
+            for (let i = 0; i < length; i++) {
+                let t = i / sampleRate;
+                let wave = Math.sin(i * 0.002) * 0.4;
+                let foam = (Math.random() * 2 - 1) * 0.2;
+                let env = 0.5 + 0.4 * Math.sin(t * 0.3);
+                let val = (wave + foam) * env;
+                left[i] = val * 0.8;
+                right[i] = val * 0.8;
+            }
+            return buffer;
+        }
+        
+        const demoBuffers = {
+            thunder: createDemoThunder,
+            rain: createDemoRain,
+            fire: createDemoFire,
+            wind: createDemoWind,
+            forest: createDemoForest,
+            waves: createDemoWaves
+        };
+        
+        // Загрузка локального аудио
+        async function loadLocalSound(url) {
+            if (!audioContext) return null;
+            try {
+                const response = await fetch(url);
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                const arrayBuffer = await response.arrayBuffer();
+                const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+                return audioBuffer;
+            } catch (error) {
+                console.log(`Не удалось загрузить ${url}:`, error.message);
+                return null;
+            }
+        }
+        
+        // Воспроизведение с loop
+        function playLoop(id, buffer, gainNode) {
+            const track = audioTracks.get(id);
+            if (track && track.sourceNode && track.isPlaying) return;
+            
+            if (track && track.sourceNode) {
+                try { track.sourceNode.stop(); } catch(e) {}
+            }
+            
+            const source = audioContext.createBufferSource();
+            source.buffer = buffer;
+            source.loop = true;
+            source.connect(gainNode);
+            source.start();
+            
+            if (track) {
+                track.sourceNode = source;
+                track.isPlaying = true;
+            }
+        }
+        
+        function stopLoop(id) {
+            const track = audioTracks.get(id);
+            if (track && track.sourceNode) {
+                try {
+                    track.sourceNode.stop();
+                } catch(e) {}
+                track.sourceNode = null;
+                track.isPlaying = false;
+            }
+        }
+        
+        function playThunder(id, buffer, gainNode) {
+            const source = audioContext.createBufferSource();
+            source.buffer = buffer;
+            source.connect(gainNode);
+            source.start();
+            return source;
+        }
+        
+        function setVolume(id, volume) {
+            const track = audioTracks.get(id);
+            if (track && track.gainNode) {
+                track.gainNode.gain.value = volume;
+            }
+        }
+        
+        // Инициализация и создание UI
+        async function initAudioSystem() {
+            if (audioContext && isInitialized) return;
+            
+            audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            
+            const container = document.getElementById('soundList');
+            container.innerHTML = '';
+            const hint = document.getElementById('folderHint');
+            
+            let localFilesFound = false;
+            
+            // Пытаемся загрузить локальные файлы
+            for (const sound of SOUNDS_CONFIG) {
+                const localPath = `звуки/${sound.fileName}`;
+                let loadedBuffer = await loadLocalSound(localPath);
+                
+                if (loadedBuffer) {
+                    localFilesFound = true;
+                } else {
+                    // Используем демо-звук
+                    const demoFunc = demoBuffers[sound.id];
+                    if (demoFunc) {
+                        loadedBuffer = demoFunc(audioContext);
+                    }
+                }
+                
+                // Создаем gain узел
+                const gainNode = audioContext.createGain();
+                gainNode.gain.value = 0.5;
+                gainNode.connect(audioContext.destination);
+                
+                audioTracks.set(sound.id, {
+                    gainNode,
+                    sourceNode: null,
+                    isPlaying: false,
+                    buffer: loadedBuffer,
+                    isLoop: sound.loop
+                });
+                
+                // Создаем UI элемент
+                const item = document.createElement('div');
+                item.className = 'sound-item';
+                item.dataset.id = sound.id;
+                
+                const left = document.createElement('div');
+                left.className = 'sound-info';
+                
+                const emoji = document.createElement('div');
+                emoji.className = 'sound-emoji';
+                emoji.textContent = sound.emoji;
+                
+                const name = document.createElement('div');
+                name.className = 'sound-name';
+                name.textContent = sound.name;
+                
+                const indicator = document.createElement('div');
+                indicator.className = 'play-indicator';
+                
+                const statusSpan = document.createElement('span');
+                statusSpan.className = 'status-badge';
+                statusSpan.textContent = loadedBuffer && !localFilesFound && demoBuffers[sound.id] ? 'демо' : (loadedBuffer ? '✓' : '✗');
+                if (loadedBuffer && !localFilesFound && demoBuffers[sound.id]) statusSpan.classList.add('loaded');
+                else if (loadedBuffer) statusSpan.classList.add('loaded');
+                else statusSpan.classList.add('error');
+                
+                left.appendChild(emoji);
+                left.appendChild(name);
+                left.appendChild(statusSpan);
+                left.appendChild(indicator);
+                
+                // Ползунок
+                const right = document.createElement('div');
+                right.className = 'volume-control';
+                
+                const range = document.createElement('input');
+                range.type = 'range';
+                range.min = 0;
+                range.max = 1;
+                range.step = 0.01;
+                range.value = 0.5;
+                
+                const volSpan = document.createElement('span');
+                volSpan.className = 'volume-value';
+                volSpan.textContent = '50%';
+                
+                range.addEventListener('input', (e) => {
+                    const val = parseFloat(e.target.value);
+                    volSpan.textContent = Math.round(val * 100) + '%';
+                    setVolume(sound.id, val);
+                });
+                
+                right.appendChild(range);
+                right.appendChild(volSpan);
+                
+                item.appendChild(left);
+                item.appendChild(right);
+                container.appendChild(item);
+                
+                // Обработчик клика
+                left.addEventListener('click', async () => {
+                    if (!audioContext) return;
+                    if (audioContext.state === 'suspended') {
+                        await audioContext.resume();
+                    }
+                    
+                    const track = audioTracks.get(sound.id);
+                    if (!track || !track.buffer) {
+                        alert(`Звук "${sound.name}" не загружен`);
+                        return;
+                    }
+                    
+                    if (sound.id === 'thunder') {
+                        playThunder(sound.id, track.buffer, track.gainNode);
+                        item.style.transform = 'scale(0.96)';
+                        setTimeout(() => { item.style.transform = ''; }, 150);
+                    } else {
+                        if (track.isPlaying) {
+                            stopLoop(sound.id);
+                            track.isPlaying = false;
+                            item.classList.remove('active');
+                        } else {
+                            playLoop(sound.id, track.buffer, track.gainNode);
+                            track.isPlaying = true;
+                            item.classList.add('active');
+                        }
+                    }
+                });
+            }
+            
+            if (localFilesFound) {
+                hint.innerHTML = '✅ <strong>ЛОКАЛЬНЫЕ ЗВУКИ ЗАГРУЖЕНЫ!</strong><br>📁 Файлы найдены в папке sounds/<br>🎵 Используются ваши звуковые файлы';
+                hint.style.borderLeftColor = '#2ecc71';
+                hint.style.background = '#1e4a3a';
+            } else {
+                hint.innerHTML = '📁 <strong>ЛОКАЛЬНЫЕ ЗВУКИ НЕ НАЙДЕНЫ</strong><br>Создайте папку <code>sounds</code> и положите файлы:<br>' +
+                    '<code>thunder.mp3</code>, <code>rain.mp3</code>, <code>fire.mp3</code>, <code>wind.mp3</code>, <code>forest.mp3</code>, <code>waves.mp3</code><br>' +
+                    '🎵 <strong>Сейчас используются встроенные демо-звуки</strong>';
+            }
+            
+            isInitialized = true;
+        }
+        
+        // Кнопка активации
+        const activateBtn = document.getElementById('activateBtn');
+        let activated = false;
+        
+        activateBtn.addEventListener('click', async () => {
+            if (!audioContext) {
+                await initAudioSystem();
+            }
+            if (audioContext.state === 'suspended') {
+                await audioContext.resume();
+            }
+            
+            if (!activated) {
+                activated = true;
+                activateBtn.textContent = '✅ ЗВУКИ АКТИВНЫ | НАЖИМАЙТЕ НА ЭМОДЗИ ✅';
+                activateBtn.style.background = 'linear-gradient(105deg, #2ecc71, #27ae60)';
+                
+                // Автозапуск демо-звуков
+                const rainTrack = audioTracks.get('rain');
+                const wavesTrack = audioTracks.get('waves');
+                
+                if (rainTrack && rainTrack.buffer && !rainTrack.isPlaying) {
+                    playLoop('rain', rainTrack.buffer, rainTrack.gainNode);
+                    rainTrack.isPlaying = true;
+                    const rainItem = document.querySelector('.sound-item[data-id="rain"]');
+                    if (rainItem) rainItem.classList.add('active');
+                }
+                
+                if (wavesTrack && wavesTrack.buffer && !wavesTrack.isPlaying) {
+                    playLoop('waves', wavesTrack.buffer, wavesTrack.gainNode);
+                    wavesTrack.isPlaying = true;
+                    const wavesItem = document.querySelector('.sound-item[data-id="waves"]');
+                    if (wavesItem) wavesItem.classList.add('active');
+                }
+            }
+        });
+        
+        // Кнопка остановить всё
+        document.getElementById('stopAllBtn').addEventListener('click', () => {
+            for (const sound of SOUNDS_CONFIG) {
+                if (sound.id !== 'thunder') {
+                    stopLoop(sound.id);
+                    const track = audioTracks.get(sound.id);
+                    if (track) track.isPlaying = false;
+                    const item = document.querySelector(`.sound-item[data-id="${sound.id}"]`);
+                    if (item) item.classList.remove('active');
+                }
+            }
+        });
+        
+        // Сброс громкости
+        document.getElementById('resetVolBtn').addEventListener('click', () => {
+            for (const sound of SOUNDS_CONFIG) {
+                setVolume(sound.id, 0.5);
+                const item = document.querySelector(`.sound-item[data-id="${sound.id}"]`);
+                if (item) {
+                    const range = item.querySelector('input[type="range"]');
+                    const span = item.querySelector('.volume-value');
+                    if (range) range.value = 0.5;
+                    if (span) span.textContent = '50%';
+                }
+            }
+        });
+        
+        // Авто-инициализация при клике
+        document.body.addEventListener('click', async (e) => {
+            if (!audioContext && e.target.closest('.sound-info')) {
+                await initAudioSystem();
+                if (audioContext.state === 'suspended') {
+                    await audioContext.resume();
+                }
+                if (!activated) activateBtn.click();
+            }
+        });
+        
+    })();
+</script>
+</body>
+</html>
