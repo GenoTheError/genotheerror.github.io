@@ -1,0 +1,1190 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>📊 Реальный монитор телефона</title>
+    <style>
+        a {
+          color: black;
+        }
+        :root {
+            --primary: #3498db;
+            --danger: #e74c3c;
+            --success: #2ecc71;
+            --warning: #f39c12;
+            --dark: #2c3e50;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #eee;
+        }
+
+        h1 {
+            color: var(--dark);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            font-size: 28px;
+        }
+
+        .last-update {
+            color: #7f8c8d;
+            font-size: 14px;
+            margin-top: 10px;
+        }
+
+        .status-bar {
+            display: flex;
+            justify-content: space-between;
+            background: var(--dark);
+            color: white;
+            padding: 12px 20px;
+            border-radius: 10px;
+            margin-bottom: 25px;
+            font-size: 14px;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .card-title {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--dark);
+        }
+
+        .card-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+
+        .card-icon.cpu { background: #e8f4fc; color: var(--primary); }
+        .card-icon.memory { background: #f0f8e8; color: var(--success); }
+        .card-icon.battery { background: #fff8e1; color: var(--warning); }
+        .card-icon.network { background: #f0e8ff; color: #9b59b6; }
+        .card-icon.device { background: #e8f8f5; color: #1abc9c; }
+        .card-icon.storage { background: #ffe8e8; color: var(--danger); }
+
+        .metric {
+            margin: 15px 0;
+        }
+
+        .metric-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 14px;
+            color: #666;
+        }
+
+        .metric-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: var(--dark);
+        }
+
+        .progress-bar {
+            height: 10px;
+            background: #ecf0f1;
+            border-radius: 5px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+
+        .progress {
+            height: 100%;
+            border-radius: 5px;
+            transition: width 0.5s ease;
+        }
+
+        .progress.cpu { background: var(--primary); }
+        .progress.memory { background: var(--success); }
+        .progress.storage { background: var(--danger); }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .info-item {
+            background: #f8f9fa;
+            padding: 12px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .info-value {
+            font-size: 18px;
+            font-weight: bold;
+            color: var(--dark);
+        }
+
+        .info-label {
+            font-size: 12px;
+            color: #7f8c8d;
+            margin-top: 5px;
+        }
+
+        .charts {
+            margin-top: 30px;
+        }
+
+        .chart-container {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .chart-title {
+            margin-bottom: 15px;
+            color: var(--dark);
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .chart {
+            height: 200px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            margin-top: 25px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-success {
+            background: var(--success);
+            color: white;
+        }
+
+        .btn-warning {
+            background: var(--warning);
+            color: white;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .warnings {
+            margin-top: 25px;
+            padding: 20px;
+            background: #fff3cd;
+            border-left: 4px solid var(--warning);
+            border-radius: 10px;
+        }
+
+        .api-status {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .api-available { background: #d4edda; color: #155724; }
+        .api-unavailable { background: #f8d7da; color: #721c24; }
+        .api-limited { background: #fff3cd; color: #856404; }
+
+        .real-data {
+            color: var(--success);
+            font-weight: bold;
+        }
+
+        .simulated-data {
+            color: var(--warning);
+            font-weight: bold;
+        }
+
+        @media (max-width: 768px) {
+            .grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .info-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .container {
+                padding: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>
+                <i class="fas fa-mobile-alt"></i>
+                Реальный (почти) монитор телефона
+            </h1>
+            <h2>это лишь имитация,реальной информации почти нет</h2>
+            <div class="last-update" id="lastUpdate">
+                Последнее обновление: загружается...
+            </div>
+        </header>
+
+        <div class="status-bar">
+            <div>Устройство: <span id="deviceName">Определяется...</span></div>
+            <div>Время: <span id="currentTime">--:--</span></div>
+            <div>Версия: <span id="appVersion">1.0</span></div>
+        </div>
+
+        <div class="grid">
+            <!-- Устройство и ОС -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">
+                        <div class="card-icon device">
+                            <i class="fas fa-mobile-alt"></i>
+                        </div>
+                        <span>Устройство</span>
+                    </div>
+                    <span class="api-status api-available">Реальные данные</span>
+                </div>
+                
+                <div class="metric">
+                    <div class="metric-label">
+                        <span>Модель и ОС</span>
+                    </div>
+                    <div class="metric-value" id="deviceInfo">Загрузка...</div>
+                </div>
+
+                <div class="metric">
+                    <div class="metric-label">
+                        <span>Разрешение экрана</span>
+                        <span class="real-data">живые данные</span>
+                    </div>
+                    <div class="metric-value" id="screenResolution">0 x 0</div>
+                </div>
+
+                <div class="metric">
+                    <div class="metric-label">
+                        <span>Плотность пикселей</span>
+                    </div>
+                    <div class="metric-value" id="pixelDensity">0 dpi</div>
+                </div>
+
+                <div class="metric">
+                    <div class="metric-label">
+                        <span>Язык системы</span>
+                        <span class="real-data">живые данные</span>
+                    </div>
+                    <div class="metric-value" id="systemLanguage">RU</div>
+                </div>
+            </div>
+
+            <!-- Батарея -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">
+                        <div class="card-icon battery">
+                            <i class="fas fa-battery-three-quarters"></i>
+                        </div>
+                        <span>Батарея</span>
+                    </div>
+                    <span class="api-status" id="batteryApiStatus">Проверка...</span>
+                </div>
+                
+                <div class="metric">
+                    <div class="metric-label">
+                        <span>Уровень заряда</span>
+                        <span class="real-data" id="batteryDataStatus">загрузка</span>
+                    </div>
+                    <div class="metric-value" id="batteryLevel">0%</div>
+                    <div class="progress-bar">
+                        <div class="progress battery" id="batteryProgress"></div>
+                    </div>
+                </div>
+
+                <div class="info-grid">
+                    <div class="info-item">
+                        <div class="info-value" id="batteryStatus">—</div>
+                        <div class="info-label">Статус</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-value" id="chargingTime">—</div>
+                        <div class="info-label">До зарядки</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-value" id="dischargingTime">—</div>
+                        <div class="info-label">До разряда</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-value" id="batteryHealth">—</div>
+                        <div class="info-label">Здоровье</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Память и хранилище -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">
+                        <div class="card-icon memory">
+                            <i class="fas fa-memory"></i>
+                        </div>
+                        <span>Память</span>
+                    </div>
+                    <span class="api-status api-limited">Ограниченные данные</span>
+                </div>
+                
+                <div class="metric">
+                    <div class="metric-label">
+                        <span>Оперативная память</span>
+                        <span class="simulated-data">эмулировано</span>
+                    </div>
+                    <div class="metric-value" id="ramUsage">0 / 0 GB</div>
+                    <div class="progress-bar">
+                        <div class="progress memory" id="ramProgress"></div>
+                    </div>
+                </div>
+
+                <div class="metric">
+                    <div class="metric-label">
+                        <span>Хранилище</span>
+                        <span class="simulated-data">эмулировано</span>
+                    </div>
+                    <div class="metric-value" id="storageUsage">0 / 0 GB</div>
+                    <div class="progress-bar">
+                        <div class="progress storage" id="storageProgress"></div>
+                    </div>
+                </div>
+
+                <div class="info-grid">
+                    <div class="info-item">
+                        <div class="info-value" id="usedStorage">0 GB</div>
+                        <div class="info-label">Использовано</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-value" id="freeStorage">0 GB</div>
+                        <div class="info-label">Свободно</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-value" id="jsHeap">0 MB</div>
+                        <div class="info-label">JS Heap</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-value" id="totalHeap">0 MB</div>
+                        <div class="info-label">Общая Heap</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Сеть и подключения -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">
+                        <div class="card-icon network">
+                            <i class="fas fa-wifi"></i>
+                        </div>
+                        <span>Сеть</span>
+                    </div>
+                    <span class="api-status api-available">Реальные данные</span>
+                </div>
+                
+                <div class="metric">
+                    <div class="metric-label">
+                        <span>Тип подключения</span>
+                        <span class="real-data">живые данные</span>
+                    </div>
+                    <div class="metric-value" id="connectionType">Проверка...</div>
+                </div>
+
+                <div class="metric">
+                    <div class="metric-label">
+                        <span>Эффективный тип</span>
+                    </div>
+                    <div class="metric-value" id="effectiveType">—</div>
+                </div>
+
+                <div class="metric">
+                    <div class="metric-label">
+                        <span>RTT (пинг)</span>
+                    </div>
+                    <div class="metric-value" id="networkRTT">0 ms</div>
+                </div>
+
+                <div class="info-grid">
+                    <div class="info-item">
+                        <div class="info-value" id="downlink">0 Mbps</div>
+                        <div class="info-label">Скорость ↓</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-value" id="downlinkMax">0 Mbps</div>
+                        <div class="info-label">Макс ↓</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-value" id="onlineStatus">—</div>
+                        <div class="info-label">Онлайн</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-value" id="dataSaver">—</div>
+                        <div class="info-label">Экономия</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Производительность -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">
+                        <div class="card-icon cpu">
+                            <i class="fas fa-microchip"></i>
+                        </div>
+                        <span>Производительность</span>
+                    </div>
+                    <span class="api-status api-available">Реальные данные</span>
+                </div>
+                
+                <div class="metric">
+                    <div class="metric-label">
+                        <span>Ядра процессора</span>
+                        <span class="real-data">живые данные</span>
+                    </div>
+                    <div class="metric-value" id="cpuCores">0</div>
+                </div>
+
+                <div class="metric">
+                    <div class="metric-label">
+                        <span>Память устройства</span>
+                        <span class="simulated-data">эмулировано</span>
+                    </div>
+                    <div class="metric-value" id="deviceMemory">0 GB</div>
+                </div>
+
+                <div class="metric">
+                    <div class="metric-label">
+                        <span>GPU Renderer</span>
+                    </div>
+                    <div class="metric-value" id="gpuRenderer">—</div>
+                </div>
+
+                <div class="info-grid">
+                    <div class="info-item">
+                        <div class="info-value" id="performanceNow">0</div>
+                        <div class="info-label">Performance</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-value" id="navigatorCores">0</div>
+                        <div class="info-label">hardwareConcurrency</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-value" id="jsEngine">—</div>
+                        <div class="info-label">JS Engine</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-value" id="touchPoints">0</div>
+                        <div class="info-label">Точки касания</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Датчики -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">
+                        <div class="card-icon storage">
+                            <i class="fas fa-compass"></i>
+                        </div>
+                        <span>Датчики</span>
+                    </div>
+                    <span class="api-status" id="sensorsApiStatus">Проверка...</span>
+                </div>
+                
+                <div class="metric">
+                    <div class="metric-label">
+                        <span>Ориентация</span>
+                        <span class="real-data" id="orientationStatus">проверка</span>
+                    </div>
+                    <div class="metric-value" id="deviceOrientation">—</div>
+                </div>
+
+                <div class="metric">
+                    <div class="metric-label">
+                        <span>Движение</span>
+                        <span class="real-data" id="motionStatus">проверка</span>
+                    </div>
+                    <div class="metric-value" id="deviceMotion">—</div>
+                </div>
+
+                <div class="info-grid">
+                    <div class="info-item">
+                        <div class="info-value" id="lightLevel">—</div>
+                        <div class="info-label">Освещение</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-value" id="geolocationStatus">—</div>
+                        <div class="info-label">Геолокация</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-value" id="vibrationStatus">—</div>
+                        <div class="info-label">Вибрация</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-value" id="touchSupport">—</div>
+                        <div class="info-label">Сенсорный</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Графики -->
+        <div class="charts">
+            <div class="chart-container">
+                <div class="chart-title">
+                    <i class="fas fa-chart-line"></i>
+                    История нагрузки (последние 60 секунд)
+                </div>
+                <div class="chart" id="performanceChart">
+                    <canvas id="chartCanvas"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Управление -->
+        <div class="controls">
+            <button class="btn btn-primary" onclick="updateAllData()">
+                <i class="fas fa-sync-alt"></i>
+                Обновить все данные
+            </button>
+            <button class="btn btn-success" onclick="startContinuousMonitoring()">
+                <i class="fas fa-play"></i>
+                Непрерывный мониторинг
+            </button>
+            <button class="btn btn-warning" onclick="exportData()">
+                <i class="fas fa-download"></i>
+                Экспорт данных
+            </button>
+            <button class="btn btn-primary" onclick="requestFullPermission()">
+                <i class="fas fa-shield-alt"></i>
+                Запросить разрешения
+            </button>
+        </div>
+
+        <!-- Предупреждения -->
+        <div class="warnings">
+            <h3><i class="fas fa-exclamation-triangle"></i> Ограничения браузера</h3>
+            <p>Браузеры имеют ограниченный доступ к аппаратным данным из соображений безопасности:</p>
+            <ul style="margin: 10px 0 0 20px;">
+                <li><span class="real-data">Зеленый</span> = реальные живые данные</li>
+                <li><span class="simulated-data">Желтый</span> = эмулированные/расчетные данные</li>
+                <li>Для доступа к реальной RAM/CPU нужны нативные приложения</li>
+                <li>Некоторые данные требуют HTTPS соединения</li>
+            </ul>
+        </div>
+    </div>
+
+    <p style="text-align: center;">
+        <a href="игры.html" class="back-link">← На Игры</a>
+    </p>
+
+    <!-- Canvas для графиков -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        // Основные переменные
+        let monitoringInterval;
+        let performanceHistory = [];
+        let chartInstance = null;
+        let lastUpdateTime = new Date();
+
+        // Обновление времени
+        function updateTime() {
+            const now = new Date();
+            const timeStr = now.toLocaleTimeString('ru-RU');
+            document.getElementById('currentTime').textContent = timeStr;
+            document.getElementById('lastUpdate').textContent = 
+                `Последнее обновление: ${now.toLocaleTimeString()}`;
+            lastUpdateTime = now;
+        }
+
+        // Получение информации об устройстве (реальные данные)
+        function getDeviceInfo() {
+            const ua = navigator.userAgent;
+            let deviceName = "Неизвестное устройство";
+            let os = "Неизвестная ОС";
+            
+            // Определение устройства
+            if (/iPhone|iPad|iPod/.test(ua)) {
+                deviceName = "Apple iOS устройство";
+                os = "iOS";
+            } else if (/Android/.test(ua)) {
+                deviceName = "Android устройство";
+                os = "Android";
+            } else if (/Windows Phone/.test(ua)) {
+                deviceName = "Windows Phone";
+                os = "Windows Phone";
+            }
+            
+            // Разрешение экрана (реальные данные)
+            const screenWidth = window.screen.width * window.devicePixelRatio;
+            const screenHeight = window.screen.height * window.devicePixelRatio;
+            
+            document.getElementById('deviceInfo').textContent = `${deviceName} (${os})`;
+            document.getElementById('screenResolution').textContent = 
+                `${Math.round(screenWidth)} x ${Math.round(screenHeight)}`;
+            document.getElementById('pixelDensity').textContent = 
+                `${window.devicePixelRatio.toFixed(2)}x (${Math.round(window.devicePixelRatio * 96)} dpi)`;
+            document.getElementById('systemLanguage').textContent = navigator.language || 'RU';
+            document.getElementById('deviceName').textContent = deviceName;
+            
+            // Количество ядер (реальные данные)
+            const cores = navigator.hardwareConcurrency || 4;
+            document.getElementById('cpuCores').textContent = cores;
+            document.getElementById('navigatorCores').textContent = cores;
+            
+            // Память устройства (если доступно)
+            if (navigator.deviceMemory) {
+                document.getElementById('deviceMemory').textContent = 
+                    `${navigator.deviceMemory} GB`;
+            }
+            
+            // JS Engine информация
+            document.getElementById('jsEngine').textContent = 
+                getJSEngineInfo();
+            
+            // Поддержка касаний
+            document.getElementById('touchPoints').textContent = 
+                navigator.maxTouchPoints || 0;
+            document.getElementById('touchSupport').textContent = 
+                navigator.maxTouchPoints > 0 ? 'Да' : 'Нет';
+            
+            // Performance API
+            document.getElementById('performanceNow').textContent = 
+                Math.round(performance.now());
+        }
+
+        // Информация о JS Engine
+        function getJSEngineInfo() {
+            try {
+                // Проверка движка по userAgent
+                const ua = navigator.userAgent;
+                if (/Chrome/.test(ua)) return 'V8 (Chrome)';
+                if (/Firefox/.test(ua)) return 'SpiderMonkey (Firefox)';
+                if (/Safari/.test(ua) && !/Chrome/.test(ua)) return 'JavaScriptCore (Safari)';
+                return 'Неизвестно';
+            } catch {
+                return '—';
+            }
+        }
+
+        // Мониторинг батареи (реальные данные, если доступно)
+        function monitorBattery() {
+            if ('getBattery' in navigator) {
+                navigator.getBattery().then(battery => {
+                    updateBatteryInfo(battery);
+                    
+                    // Слушаем изменения
+                    battery.addEventListener('levelchange', () => updateBatteryInfo(battery));
+                    battery.addEventListener('chargingchange', () => updateBatteryInfo(battery));
+                    battery.addEventListener('chargingtimechange', () => updateBatteryInfo(battery));
+                    battery.addEventListener('dischargingtimechange', () => updateBatteryInfo(battery));
+                    
+                    document.getElementById('batteryApiStatus').textContent = 'Доступно';
+                    document.getElementById('batteryApiStatus').className = 'api-status api-available';
+                    document.getElementById('batteryDataStatus').textContent = 'живые данные';
+                }).catch(error => {
+                    console.error('Battery API error:', error);
+                    emulateBattery();
+                });
+            } else {
+                document.getElementById('batteryApiStatus').textContent = 'Недоступно';
+                document.getElementById('batteryApiStatus').className = 'api-status api-unavailable';
+                emulateBattery();
+            }
+        }
+
+        function updateBatteryInfo(battery) {
+            const level = Math.round(battery.level * 100);
+            const charging = battery.charging;
+            
+            document.getElementById('batteryLevel').textContent = `${level}%`;
+            document.getElementById('batteryProgress').style.width = `${level}%`;
+            document.getElementById('batteryStatus').textContent = charging ? 'Зарядка' : 'Разрядка';
+            document.getElementById('batteryDataStatus').textContent = 'живые данные';
+            
+            // Время зарядки
+            if (charging && battery.chargingTime !== Infinity) {
+                const hours = Math.floor(battery.chargingTime / 3600);
+                const minutes = Math.floor((battery.chargingTime % 3600) / 60);
+                document.getElementById('chargingTime').textContent = `${hours}:${minutes.toString().padStart(2, '0')}`;
+            } else {
+                document.getElementById('chargingTime').textContent = '—';
+            }
+            
+            // Время разрядки
+            if (!charging && battery.dischargingTime !== Infinity) {
+                const hours = Math.floor(battery.dischargingTime / 3600);
+                const minutes = Math.floor((battery.dischargingTime % 3600) / 60);
+                document.getElementById('dischargingTime').textContent = `${hours}:${minutes.toString().padStart(2, '0')}`;
+            } else {
+                document.getElementById('dischargingTime').textContent = '—';
+            }
+            
+            // "Здоровье" батареи (эмулируем)
+            const health = Math.floor(Math.random() * 10) + 90; // 90-100%
+            document.getElementById('batteryHealth').textContent = `${health}%`;
+        }
+
+        function emulateBattery() {
+            // Эмуляция для устройств без Battery API
+            const level = Math.floor(Math.random() * 100);
+            const isCharging = level < 95 && Math.random() > 0.7;
+            
+            document.getElementById('batteryLevel').textContent = `${level}%`;
+            document.getElementById('batteryProgress').style.width = `${level}%`;
+            document.getElementById('batteryStatus').textContent = isCharging ? 'Зарядка' : 'Разрядка';
+            document.getElementById('batteryDataStatus').textContent = 'эмулировано';
+            document.getElementById('chargingTime').textContent = isCharging ? '~1:30' : '—';
+            document.getElementById('dischargingTime').textContent = isCharging ? '—' : `~${Math.floor((level / 100) * 8)}:00`;
+            document.getElementById('batteryHealth').textContent = '95%';
+        }
+
+        // Мониторинг сети (реальные данные)
+        function monitorNetwork() {
+            // Connection API (реальные данные)
+            if ('connection' in navigator) {
+                const connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+                
+                if (connection) {
+                    updateNetworkInfo(connection);
+                    
+                    // Слушаем изменения
+                    connection.addEventListener('change', () => updateNetworkInfo(connection));
+                }
+            }
+            
+            // Онлайн статус (реальные данные)
+            document.getElementById('onlineStatus').textContent = navigator.onLine ? 'Да' : 'Нет';
+            
+            // Data Saver
+            if ('saveData' in navigator) {
+                document.getElementById('dataSaver').textContent = navigator.saveData ? 'Включена' : 'Выключена';
+            }
+            
+            // Эмуляция использования сети
+            emulateNetworkUsage();
+        }
+
+        function updateNetworkInfo(connection) {
+            document.getElementById('connectionType').textContent = 
+                connection.type || 'Неизвестно';
+            document.getElementById('effectiveType').textContent = 
+                connection.effectiveType || '—';
+            document.getElementById('networkRTT').textContent = 
+                connection.rtt ? `${connection.rtt} ms` : '—';
+            document.getElementById('downlink').textContent = 
+                connection.downlink ? `${connection.downlink} Mbps` : '—';
+            document.getElementById('downlinkMax').textContent = 
+                connection.downlinkMax ? `${connection.downlinkMax} Mbps` : '—';
+        }
+
+        function emulateNetworkUsage() {
+            // Эмуляция использования сети
+            const downlink = (Math.random() * 10 + 1).toFixed(1);
+            const uplink = (Math.random() * 2 + 0.1).toFixed(1);
+            
+            if (!navigator.connection) {
+                document.getElementById('downlink').textContent = `${downlink} Mbps`;
+            }
+        }
+
+        // Мониторинг памяти (ограниченные данные)
+        function monitorMemory() {
+            // Performance Memory API (только Chrome)
+            if (performance.memory) {
+                const memory = performance.memory;
+                const usedJSHeap = Math.round(memory.usedJSHeapSize / 1024 / 1024);
+                const totalJSHeap = Math.round(memory.totalJSHeapSize / 1024 / 1024);
+                
+                document.getElementById('jsHeap').textContent = `${usedJSHeap} MB`;
+                document.getElementById('totalHeap').textContent = `${totalJSHeap} MB`;
+                
+                // Эмуляция общей RAM на основе JS heap
+                const totalRAM = Math.max(2048, totalJSHeap * 10); // Эмуляция
+                const usedRAM = Math.min(totalRAM, usedJSHeap * 8 + Math.random() * 512);
+                const ramUsagePercent = (usedRAM / totalRAM) * 100;
+                
+                document.getElementById('ramUsage').textContent = 
+                    `${Math.round(usedRAM)} / ${Math.round(totalRAM)} MB`;
+                document.getElementById('ramProgress').style.width = `${ramUsagePercent}%`;
+            } else {
+                // Эмуляция если API нет
+                emulateMemoryUsage();
+            }
+            
+            // Эмуляция хранилища
+            emulateStorageUsage();
+        }
+
+        function emulateMemoryUsage() {
+            const totalRAM = 4096; // 4GB типично для телефона
+            const usedRAM = Math.floor(totalRAM * (0.3 + Math.random() * 0.4));
+            const ramUsagePercent = (usedRAM / totalRAM) * 100;
+            
+            document.getElementById('ramUsage').textContent = 
+                `${usedRAM} / ${totalRAM} MB`;
+            document.getElementById('ramProgress').style.width = `${ramUsagePercent}%`;
+            document.getElementById('jsHeap').textContent = `${Math.floor(usedRAM / 8)} MB`;
+            document.getElementById('totalHeap').textContent = `${Math.floor(totalRAM / 8)} MB`;
+        }
+
+        function emulateStorageUsage() {
+            const totalStorage = 64; // GB
+            const usedStorage = Math.floor(totalStorage * (0.4 + Math.random() * 0.3));
+            const storageUsagePercent = (usedStorage / totalStorage) * 100;
+            const freeStorage = totalStorage - usedStorage;
+            
+            document.getElementById('storageUsage').textContent = 
+                `${usedStorage} / ${totalStorage} GB`;
+            document.getElementById('storageProgress').style.width = `${storageUsagePercent}%`;
+            document.getElementById('usedStorage').textContent = `${usedStorage} GB`;
+            document.getElementById('freeStorage').textContent = `${freeStorage} GB`;
+        }
+
+        // Мониторинг датчиков
+        function monitorSensors() {
+            // Orientation API
+            if (window.DeviceOrientationEvent) {
+                window.addEventListener('deviceorientation', handleOrientation);
+                document.getElementById('orientationStatus').textContent = 'живые данные';
+                document.getElementById('sensorsApiStatus').textContent = 'Доступно';
+                document.getElementById('sensorsApiStatus').className = 'api-status api-available';
+            } else {
+                document.getElementById('orientationStatus').textContent = 'недоступно';
+            }
+            
+            // Motion API
+            if (window.DeviceMotionEvent) {
+                window.addEventListener('devicemotion', handleMotion);
+                document.getElementById('motionStatus').textContent = 'живые данные';
+            } else {
+                document.getElementById('motionStatus').textContent = 'недоступно';
+            }
+            
+            // Ambient Light API
+            if ('AmbientLightSensor' in window) {
+                try {
+                    const sensor = new AmbientLightSensor();
+                    sensor.addEventListener('reading', () => {
+                        document.getElementById('lightLevel').textContent = 
+                            `${sensor.illuminance} lux`;
+                    });
+                    sensor.start();
+                } catch (e) {
+                    document.getElementById('lightLevel').textContent = '—';
+                }
+            } else {
+                document.getElementById('lightLevel').textContent = '—';
+            }
+            
+            // Геолокация
+            if ('geolocation' in navigator) {
+                document.getElementById('geolocationStatus').textContent = 'Доступна';
+            } else {
+                document.getElementById('geolocationStatus').textContent = 'Нет';
+            }
+            
+            // Вибрация
+            if ('vibrate' in navigator) {
+                document.getElementById('vibrationStatus').textContent = 'Да';
+            } else {
+                document.getElementById('vibrationStatus').textContent = 'Нет';
+            }
+        }
+
+        function handleOrientation(event) {
+            const alpha = event.alpha ? Math.round(event.alpha) : '—';
+            const beta = event.beta ? Math.round(event.beta) : '—';
+            const gamma = event.gamma ? Math.round(event.gamma) : '—';
+            
+            document.getElementById('deviceOrientation').textContent = 
+                `α:${alpha}° β:${beta}° γ:${gamma}°`;
+        }
+
+        function handleMotion(event) {
+            const accel = event.acceleration;
+            if (accel) {
+                const x = accel.x ? Math.round(accel.x * 10) / 10 : '—';
+                const y = accel.y ? Math.round(accel.y * 10) / 10 : '—';
+                const z = accel.z ? Math.round(accel.z * 10) / 10 : '—';
+                
+                document.getElementById('deviceMotion').textContent = 
+                    `X:${x} Y:${y} Z:${z}`;
+            }
+        }
+
+        // Инициализация графиков
+        function initChart() {
+            const ctx = document.getElementById('chartCanvas').getContext('2d');
+            
+            chartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: Array.from({length: 60}, (_, i) => i + 1),
+                    datasets: [
+                        {
+                            label: 'Использование CPU (%)',
+                            data: [],
+                            borderColor: '#3498db',
+                            backgroundColor: 'rgba(52, 152, 219, 0.1)',
+                            tension: 0.4,
+                            fill: true
+                        },
+                        {
+                            label: 'Использование RAM (%)',
+                            data: [],
+                            borderColor: '#2ecc71',
+                            backgroundColor: 'rgba(46, 204, 113, 0.1)',
+                            tension: 0.4,
+                            fill: true
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    animation: {
+                        duration: 0
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100,
+                            ticks: {
+                                callback: function(value) {
+                                    return value + '%';
+                                }
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                        }
+                    }
+                }
+            });
+        }
+
+        // Обновление графиков
+        function updateChart() {
+            if (!chartInstance) return;
+            
+            // Добавляем новые данные
+            const cpuUsage = Math.random() * 40 + 10; // Эмуляция
+            const ramUsage = Math.random() * 30 + 20; // Эмуляция
+            
+            performanceHistory.push({cpu: cpuUsage, ram: ramUsage, time: new Date()});
+            
+            if (performanceHistory.length > 60) {
+                performanceHistory.shift();
+            }
+            
+            // Обновляем график
+            chartInstance.data.datasets[0].data = performanceHistory.map(d => d.cpu);
+            chartInstance.data.datasets[1].data = performanceHistory.map(d => d.ram);
+            chartInstance.update('none');
+        }
+
+        // Обновление всех данных
+        function updateAllData() {
+            updateTime();
+            getDeviceInfo();
+            monitorBattery();
+            monitorNetwork();
+            monitorMemory();
+            monitorSensors();
+            updateChart();
+            
+            // Обновляем GPU информацию
+            const canvas = document.createElement('canvas');
+            const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+            if (gl) {
+                const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
+                if (debugInfo) {
+                    const renderer = gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL);
+                    document.getElementById('gpuRenderer').textContent = 
+                        renderer.substring(0, 30) + (renderer.length > 30 ? '...' : '');
+                }
+            }
+        }
+
+        // Непрерывный мониторинг
+        function startContinuousMonitoring() {
+            if (monitoringInterval) {
+                clearInterval(monitoringInterval);
+                monitoringInterval = null;
+                alert('Непрерывный мониторинг остановлен');
+                return;
+            }
+            
+            monitoringInterval = setInterval(() => {
+                updateAllData();
+            }, 2000);
+            
+            alert('Непрерывный мониторинг запущен (обновление каждые 2 секунды)');
+        }
+
+        // Экспорт данных
+        function exportData() {
+            const data = {
+                timestamp: new Date().toISOString(),
+                device: {
+                    userAgent: navigator.userAgent,
+                    platform: navigator.platform,
+                    language: navigator.language,
+                    cores: navigator.hardwareConcurrency,
+                    memory: navigator.deviceMemory,
+                    screen: {
+                        width: window.screen.width,
+                        height: window.screen.height,
+                        pixelRatio: window.devicePixelRatio
+                    }
+                },
+                performance: performanceHistory
+            };
+            
+            const dataStr = JSON.stringify(data, null, 2);
+            const dataUri = 'data:application/json;charset=utf-8,' + encodeURIComponent(dataStr);
+            
+            const exportLink = document.createElement('a');
+            exportLink.setAttribute('href', dataUri);
+            exportLink.setAttribute('download', `phone-monitor-${Date.now()}.json`);
+            exportLink.click();
+        }
+
+        // Запрос разрешений
+        function requestFullPermission() {
+            const permissions = [
+                'geolocation',
+                'notifications',
+                'camera',
+                'microphone'
+            ];
+            
+            let message = 'Для полного доступа к данным телефона нужно:\n\n';
+            message += '1. Разрешить геолокацию\n';
+            message += '2. Использовать HTTPS (а не локальный файл)\n';
+            message += '3. Установить как PWA приложение\n\n';
+            message += 'Некоторые данные доступны только в нативных приложениях.';
+            
+            alert(message);
+            
+            // Пробуем запросить геолокацию
+            if ('geolocation' in navigator) {
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        alert(`Геолокация получена!\nШирота: ${position.coords.latitude}\nДолгота: ${position.coords.longitude}`);
+                    },
+                    (error) => {
+                        alert('Геолокация не разрешена: ' + error.message);
+                    }
+                );
+            }
+        }
+
+        // Инициализация при загрузке
+        document.addEventListener('DOMContentLoaded', function() {
+            updateTime();
+            initChart();
+            updateAllData();
+            
+            // Автообновление времени
+            setInterval(updateTime, 1000);
+            
+            // Периодическое обновление данных
+            setInterval(() => {
+                updateAllData();
+            }, 5000);
+        });
+    </script>
+</body>
+</html>
