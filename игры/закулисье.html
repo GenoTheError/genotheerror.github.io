@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Закулисье: коридоры + комнаты</title>
+    <style>
+        * { user-select: none; -webkit-tap-highlight-color: transparent; box-sizing: border-box; }
+        body { background: #0f0e0a; display: flex; justify-content: center; align-items: center; min-height: 100vh; font-family: 'Courier New', monospace; margin: 0; padding: 12px; }
+        .game-container { background: #2c241b; padding: 12px; border-radius: 28px; box-shadow: 0 15px 30px rgba(0,0,0,0.6); }
+        .canvas-wrapper { position: relative; width: 100%; max-width: 550px; height: auto; aspect-ratio: 11 / 7; overflow: hidden; border-radius: 18px; border: 3px solid #c4a27a; background: #2e251c; margin: 0 auto; }
+        canvas { position: absolute; top: 0; left: 0; display: block; background-color: #2a241d; }
+        .status-panel { background: #1f1a14; border-radius: 40px; padding: 8px 14px; margin-top: 12px; display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; align-items: center; }
+        .stats { display: flex; gap: 24px; background: #0c0a07; padding: 6px 16px; border-radius: 40px; font-weight: bold; }
+        .hunger-icons, .thirst-icons { display: flex; gap: 4px; align-items: center; }
+        .hunger-icons span, .thirst-icons span { font-size: 1.2rem; filter: drop-shadow(0 1px 1px black); }
+        .interact-hint { background: #2c2c2c; padding: 4px 12px; border-radius: 28px; font-size: 0.75rem; color: #ffdd99; }
+        button { background: #8b5a3c; border: none; color: white; font-weight: bold; padding: 4px 14px; border-radius: 36px; cursor: pointer; font-family: monospace; font-size: 0.8rem; }
+        button:active { transform: scale(0.95); background: #5e3e28; }
+        .arrow-panel { display: flex; justify-content: center; margin-top: 12px; gap: 10px; background: #2b221b; padding: 8px 14px; border-radius: 60px; width: fit-content; margin-left: auto; margin-right: auto; box-shadow: 0 4px 0 #0f0b07; }
+        .arrow-btn { background: #4a3a2c; width: 52px; height: 52px; border-radius: 42px; display: flex; align-items: center; justify-content: center; font-size: 1.8rem; font-weight: bold; color: #f9e0a0; cursor: pointer; box-shadow: 0 4px 0 #1f170f; transition: 0.04s linear; touch-action: manipulation; }
+        .arrow-btn:active { transform: translateY(3px); box-shadow: 0 1px 0 #1f170f; }
+        @media (max-width: 600px) { .arrow-btn { width: 48px; height: 48px; font-size: 1.6rem; } .hunger-icons span, .thirst-icons span { font-size: 1rem; } }
+        .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); display: flex; justify-content: center; align-items: center; z-index: 1000; backdrop-filter: blur(4px); }
+        .modal-content { background: #30261f; border-radius: 24px; padding: 14px; width: 520px; max-width: 92vw; border: 3px solid #dbb67b; }
+        .modal-title { text-align: center; color: #ffefb9; margin-bottom: 10px; font-size: 1rem; font-weight: bold; }
+        .locker-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; background: #5c4733; padding: 10px; border-radius: 18px; margin-bottom: 16px; }
+        .inventory-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 5px; background: #4a3827; padding: 10px; border-radius: 18px; margin-bottom: 6px; }
+        .slot { background: #231e18; aspect-ratio: 1 / 1; border-radius: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; box-shadow: inset 0 1px 4px rgba(0,0,0,0.7); transition: 0.04s linear; cursor: pointer; position: relative; }
+        .slot:active { transform: scale(0.94); }
+        .close-modal { display: block; margin: 8px auto 0; background: #b36234; padding: 5px 20px; }
+        .slot-count { position: absolute; bottom: 2px; right: 4px; font-size: 0.65rem; background: rgba(0,0,0,0.7); color: #ffdd99; padding: 1px 4px; border-radius: 10px; }
+        .warning { animation: pulse 0.8s infinite; }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } }
+    </style>
+</head>
+<body>
+<div>
+    <div class="game-container">
+        <div class="canvas-wrapper" id="canvasWrapper"><canvas id="gameCanvas"></canvas></div>
+        <div class="status-panel">
+            <div class="stats">
+                <div class="hunger-icons" id="hungerIcons"></div>
+                <div class="thirst-icons" id="thirstIcons"></div>
+            </div>
+            <div class="interact-hint" id="interactHint">⬅️➡️⬆️⬇️</div>
+            <button id="resetBtn">⟳ ЗАНОВО</button>
+        </div>
+        <div class="arrow-panel">
+            <div class="arrow-btn" data-dx="0" data-dy="-1">▲</div>
+            <div class="arrow-btn" data-dx="-1" data-dy="0">◀</div>
+            <div class="arrow-btn" data-dx="0" data-dy="1">▼</div>
+            <div class="arrow-btn" data-dx="1" data-dy="0">▶</div>
+            <div class="arrow-btn" data-dx="0" data-dy="0" style="background:#7a5a44;">📦E</div>
+        </div>
+        <div style="font-size:10px; text-align:center; margin-top:6px; color:#bfa77a;">▼ стрелки — ходьба | 📦E — открыть (шкаф+инвентарь)</div>
+    </div>
+</div>
+
+<script>
+    (function(){
+        // ========== РАЗМЕРЫ ==========
+        const CELL_SIZE = 42;
+        const VISIBLE_CELLS_H = 11;
+        const VISIBLE_CELLS_V = 7;
+        const VIEW_WIDTH = VISIBLE_CELLS_H * CELL_SIZE;
+        const VIEW_HEIGHT = VISIBLE_CELLS_V * CELL_SIZE;
+        
+        const wrapper = document.getElementById('canvasWrapper');
+        wrapper.style.width = VIEW_WIDTH + 'px';
+        wrapper.style.height = VIEW_HEIGHT + 'px';
+        
+        const TILE_FLOOR = 0;
+        const TILE_WALL = 1;
+        const TILE_LOCKER_LEFT = 2;
+        const TILE_LOCKER_RIGHT = 3;
+        
+        const ITEM_BATTERY = 'battery';
+        const ITEM_BREAD = 'bread';
+        const ITEM_WATER = 'water';
+        
+        let gameMap = new Map();
+        let lockers = [];
+        let player = { x: 0, y: 0 };
+        let playerInventory = Array(18).fill(null);
+        let hunger = 10, thirst = 10;
+        let lastHungerThirstUpdate = performance.now();
+        let modalDiv = null;
+        
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        // ========== ПРОСТАЯ ГЕНЕРАЦИЯ: СЕТКА ПРОХОДОВ + КОМНАТЫ ==========
+        function seededRandom(seed) {
+            let x = Math.sin(seed) * 10000;
+            return x - Math.floor(x);
+        }
+        
+        // Типы комнат (размеры 7x7 или 9x7)
+        const ROOM_TYPES = [
+            // тип 0: пустая комната 7x7
+            { w: 7, h: 7, walls: [] },
+            // тип 1: комната с колонной
+            { w: 7, h: 7, walls: [[3,2], [3,4]] },
+            // тип 2: комната с перегородкой
+            { w: 7, h: 7, walls: [[2,3], [3,3], [4,3]] },
+            // тип 3: большая комната 9x7
+            { w: 9, h: 7, walls: [] },
+            // тип 4: большая комната с двумя колоннами
+            { w: 9, h: 7, walls: [[3,2], [3,4], [5,2], [5,4]] }
+        ];
+        
+        function generateChunk(chunkX, chunkY) {
+            const mapPiece = new Map();
+            const chunkStartX = chunkX * 20;
+            const chunkStartY = chunkY * 20;
+            
+            // 1. Сначала создаём сетку коридоров (проходы 1 клетка в ширину)
+            // Горизонтальные коридоры на каждом уровне y = 0, 2, 4, 6... (через 2 клетки)
+            for(let y = 0; y < 20; y += 2) {
+                for(let x = 0; x < 20; x++) {
+                    let worldX = chunkStartX + x;
+                    let worldY = chunkStartY + y;
+                    mapPiece.set(`${worldX},${worldY}`, TILE_FLOOR);
+                }
+            }
+            
+            // Вертикальные коридоры на каждом уровне x = 0, 2, 4, 6...
+            for(let x = 0; x < 20; x += 2) {
+                for(let y = 0; y < 20; y++) {
+                    let worldX = chunkStartX + x;
+                    let worldY = chunkStartY + y;
+                    mapPiece.set(`${worldX},${worldY}`, TILE_FLOOR);
+                }
+            }
+            
+            // 2. Добавляем комнаты в определённых местах (каждая комната занимает 7-9 клеток)
+            let rng = seededRandom(chunkX * 131 + chunkY * 253);
+            let roomPositions = [
+                { x: 2, y: 2 },   // верхний левый угол чанка
+                { x: 10, y: 2 },  // верхний правый
+                { x: 2, y: 10 },  // нижний левый
+                { x: 10, y: 10 }  // нижний правый
+            ];
+            
+            for(let pos of roomPositions) {
+                // 70% шанс, что комната появится
+                if(seededRandom(chunkX * 7 + chunkY * 11 + pos.x * pos.y) < 0.7) {
+                    let roomType = Math.floor(seededRandom(chunkX * 13 + chunkY * 17 + pos.x * 3) * ROOM_TYPES.length);
+                    let room = ROOM_TYPES[roomType];
+                    let roomW = room.w;
+                    let roomH = room.h;
+                    let startX = chunkStartX + pos.x;
+                    let startY = chunkStartY + pos.y;
+                    
+                    // Рисуем стены комнаты
+                    for(let i = 0; i < roomW; i++) {
+                        for(let j = 0; j < roomH; j++) {
+                            let wx = startX + i;
+                            let wy = startY + j;
+                            if(i === 0 || i === roomW-1 || j === 0 || j === roomH-1) {
+                                mapPiece.set(`${wx},${wy}`, TILE_WALL);
+                            } else {
+                                mapPiece.set(`${wx},${wy}`, TILE_FLOOR);
+                            }
+                        }
+                    }
+                    
+                    // Добавляем внутренние стены (колонны, перегородки)
+                    for(let [wallX, wallY] of room.walls) {
+                        let wx = startX + wallX;
+                        let wy = startY + wallY;
+                        if(mapPiece.get(`${wx},${wy}`) !== TILE_WALL) {
+                            mapPiece.set(`${wx},${wy}`, TILE_WALL);
+                        }
+                    }
+                    
+                    // Делаем проходы в комнату (убираем стены на входе)
+                    // Вход сверху
+                    let entranceY = startY;
+                    let entranceX = startX + Math.floor(roomW/2);
+                    mapPiece.set(`${entranceX},${entranceY}`, TILE_FLOOR);
+                    // Вход снизу
+                    mapPiece.set(`${entranceX},${startY + roomH - 1}`, TILE_FLOOR);
+                    // Вход слева
+                    mapPiece.set(`${startX},${startY + Math.floor(roomH/2)}`, TILE_FLOOR);
+                    // Вход справа
+                    mapPiece.set(`${startX + roomW - 1},${startY + Math.floor(roomH/2)}`, TILE_FLOOR);
+                    
+                    // 3. Добавляем шкафы в комнату (от 1 до 3)
+                    let lockerCount = 1 + Math.floor(seededRandom(chunkX * 31 + chunkY * 43 + pos.x * pos.y) * 3);
+                    for(let l = 0; l < lockerCount; l++) {
+                        let tryX = startX + 1 + Math.floor(seededRandom(chunkX * 53 + chunkY * 61 + l * 101) * (roomW - 3));
+                        let tryY = startY + 1 + Math.floor(seededRandom(chunkX * 73 + chunkY * 83 + l * 113) * (roomH - 3));
+                        if(tryX + 1 < startX + roomW - 1 && tryY > startY && tryY < startY + roomH - 1) {
+                            if(mapPiece.get(`${tryX},${tryY}`) === TILE_FLOOR && mapPiece.get(`${tryX+1},${tryY}`) === TILE_FLOOR) {
+                                mapPiece.set(`${tryX},${tryY}`, TILE_LOCKER_LEFT);
+                                mapPiece.set(`${tryX+1},${tryY}`, TILE_LOCKER_RIGHT);
+                                let items = Array(6).fill(null);
+                                let itemTypes = [ITEM_BATTERY, ITEM_BREAD, ITEM_WATER];
+                                let cnt = 1 + Math.floor(seededRandom(chunkX * 97 + chunkY * 101 + l * 127) * 3);
+                                let slots = [0,1,2,3,4,5];
+                                for(let i = 0; i < cnt && slots.length; i++) {
+                                    let idx = Math.floor(seededRandom(chunkX * 131 + chunkY * 137 + i * 151) * slots.length);
+                                    let slot = slots[idx];
+                                    slots.splice(idx, 1);
+                                    let typeIdx = Math.floor(seededRandom(chunkX * 163 + chunkY * 173 + i * 191) * 3);
+                                    items[slot] = { type: itemTypes[typeIdx], count: 1 };
+                                }
+                                lockers.push({ x: tryX, y: tryY, items: items });
+                            }
+                        }
+                    }
+                }
+            }
+            
+            return mapPiece;
+        }
+        
+        let loadedChunks = new Set();
+        function ensureChunksAround(playerX, playerY) {
+            let chunkX = Math.floor(playerX / 20);
+            let chunkY = Math.floor(playerY / 20);
+            for(let dx = -1; dx <= 1; dx++) {
+                for(let dy = -1; dy <= 1; dy++) {
+                    let cx = chunkX + dx;
+                    let cy = chunkY + dy;
+                    let key = `${cx},${cy}`;
+                    if(!loadedChunks.has(key)) {
+                        loadedChunks.add(key);
+                        let chunkData = generateChunk(cx, cy);
+                        for(let [coord, tile] of chunkData.entries()) {
+                            gameMap.set(coord, tile);
+                        }
+                    }
+                }
+            }
+        }
+        
+        function getTile(x, y) {
+            return gameMap.get(`${x},${y}`) ?? TILE_WALL;
+        }
+        
+        // ========== ГОЛОД И ЖАЖДА ==========
+        function updateHungerThirstUI() {
+            let hungerDiv = document.getElementById('hungerIcons');
+            let thirstDiv = document.getElementById('thirstIcons');
+            hungerDiv.innerHTML = '';
+            thirstDiv.innerHTML = '';
+            for(let i = 0; i < hunger; i++) hungerDiv.innerHTML += '<span>🍞</span>';
+            for(let i = 0; i < thirst; i++) thirstDiv.innerHTML += '<span>💧</span>';
+            if(hunger <= 2) hungerDiv.classList.add('warning'); else hungerDiv.classList.remove('warning');
+            if(thirst <= 2) thirstDiv.classList.add('warning'); else thirstDiv.classList.remove('warning');
+        }
+        
+        let lastTickTime = performance.now();
+        function updateHungerThirst(now) {
+            let delta = Math.min(2, (now - lastTickTime) / 1000);
+            if(delta < 0.5) return;
+            lastTickTime = now;
+            let newHunger = hunger;
+            let newThirst = thirst;
+            let hungerTick = Math.floor(now / 35000) - Math.floor((now - delta * 1000) / 35000);
+            let thirstTick = Math.floor(now / 30000) - Math.floor((now - delta * 1000) / 30000);
+            if(hungerTick > 0) newHunger = Math.max(0, hunger - hungerTick);
+            if(thirstTick > 0) newThirst = Math.max(0, thirst - thirstTick);
+            if(newHunger !== hunger || newThirst !== thirst) {
+                hunger = newHunger;
+                thirst = newThirst;
+                updateHungerThirstUI();
+                if(hunger <= 0 || thirst <= 0) {
+                    alert("Вы погибли от голода/жажды! Игра перезапущена.");
+                    resetGame();
+                }
+            }
+        }
+        
+        function consumeItem(type) {
+            if(type === ITEM_BREAD && hunger < 10) {
+                hunger = Math.min(10, hunger + 3);
+                updateHungerThirstUI();
+                return true;
+            } else if(type === ITEM_WATER && thirst < 10) {
+                thirst = Math.min(10, thirst + 2);
+                updateHungerThirstUI();
+                return true;
+            }
+            return false;
+        }
+        
+        // ========== ИНВЕНТАРЬ ==========
+        function addItemToInventory(itemType) {
+            for(let i = 0; i < playerInventory.length; i++) {
+                if(playerInventory[i] && playerInventory[i].type === itemType && playerInventory[i].count < 30) {
+                    playerInventory[i].count++;
+                    return true;
+                }
+            }
+            for(let i = 0; i < playerInventory.length; i++) {
+                if(playerInventory[i] === null) {
+                    playerInventory[i] = { type: itemType, count: 1 };
+                    return true;
+                }
+            }
+            return false;
+        }
+        
+        function removeItemFromInventory(slotIndex) {
+            if(playerInventory[slotIndex] && playerInventory[slotIndex].count > 0) {
+                playerInventory[slotIndex].count--;
+                if(playerInventory[slotIndex].count === 0) playerInventory[slotIndex] = null;
+                return true;
+            }
+            return false;
+        }
+        
+        // ========== ОТРИСОВКА ==========
+        let cameraX = 0, cameraY = 0;
+        
+        function updateCamera() {
+            cameraX = player.x * CELL_SIZE + CELL_SIZE / 2 - VIEW_WIDTH / 2;
+            cameraY = player.y * CELL_SIZE + CELL_SIZE / 2 - VIEW_HEIGHT / 2;
+            cameraX = Math.max(0, Math.min(cameraX, canvas.width - VIEW_WIDTH));
+            cameraY = Math.max(0, Math.min(cameraY, canvas.height - VIEW_HEIGHT));
+            canvas.style.left = -cameraX + 'px';
+            canvas.style.top = -cameraY + 'px';
+        }
+        
+        function drawGame() {
+            let maxX = 0, maxY = 0;
+            for(let key of gameMap.keys()) {
+                let [x, y] = key.split(',').map(Number);
+                maxX = Math.max(maxX, x);
+                maxY = Math.max(maxY, y);
+            }
+            canvas.width = Math.max(2000, (maxX + 5) * CELL_SIZE);
+            canvas.height = Math.max(2000, (maxY + 5) * CELL_SIZE);
+            
+            let startCol = Math.floor(cameraX / CELL_SIZE);
+            let endCol = startCol + VISIBLE_CELLS_H + 2;
+            let startRow = Math.floor(cameraY / CELL_SIZE);
+            let endRow = startRow + VISIBLE_CELLS_V + 2;
+            
+            for(let y = startRow; y <= endRow; y++) {
+                for(let x = startCol; x <= endCol; x++) {
+                    let tile = getTile(x, y);
+                    let sx = x * CELL_SIZE;
+                    let sy = y * CELL_SIZE;
+                    
+                    if(tile === TILE_FLOOR) {
+                        ctx.fillStyle = "#7c6b4e";
+                        ctx.fillRect(sx, sy, CELL_SIZE, CELL_SIZE);
+                        ctx.fillStyle = "#9e8562";
+                        ctx.fillRect(sx + 2, sy + 2, CELL_SIZE - 4, CELL_SIZE - 4);
+                    } else if(tile === TILE_WALL) {
+                        ctx.fillStyle = "#a8986b";
+                        ctx.fillRect(sx, sy, CELL_SIZE, CELL_SIZE);
+                        ctx.fillStyle = "#c9b178";
+                        for(let i = 0; i < 3; i++) ctx.fillRect(sx + 5 + i * 10, sy + 8, 3, 8);
+                        ctx.strokeStyle = "#7a6842";
+                        ctx.strokeRect(sx + 2, sy + 2, CELL_SIZE - 4, CELL_SIZE - 4);
+                    } else if(tile === TILE_LOCKER_LEFT || tile === TILE_LOCKER_RIGHT) {
+                        let grad = ctx.createLinearGradient(sx, sy, sx + CELL_SIZE, sy + CELL_SIZE);
+                        grad.addColorStop(0, "#7a7e85");
+                        grad.addColorStop(1, "#545860");
+                        ctx.fillStyle = grad;
+                        ctx.fillRect(sx, sy, CELL_SIZE, CELL_SIZE);
+                        ctx.fillStyle = "#3a3e45";
+                        ctx.fillRect(sx + 5, sy + 12, CELL_SIZE - 10, 5);
+                        ctx.fillRect(sx + 5, sy + 22, CELL_SIZE - 10, 5);
+                        ctx.fillStyle = "#2e2e2e";
+                        ctx.font = "bold 16px monospace";
+                        ctx.fillText("🔒", sx + 12, sy + 26);
+                    }
+                }
+            }
+            
+            // Игрок
+            let playerScreenX = player.x * CELL_SIZE;
+            let playerScreenY = player.y * CELL_SIZE;
+            ctx.fillStyle = "#3a86ff";
+            ctx.fillRect(playerScreenX + 2, playerScreenY + 2, CELL_SIZE - 4, CELL_SIZE - 4);
+            ctx.fillStyle = "#ffffff";
+            ctx.fillRect(playerScreenX + CELL_SIZE - 14, playerScreenY + 8, 5, 5);
+            ctx.fillRect(playerScreenX + 9, playerScreenY + 8, 5, 5);
+            ctx.fillStyle = "#001133";
+            ctx.fillRect(playerScreenX + CELL_SIZE - 13, playerScreenY + 9, 3, 3);
+            ctx.fillRect(playerScreenX + 10, playerScreenY + 9, 3, 3);
+            
+            updateCamera();
+        }
+        
+        // ========== ДВИЖЕНИЕ ==========
+        function canMove(dx, dy) {
+            let nx = player.x + dx;
+            let ny = player.y + dy;
+            let tile = getTile(nx, ny);
+            return tile !== TILE_WALL && tile !== TILE_LOCKER_LEFT && tile !== TILE_LOCKER_RIGHT;
+        }
+        
+        function movePlayer(dx, dy) {
+            if(canMove(dx, dy)) {
+                player.x += dx;
+                player.y += dy;
+                ensureChunksAround(player.x, player.y);
+                drawGame();
+                updateHintText();
+                return true;
+            }
+            return false;
+        }
+        
+        function findAdjacentLocker() {
+            let dirs = [[0, 1], [1, 0], [0, -1], [-1, 0]];
+            for(let [dx, dy] of dirs) {
+                let nx = player.x + dx;
+                let ny = player.y + dy;
+                let tile = getTile(nx, ny);
+                if(tile === TILE_LOCKER_LEFT || tile === TILE_LOCKER_RIGHT) {
+                    for(let i = 0; i < lockers.length; i++) {
+                        let l = lockers[i];
+                        if((ny === l.y && nx === l.x) || (ny === l.y && nx === l.x + 1)) return i;
+                    }
+                }
+            }
+            return -1;
+        }
+        
+        function updateHintText() {
+            let idx = findAdjacentLocker();
+            document.getElementById("interactHint").innerHTML = idx !== -1 ? "📦 РЯДОМ! E (шкаф+инвентарь)" : "⬅️➡️⬆️⬇️ | E — инвентарь";
+        }
+        
+        // ========== UI ИНВЕНТАРЯ ==========
+        function drawItemInSlot(container, type, count) {
+            container.innerHTML = '';
+            let div = document.createElement('div');
+            div.style.display = 'flex';
+            div.style.flexDirection = 'column';
+            div.style.alignItems = 'center';
+            div.style.justifyContent = 'center';
+            if(type === ITEM_BATTERY) {
+                div.innerHTML = `<div style="width:45px;height:45px;display:flex;flex-direction:column;align-items:center"><div style="width:30px;height:25px;background:orange;border-radius:3px;overflow:hidden;border:1px solid #555"><div style="background:#ff8c00;height:50%"></div><div style="background:#2a2a2a;height:50%"></div></div><div style="font-size:8px;">+ -</div></div>`;
+            } else {
+                let icon = type === ITEM_BREAD ? '🍞' : '💧';
+                let name = type === ITEM_BREAD ? 'хлеб' : 'вода';
+                div.innerHTML = `<div style="font-size:1.8rem;">${icon}</div><div style="font-size:0.6rem;">${name}</div>`;
+            }
+            container.appendChild(div);
+            if(count > 1) {
+                let c = document.createElement('div');
+                c.className = 'slot-count';
+                c.innerText = count;
+                container.appendChild(c);
+            }
+        }
+        
+        function openUniversal() {
+            let lockerIdx = findAdjacentLocker();
+            if(lockerIdx !== -1) openLockerAndInventory(lockerIdx);
+            else openInventoryOnly();
+        }
+        
+        function openInventoryOnly() {
+            if(modalDiv) modalDiv.remove();
+            modalDiv = document.createElement('div');
+            modalDiv.className = 'modal';
+            modalDiv.innerHTML = `<div class="modal-content"><div class="modal-title">🎒 ИНВЕНТАРЬ</div><div class="inventory-grid" id="invGrid"></div><button class="close-modal">ЗАКРЫТЬ</button></div>`;
+            document.body.appendChild(modalDiv);
+            
+            function refresh() {
+                let grid = modalDiv.querySelector('#invGrid');
+                grid.innerHTML = '';
+                for(let i = 0; i < 18; i++) {
+                    let slot = document.createElement('div');
+                    slot.className = 'slot';
+                    let item = playerInventory[i];
+                    if(item) {
+                        drawItemInSlot(slot, item.type, item.count);
+                        slot.onclick = (function(idx) {
+                            return function() {
+                                let itm = playerInventory[idx];
+                                if(itm && consumeItem(itm.type)) {
+                                    removeItemFromInventory(idx);
+                                    refresh();
+                                } else {
+                                    alert("Нельзя съесть (сытость/жажда полны)");
+                                }
+                            };
+                        })(i);
+                    } else {
+                        slot.innerHTML = '<span style="opacity:0.3;">▢</span>';
+                    }
+                    grid.appendChild(slot);
+                }
+            }
+            refresh();
+            modalDiv.querySelector('.close-modal').onclick = () => { modalDiv.remove(); modalDiv = null; drawGame(); };
+        }
+        
+        function openLockerAndInventory(lockerIdx) {
+            if(modalDiv) modalDiv.remove();
+            let locker = lockers[lockerIdx];
+            modalDiv = document.createElement('div');
+            modalDiv.className = 'modal';
+            modalDiv.innerHTML = `<div class="modal-content"><div class="modal-title">🗄️ ШКАФ</div><div class="locker-grid" id="lockerGrid"></div><div class="modal-title">🎒 ИНВЕНТАРЬ</div><div class="inventory-grid" id="invGrid"></div><button class="close-modal">ЗАКРЫТЬ</button></div>`;
+            document.body.appendChild(modalDiv);
+            
+            function refresh() {
+                let lockerDiv = modalDiv.querySelector('#lockerGrid');
+                let invDiv = modalDiv.querySelector('#invGrid');
+                lockerDiv.innerHTML = '';
+                invDiv.innerHTML = '';
+                
+                for(let i = 0; i < 6; i++) {
+                    let s = document.createElement('div');
+                    s.className = 'slot';
+                    let it = locker.items[i];
+                    if(it) {
+                        drawItemInSlot(s, it.type, 1);
+                        s.onclick = (function(idx) {
+                            return function() {
+                                if(addItemToInventory(locker.items[idx].type)) {
+                                    locker.items[idx] = null;
+                                    refresh();
+                                } else {
+                                    alert("Инвентарь полон");
+                                }
+                            };
+                        })(i);
+                    } else {
+                        s.innerHTML = '<span style="opacity:0.4;">◻️</span>';
+                    }
+                    lockerDiv.appendChild(s);
+                }
+                
+                for(let i = 0; i < 18; i++) {
+                    let s = document.createElement('div');
+                    s.className = 'slot';
+                    let it = playerInventory[i];
+                    if(it) {
+                        drawItemInSlot(s, it.type, it.count);
+                        s.onclick = (function(idx) {
+                            return function() {
+                                let free = locker.items.findIndex(x => x === null);
+                                if(free !== -1 && removeItemFromInventory(idx)) {
+                                    locker.items[free] = { type: playerInventory[idx]?.type || it.type, count: 1 };
+                                    refresh();
+                                } else {
+                                    alert("Шкаф полон");
+                                }
+                            };
+                        })(i);
+                    } else {
+                        s.innerHTML = '<span style="opacity:0.3;">▢</span>';
+                    }
+                    invDiv.appendChild(s);
+                }
+            }
+            refresh();
+            modalDiv.querySelector('.close-modal').onclick = () => { modalDiv.remove(); modalDiv = null; drawGame(); };
+        }
+        
+        // ========== СБРОС ==========
+        function resetGame() {
+            if(modalDiv) { modalDiv.remove(); modalDiv = null; }
+            gameMap.clear();
+            lockers = [];
+            loadedChunks.clear();
+            playerInventory = Array(18).fill(null);
+            hunger = 10;
+            thirst = 10;
+            
+            // Находим безопасную стартовую позицию (первый пол в центре чанка)
+            ensureChunksAround(10, 10);
+            for(let y = 8; y < 12; y++) {
+                for(let x = 8; x < 12; x++) {
+                    if(getTile(x, y) === TILE_FLOOR) {
+                        player = { x: x, y: y };
+                        break;
+                    }
+                }
+            }
+            if(player.x === 0 && player.y === 0) player = { x: 10, y: 10 };
+            
+            updateHungerThirstUI();
+            drawGame();
+            updateHintText();
+            lastTickTime = performance.now();
+        }
+        
+        // ========== УПРАВЛЕНИЕ ==========
+        function onKey(e) {
+            let k = e.key;
+            let dx = 0, dy = 0;
+            if(k === 'ArrowUp' || k === 'w') dy = -1;
+            else if(k === 'ArrowDown' || k === 's') dy = 1;
+            else if(k === 'ArrowLeft' || k === 'a') dx = -1;
+            else if(k === 'ArrowRight' || k === 'd') dx = 1;
+            else if(k === 'e' || k === 'E') {
+                openUniversal();
+                e.preventDefault();
+                return;
+            }
+            if(dx !== 0 || dy !== 0) {
+                movePlayer(dx, dy);
+                e.preventDefault();
+            }
+        }
+        
+        function bindButtons() {
+            document.querySelectorAll('.arrow-btn').forEach(btn => {
+                const handleClick = () => {
+                    let dx = parseInt(btn.dataset.dx || '0');
+                    let dy = parseInt(btn.dataset.dy || '0');
+                    if(dx === 0 && dy === 0) {
+                        openUniversal();
+                    } else {
+                        movePlayer(dx, dy);
+                    }
+                };
+                btn.addEventListener('click', handleClick);
+                btn.addEventListener('touchstart', (e) => {
+                    e.preventDefault();
+                    handleClick();
+                });
+            });
+        }
+        
+        function animate() {
+            let now = performance.now();
+            updateHungerThirst(now);
+            requestAnimationFrame(animate);
+        }
+        
+        window.addEventListener('load', () => {
+            resetGame();
+            bindButtons();
+            document.addEventListener('keydown', onKey);
+            document.getElementById('resetBtn').addEventListener('click', () => resetGame());
+            animate();
+        });
+    })();
+</script>
+</body>
+</html>
