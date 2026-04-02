@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Игра «Жизнь»</title>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            margin: 0;
+            padding: 10px;
+            box-sizing: border-box;
+        }
+        canvas {
+            border: 1px solid #333;
+            background-color: white;
+            margin-bottom: 15px;
+            max-width: 100%;
+            height: auto;
+        }
+        button {
+            padding: 8px 16px;
+            margin: 5px;
+            font-size: 14px;
+            cursor: pointer;
+            width: 45%;
+            box-sizing: border-box;
+        }
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 10px;
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+    <h1>Игра «Жизнь» Конвея</h1>
+    <canvas id="gameCanvas" width="400" height="400"></canvas>
+    <div class="controls">
+        <button id="startBtn">Старт</button>
+        <button id="pauseBtn">Пауза</button>
+        <button id="clearBtn">Очистить</button>
+        <button id="randomBtn">Случайное поле</button>
+    </div>
+    <p style="text-align: center;">
+        <a href="игры.html" class="back-link">← На Игры</a>
+    </p>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const cellSize = 8; // Размер ячейки уменьшен
+        const cols = canvas.width / cellSize;
+        const rows = canvas.height / cellSize;
+
+        let grid = createGrid();
+        let isRunning = false;
+
+        function createGrid() {
+            const grid = [];
+            for (let i = 0; i < rows; i++) {
+                grid[i] = [];
+                for (let j = 0; j < cols; j++) {
+                    grid[i][j] = 0;
+                }
+            }
+            return grid;
+        }
+
+        function drawGrid() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            for (let i = 0; i < rows; i++) {
+                for (let j = 0; j < cols; j++) {
+                    if (grid[i][j] === 1) {
+                        ctx.fillStyle = 'black';
+                        ctx.fillRect(j * cellSize, i * cellSize, cellSize - 1, cellSize - 1);
+                    }
+                }
+            }
+        }
+
+        function countNeighbors(grid, x, y) {
+            let sum = 0;
+            for (let i = -1; i <= 1; i++) {
+                for (let j = -1; j <= 1; j++) {
+                    const col = (x + i + cols) % cols;
+                    const row = (y + j + rows) % rows;
+                    sum += grid[row][col];
+                }
+            }
+            sum -= grid[y][x];
+            return sum;
+        }
+
+        function nextGeneration() {
+            const newGrid = createGrid();
+            for (let i = 0; i < rows; i++) {
+                for (let j = 0; j < cols; j++) {
+                    const neighbors = countNeighbors(grid, j, i);
+                    const cell = grid[i][j];
+
+                    if (cell === 1 && (neighbors < 2 || neighbors > 3)) {
+                        newGrid[i][j] = 0;
+                    } else if (cell === 0 && neighbors === 3) {
+                        newGrid[i][j] = 1;
+                    } else {
+                        newGrid[i][j] = cell;
+                    }
+                }
+            }
+            grid = newGrid;
+        }
+
+        function update() {
+            if (!isRunning) return;
+            nextGeneration();
+            drawGrid();
+            requestAnimationFrame(update);
+        }
+
+        canvas.addEventListener('click', function(event) {
+            const rect = canvas.getBoundingClientRect();
+            const x = Math.floor((event.clientX - rect.left) / cellSize);
+            const y = Math.floor((event.clientY - rect.top) / cellSize);
+
+            if (x >= 0 && x < cols && y >= 0 && y < rows) {
+                grid[y][x] = grid[y][x] ? 0 : 1;
+                drawGrid();
+            }
+        });
+
+        document.getElementById('startBtn').addEventListener('click', function() {
+            isRunning = true;
+            update();
+        });
+
+        document.getElementById('pauseBtn').addEventListener('click', function() {
+            isRunning = false;
+        });
+
+        document.getElementById('clearBtn').addEventListener('click', function() {
+            isRunning = false;
+            grid = createGrid();
+            drawGrid();
+        });
+
+        document.getElementById('randomBtn').addEventListener('click', function() {
+            for (let i = 0; i < rows; i++) {
+                for (let j = 0; j < cols; j++) {
+                    grid[i][j] = Math.random() > 0.8 ? 1 : 0; // Уменьшена плотность заполнения
+                }
+            }
+            drawGrid();
+        });
+
+        drawGrid();
+    </script>
+</body>
+</html>

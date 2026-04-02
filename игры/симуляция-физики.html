@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Солнечная энергия - симулятор света</title>
+    <style>
+        * {
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        body {
+            margin: 0;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #1a472a, #0e2a1a);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            padding: 20px;
+        }
+        
+        .game-container {
+            background: #2c3e2f;
+            border-radius: 28px;
+            padding: 20px;
+            box-shadow: 0 20px 35px rgba(0,0,0,0.4);
+        }
+        
+        canvas {
+            display: block;
+            margin: 0 auto;
+            border-radius: 16px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+            cursor: grab;
+            touch-action: none;
+        }
+        
+        canvas:active {
+            cursor: grabbing;
+        }
+        
+        .toolbar {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 12px;
+            margin-bottom: 18px;
+            background: #1e2a21;
+            padding: 12px 18px;
+            border-radius: 60px;
+        }
+        
+        .tool-btn {
+            background: #3a5a3f;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 40px;
+            color: white;
+            font-weight: bold;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+        }
+        
+        .tool-btn:active {
+            transform: scale(0.96);
+        }
+        
+        .tool-btn.selected {
+            background: #f5b042;
+            color: #1e2a21;
+            box-shadow: 0 0 0 2px #ffe6b3;
+        }
+        
+        .info-panel {
+            margin-top: 16px;
+            background: #1e2a21cc;
+            backdrop-filter: blur(8px);
+            border-radius: 24px;
+            padding: 10px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+            color: #f0f0e0;
+            font-weight: 500;
+        }
+        
+        .voltage-box {
+            background: #0f1a12;
+            padding: 6px 16px;
+            border-radius: 32px;
+            font-family: monospace;
+            font-size: 1.3rem;
+            font-weight: bold;
+            letter-spacing: 1px;
+        }
+        
+        .status {
+            font-size: 0.85rem;
+            background: #2d3a2a;
+            padding: 6px 14px;
+            border-radius: 32px;
+        }
+        
+        @media (max-width: 700px) {
+            .tool-btn { padding: 6px 14px; font-size: 0.8rem; }
+            .voltage-box { font-size: 1rem; }
+            .game-container { padding: 12px; }
+        }
+        
+        .instruction {
+            font-size: 0.7rem;
+            text-align: center;
+            margin-top: 10px;
+            color: #b8cfb0;
+        }
+    </style>
+</head>
+<body>
+<div>
+    <div class="game-container">
+        <div class="toolbar">
+            <button class="tool-btn" data-type="light">💡 Свет (источник)</button>
+            <button class="tool-btn" data-type="panel">🔆 Солнечная панель</button>
+            <button class="tool-btn" data-type="wire">⚡ Провод (соединитель)</button>
+            <button class="tool-btn" data-type="display">📟 Табло</button>
+            <button class="tool-btn" data-type="remove">🗑 Удалить</button>
+        </div>
+        <canvas id="gameCanvas" width="900" height="600" style="width:100%; height:auto; max-width:900px; aspect-ratio:900/600"></canvas>
+        <div class="info-panel">
+            <div class="status">⚡ Режим: <span id="modeLabel">Выберите предмет</span></div>
+            <div class="voltage-box">🔋 Напряжение: <span id="voltageDisplay">0.0</span> В</div>
+            <div class="status">🎯 Лучи блокируются предметами</div>
+        </div>
+        <div class="instruction">
+            📱 На телефоне: коснитесь предмета, чтобы выбрать | 🖱 На ПК: клик и перетаскивание. Лучи не проходят сквозь объекты.
+        </div>
+    </div>
+</div>
+
+<script>
+    (function(){
+        // ---------- НАСТРОЙКИ ----------
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        // Объекты на сцене
+        let objects = [];   // каждый: { type, x, y, w, h, connectedTo?, voltage? ... }
+        let selectedTool = 'light';
+        let draggedObj = null;
+        let dragOffsetX = 0, dragOffsetY = 0;
+        let isDragging = false;
+        
+        // Для тач-событий
+        let lastTouchDist = 0;
+        
+        // Обновление UI
+        const voltageSpan = document.getElementById('voltageDisplay');
+        const modeLabelSpan = document.getElementById('modeLabel');
+        
+        // ---------- РАЗМЕРЫ ----------
+        const LIGHT_SIZE = 28;
+        const PANEL_W = 90, PANEL_H = 60;
+        const WIRE_W = 80, WIRE_H = 14;
+        const DISPLAY_W = 80, DISPLAY_H = 50;
+        
+        // Начальные объекты (пример)
+        function initScene(){
+            objects = [];
+            // Свет (жёлтый источник)
+            objects.push({ type: 'light', x: 150, y: 150, w: LIGHT_SIZE, h: LIGHT_SIZE });
+            // Солнечная панель
+            objects.push({ type: 'panel', x: 500, y: 300, w: PANEL_W, h: PANEL_H });
+            // Табло
+            objects.push({ type: 'display', x: 700, y: 450, w: DISPLAY_W, h: DISPLAY_H });
+            // Провод, соединяющий панель и табло (тип wire хранит from/to индексы? упростим: провод просто объект, но соединение будем искать по пересечению)
+            // Чтобы провода работали: логика будет искать ближайшие панель и табло по координатам.
+            objects.push({ type: 'wire', x: 580, y: 330, w: WIRE_W, h: WIRE_H });
+        }
+        
+        // ---------- ГЕОМЕТРИЯ ----------
+        function rectIntersect(r1, r2) {
+            return !(r2.x > r1.x + r1.w ||
+                r2.x + r2.w < r1.x ||
+                r2.y > r1.y + r1.h ||
+                r2.y + r2.h < r1.y);
+        }
+        
+        // Проверка пересечения отрезка луча с прямоугольником
+        function segmentIntersectRect(x1,y1, x2,y2, rect){
+            // быстрое отсечение
+            if (Math.max(x1,x2) < rect.x) return false;
+            if (Math.min(x1,x2) > rect.x+rect.w) return false;
+            if (Math.max(y1,y2) < rect.y) return false;
+            if (Math.min(y1,y2) > rect.y+rect.h) return false;
+            
+            // Проверка каждой стороны
+            function segIntersectLine(ax,ay, bx,by, cx,cy, dx,dy){
+                const denom = (bx-ax)*(dy-cy) - (by-ay)*(dx-cx);
+                if (denom === 0) return null;
+                const t = ((cx-ax)*(dy-cy) - (cy-ay)*(dx-cx)) / denom;
+                const u = ((cx-ax)*(by-ay) - (cy-ay)*(bx-ax)) / denom;
+                if (t>=0 && t<=1 && u>=0 && u<=1) {
+                    return { x: ax + t*(bx-ax), y: ay + t*(by-ay) };
+                }
+                return null;
+            }
+            const edges = [
+                [rect.x, rect.y, rect.x+rect.w, rect.y],
+                [rect.x+rect.w, rect.y, rect.x+rect.w, rect.y+rect.h],
+                [rect.x+rect.w, rect.y+rect.h, rect.x, rect.y+rect.h],
+                [rect.x, rect.y+rect.h, rect.x, rect.y]
+            ];
+            for(let e of edges){
+                if(segIntersectLine(x1,y1,x2,y2, e[0],e[1], e[2],e[3])) return true;
+            }
+            return false;
+        }
+        
+        // Найти все объекты, которые блокируют луч между (x1,y1) и (x2,y2), исключая источник и панель?
+        function getFirstIntersection(x1,y1, x2,y2, ignoreObj) {
+            let closestDist = Infinity;
+            let hitObj = null;
+            for(let obj of objects){
+                if(obj === ignoreObj) continue;
+                const rect = { x: obj.x, y: obj.y, w: obj.w, h: obj.h };
+                if(segmentIntersectRect(x1,y1, x2,y2, rect)){
+                    // вычисляем точку пересечения для дистанции (приблизительно)
+                    const centerX = obj.x+obj.w/2, centerY = obj.y+obj.h/2;
+                    const dx = centerX - x1, dy = centerY - y1;
+                    const dist = dx*dx+dy*dy;
+                    if(dist < closestDist){
+                        closestDist = dist;
+                        hitObj = obj;
+                    }
+                }
+            }
+            return hitObj;
+        }
+        
+        // Рассчитать напряжение на панели с учётом лучей от источников света и препятствий
+        function calculateVoltage(){
+            let totalPower = 0;
+            // Найти все источники света
+            const lights = objects.filter(o => o.type === 'light');
+            const panels = objects.filter(o => o.type === 'panel');
+            if(panels.length === 0) return 0;
+            
+            // Для каждого источника испускаем лучи (8 направлений)
+            for(let light of lights){
+                const centerX = light.x + light.w/2;
+                const centerY = light.y + light.h/2;
+                const rayCount = 16; // больше лучей = точнее, но красивее
+                for(let i=0; i<rayCount; i++){
+                    const angle = (i / rayCount) * Math.PI * 2;
+                    const dx = Math.cos(angle);
+                    const dy = Math.sin(angle);
+                    const rayLength = 500; // дальность
+                    const endX = centerX + dx * rayLength;
+                    const endY = centerY + dy * rayLength;
+                    
+                    // Ищем первое препятствие на пути луча
+                    let hitObj = getFirstIntersection(centerX, centerY, endX, endY, light);
+                    let hitPoint = { x: endX, y: endY };
+                    if(hitObj){
+                        // вычислим точное пересечение (упрощённо: берём центр препятствия)
+                        hitPoint = { x: hitObj.x + hitObj.w/2, y: hitObj.y + hitObj.h/2 };
+                    }
+                    // Проверяем, попал ли луч в какую-либо панель (если препятствие — панель)
+                    if(hitObj && hitObj.type === 'panel'){
+                        // угол падения: чем ближе к нормали (перпендикуляр) тем выше мощность
+                        let panel = hitObj;
+                        let panelCenterX = panel.x + panel.w/2;
+                        let panelCenterY = panel.y + panel.h/2;
+                        let rayDirX = hitPoint.x - centerX;
+                        let rayDirY = hitPoint.y - centerY;
+                        let len = Math.hypot(rayDirX, rayDirY);
+                        if(len > 0.01){
+                            rayDirX /= len; rayDirY /= len;
+                        }
+                        // Нормаль панели (смотрит вверх, т.к. вид сверху, панель лежит горизонтально, но луч падает сверху? Упростим: эффективность = косинус угла между лучом и вертикалью)
+                        // Для реализма: чем ближе луч к перпендикуляру к поверхности (в 2D — к оси Y), тем больше.
+                        let normalX = 0, normalY = 1; // панель лежит, нормаль вверх (Y+)
+                        let dot = rayDirX*normalX + rayDirY*normalY;
+                        let intensity = Math.max(0, dot);
+                        // Добавляем вклад (базово 0.5В за луч, умножаем на интенсивность)
+                        totalPower += 0.45 * intensity;
+                    }
+                }
+            }
+            // Ограничим напряжение 0..24В
+            let voltage = Math.min(24, Math.max(0, totalPower * 0.8));
+            return Math.round(voltage * 10) / 10;
+        }
+        
+        // Определить, какое табло подключено к какой панели через провода (поиск связей)
+        function getConnectedDisplayVoltage(){
+            let panels = objects.filter(o => o.type === 'panel');
+            let displays = objects.filter(o => o.type === 'display');
+            let wires = objects.filter(o => o.type === 'wire');
+            if(panels.length===0 || displays.length===0) return 0;
+            
+            // упрощённая логика: если провод пересекает область панели и табло, то считаем соединённым
+            for(let panel of panels){
+                for(let display of displays){
+                    let connected = false;
+                    for(let wire of wires){
+                        const wireRect = { x: wire.x, y: wire.y, w: wire.w, h: wire.h };
+                        const panelRect = { x: panel.x, y: panel.y, w: panel.w, h: panel.h };
+                        const dispRect = { x: display.x, y: display.y, w: display.w, h: display.h };
+                        if(rectIntersect(wireRect, panelRect) && rectIntersect(wireRect, dispRect)){
+                            connected = true;
+                            break;
+                        }
+                    }
+                    if(connected){
+                        // вычисляем напряжение от всех панелей (суммарно)
+                        let totalV = calculateVoltage();
+                        return totalV;
+                    }
+                }
+            }
+            return 0;
+        }
+        
+        // ---------- ОТРИСОВКА ----------
+        function draw(){
+            ctx.clearRect(0,0,canvas.width,canvas.height);
+            // фон (белое поле)
+            ctx.fillStyle = "#fef7e0";
+            ctx.fillRect(0,0,canvas.width,canvas.height);
+            ctx.fillStyle = "#ddd8c0";
+            for(let i=0;i<canvas.width;i+=40){
+                ctx.beginPath();
+                ctx.moveTo(i,0);
+                ctx.lineTo(i,canvas.height);
+                ctx.strokeStyle = "#e5dfc0";
+                ctx.stroke();
+                ctx.beginPath();
+                ctx.moveTo(0,i%canvas.height);
+                ctx.lineTo(canvas.width,i%canvas.height);
+                ctx.stroke();
+            }
+            
+            // Рисуем лучи от источников (только визуализация, не влияет на физику)
+            const lights = objects.filter(o => o.type === 'light');
+            for(let light of lights){
+                const cx = light.x + light.w/2;
+                const cy = light.y + light.h/2;
+                const rayCount = 24;
+                for(let i=0;i<rayCount;i++){
+                    const angle = (i / rayCount) * Math.PI * 2;
+                    const dx = Math.cos(angle);
+                    const dy = Math.sin(angle);
+                    const endX = cx + dx * 180;
+                    const endY = cy + dy * 180;
+                    // Проверка пересечения с объектами (для отрисовки короткого луча)
+                    let hit = getFirstIntersection(cx,cy,endX,endY, light);
+                    let drawTo = { x: endX, y: endY };
+                    if(hit){
+                        drawTo = { x: hit.x + hit.w/2, y: hit.y + hit.h/2 };
+                    }
+                    ctx.beginPath();
+                    ctx.moveTo(cx,cy);
+                    ctx.lineTo(drawTo.x, drawTo.y);
+                    ctx.strokeStyle = "#ffdd77";
+                    ctx.lineWidth = 1.8;
+                    ctx.stroke();
+                    // маленькие стрелочки (имитация света)
+                    let arrowAngle = Math.atan2(drawTo.y-cy, drawTo.x-cx);
+                    let arrowX = drawTo.x - 6*Math.cos(arrowAngle);
+                    let arrowY = drawTo.y - 6*Math.sin(arrowAngle);
+                    ctx.beginPath();
+                    ctx.moveTo(arrowX, arrowY);
+                    ctx.lineTo(arrowX - 4*Math.cos(arrowAngle - 0.6), arrowY - 4*Math.sin(arrowAngle - 0.6));
+                    ctx.lineTo(arrowX - 4*Math.cos(arrowAngle + 0.6), arrowY - 4*Math.sin(arrowAngle + 0.6));
+                    ctx.fillStyle = "#ffcc44";
+                    ctx.fill();
+                }
+            }
+            
+            // Рисуем объекты
+            for(let obj of objects){
+                if(obj.type === 'light'){
+                    ctx.shadowBlur = 12;
+                    ctx.fillStyle = "#FFD966";
+                    ctx.beginPath();
+                    ctx.arc(obj.x+obj.w/2, obj.y+obj.h/2, obj.w/2, 0, Math.PI*2);
+                    ctx.fill();
+                    ctx.fillStyle = "#FFB347";
+                    ctx.beginPath();
+                    ctx.arc(obj.x+obj.w/2, obj.y+obj.h/2, obj.w/3, 0, Math.PI*2);
+                    ctx.fill();
+                    ctx.shadowBlur = 0;
+                }
+                else if(obj.type === 'panel'){
+                    ctx.fillStyle = "#3a6ea5";
+                    ctx.fillRect(obj.x, obj.y, obj.w, obj.h);
+                    ctx.fillStyle = "#c0d0e0";
+                    const barHeight = 8;
+                    for(let i=1; i<=2; i++){
+                        ctx.fillRect(obj.x+8, obj.y + i*(obj.h/3) - barHeight/2, obj.w-16, barHeight);
+                    }
+                    ctx.strokeStyle = "#2c5282";
+                    ctx.lineWidth = 2;
+                    ctx.strokeRect(obj.x, obj.y, obj.w, obj.h);
+                }
+                else if(obj.type === 'wire'){
+                    ctx.fillStyle = "#2d2d35";
+                    ctx.fillRect(obj.x, obj.y, obj.w, obj.h);
+                    ctx.fillStyle = "#5a5a6e";
+                    for(let i=0;i<3;i++){
+                        ctx.fillRect(obj.x+5 + i*25, obj.y+4, 8, obj.h-8);
+                    }
+                }
+                else if(obj.type === 'display'){
+                    ctx.fillStyle = "#1a1f2a";
+                    ctx.fillRect(obj.x, obj.y, obj.w, obj.h);
+                    ctx.fillStyle = "#7bc5ae";
+                    ctx.font = "bold 16px monospace";
+                    ctx.fillText("⏚", obj.x+obj.w-18, obj.y+obj.h-12);
+                    ctx.fillStyle = "#90e0c0";
+                    ctx.font = "10px monospace";
+                    ctx.fillText("V", obj.x+obj.w-10, obj.y+obj.h-8);
+                }
+            }
+            
+            // Выделение выбранного инструмента (подсветка)
+            if(selectedTool !== 'remove' && !isDragging){
+                // небольшой эффект
+            }
+        }
+        
+        // ---------- ВЗАИМОДЕЙСТВИЕ (drag & drop) ----------
+        function getMouseCoord(e){
+            const rect = canvas.getBoundingClientRect();
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
+            let clientX, clientY;
+            if(e.touches){
+                clientX = e.touches[0].clientX;
+                clientY = e.touches[0].clientY;
+            } else {
+                clientX = e.clientX;
+                clientY = e.clientY;
+            }
+            let canvasX = (clientX - rect.left) * scaleX;
+            let canvasY = (clientY - rect.top) * scaleY;
+            canvasX = Math.min(canvas.width-10, Math.max(10, canvasX));
+            canvasY = Math.min(canvas.height-10, Math.max(10, canvasY));
+            return { x: canvasX, y: canvasY };
+        }
+        
+        function findObjectAt(x,y){
+            for(let i=objects.length-1; i>=0; i--){
+                let obj = objects[i];
+                if(x >= obj.x && x <= obj.x+obj.w && y >= obj.y && y <= obj.y+obj.h){
+                    return obj;
+                }
+            }
+            return null;
+        }
+        
+        function onPointerDown(e){
+            e.preventDefault();
+            const coord = getMouseCoord(e);
+            const obj = findObjectAt(coord.x, coord.y);
+            if(obj){
+                draggedObj = obj;
+                dragOffsetX = coord.x - obj.x;
+                dragOffsetY = coord.y - obj.y;
+                isDragging = true;
+                return;
+            }
+            // Если клик на пустом месте и выбран инструмент создания
+            if(selectedTool !== 'remove'){
+                let newObj = null;
+                let x = coord.x - (selectedTool==='light'? LIGHT_SIZE/2 : (selectedTool==='panel'? PANEL_W/2 : (selectedTool==='wire'? WIRE_W/2 : DISPLAY_W/2)));
+                let y = coord.y - (selectedTool==='light'? LIGHT_SIZE/2 : (selectedTool==='panel'? PANEL_H/2 : (selectedTool==='wire'? WIRE_H/2 : DISPLAY_H/2)));
+                x = Math.min(canvas.width - (selectedTool==='light'?LIGHT_SIZE:PANEL_W), Math.max(0, x));
+                y = Math.min(canvas.height - (selectedTool==='light'?LIGHT_SIZE:PANEL_H), Math.max(0, y));
+                if(selectedTool === 'light') newObj = { type:'light', x, y, w:LIGHT_SIZE, h:LIGHT_SIZE };
+                if(selectedTool === 'panel') newObj = { type:'panel', x, y, w:PANEL_W, h:PANEL_H };
+                if(selectedTool === 'wire') newObj = { type:'wire', x, y, w:WIRE_W, h:WIRE_H };
+                if(selectedTool === 'display') newObj = { type:'display', x, y, w:DISPLAY_W, h:DISPLAY_H };
+                if(newObj) objects.push(newObj);
+            } else {
+                // удаление
+                if(obj) objects = objects.filter(o => o !== obj);
+            }
+            draw();
+        }
+        
+        function onPointerMove(e){
+            if(!isDragging || !draggedObj) return;
+            e.preventDefault();
+            const coord = getMouseCoord(e);
+            let newX = coord.x - dragOffsetX;
+            let newY = coord.y - dragOffsetY;
+            newX = Math.min(canvas.width - draggedObj.w, Math.max(0, newX));
+            newY = Math.min(canvas.height - draggedObj.h, Math.max(0, newY));
+            draggedObj.x = newX;
+            draggedObj.y = newY;
+            draw();
+            updateVoltageAndDisplay();
+        }
+        
+        function onPointerUp(e){
+            isDragging = false;
+            draggedObj = null;
+            updateVoltageAndDisplay();
+            draw();
+        }
+        
+        function updateVoltageAndDisplay(){
+            const voltage = getConnectedDisplayVoltage();
+            voltageSpan.innerText = voltage.toFixed(1);
+        }
+        
+        // ---------- ПЕРИОДИЧЕСКОЕ ОБНОВЛЕНИЕ ----------
+        function animationLoop(){
+            draw();
+            updateVoltageAndDisplay();
+            requestAnimationFrame(animationLoop);
+        }
+        
+        // ---------- ПЕРЕКЛЮЧЕНИЕ ИНСТРУМЕНТОВ ----------
+        function bindToolButtons(){
+            document.querySelectorAll('.tool-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const type = btn.dataset.type;
+                    if(type === 'light') selectedTool = 'light';
+                    else if(type === 'panel') selectedTool = 'panel';
+                    else if(type === 'wire') selectedTool = 'wire';
+                    else if(type === 'display') selectedTool = 'display';
+                    else if(type === 'remove') selectedTool = 'remove';
+                    
+                    document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('selected'));
+                    btn.classList.add('selected');
+                    if(selectedTool === 'remove') modeLabelSpan.innerText = 'Удаление предметов';
+                    else if(selectedTool === 'light') modeLabelSpan.innerText = '💡 Свет (лучи)';
+                    else if(selectedTool === 'panel') modeLabelSpan.innerText = '🔆 Солнечная панель';
+                    else if(selectedTool === 'wire') modeLabelSpan.innerText = '⚡ Провод';
+                    else modeLabelSpan.innerText = '📟 Табло';
+                });
+            });
+            document.querySelector('[data-type="light"]').classList.add('selected');
+            modeLabelSpan.innerText = '💡 Свет (лучи)';
+        }
+        
+        // ---------- ИНИЦИАЛИЗАЦИЯ ----------
+        function init(){
+            initScene();
+            bindToolButtons();
+            canvas.addEventListener('mousedown', onPointerDown);
+            window.addEventListener('mousemove', onPointerMove);
+            window.addEventListener('mouseup', onPointerUp);
+            canvas.addEventListener('touchstart', onPointerDown, {passive: false});
+            canvas.addEventListener('touchmove', onPointerMove, {passive: false});
+            canvas.addEventListener('touchend', onPointerUp);
+            animationLoop();
+        }
+        
+        init();
+    })();
+</script>
+</body>
+</html>
