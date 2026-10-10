@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <title>Личная энциклопедия</title>
+    
+    <meta name="description" content="Личная энциклопедия: вещества, SCP, Закулисье, персонажи, игры, еда, руны.">
+    <meta name="keywords" content="база знаний, энциклопедия, гранит, SCP, Закулисье, персонажи, руны">
+    <meta name="author" content="GenoTheError, Geno">
+    <meta name="robots" content="index, follow">
+    
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="Личная энциклопедия">
+    <meta property="og:description" content="Вещества, SCP, Закулисье, персонажи, игры, еда, руны.">
+    
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="Личная энциклопедия">
+    <meta name="twitter:description" content="Вещества, SCP, Закулисье, персонажи, игры, еда, руны.">
+    
+    <link rel="icon" href="ico.png">
+    
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .search-box {
+            background: #2d3748;
+            padding: 16px;
+            border-radius: 12px;
+            margin-bottom: 24px;
+            border: 2px solid #4299e1;
+        }
+        
+        #searchInput {
+            width: 100%;
+            font-size: 18px;
+            padding: 14px 16px;
+            border: none;
+            border-radius: 8px;
+            background: #1a202c;
+            color: #e2e8f0;
+            outline: none;
+        }
+        
+        #searchInput::placeholder {
+            color: #718096;
+        }
+        
+        #searchResults {
+            margin-top: 12px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        
+        .search-item {
+            display: block;
+            padding: 12px 16px;
+            background: #1a202c;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            color: #e2e8f0;
+            text-decoration: none;
+            border-left: 3px solid #4299e1;
+            transition: all 0.2s;
+        }
+        
+        .search-item:hover {
+            background: #2d3748;
+            text-decoration: none;
+            border-left-color: #63b3ed;
+        }
+        
+        .search-item .item-name {
+            font-weight: 600;
+            color: #90cdf4;
+        }
+        
+        .search-item .item-cat {
+            font-size: 13px;
+            color: #718096;
+            margin-top: 2px;
+        }
+        
+        .category-section {
+            margin-bottom: 28px;
+        }
+        
+        .category-title {
+            font-size: 20px;
+            color: #63b3ed;
+            margin-bottom: 12px;
+            padding-left: 12px;
+            border-left: 4px solid #4299e1;
+        }
+        
+        .articles-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 10px;
+        }
+        
+        .article-card {
+            display: block;
+            background: #1a202c;
+            border: 1px solid #2d3748;
+            border-radius: 10px;
+            padding: 14px 16px;
+            color: #e2e8f0;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+        
+        .article-card:hover {
+            background: #2d3748;
+            border-color: #4299e1;
+            text-decoration: none;
+            transform: translateY(-2px);
+        }
+        
+        .article-card .icon {
+            font-size: 24px;
+            display: block;
+            margin-bottom: 6px;
+        }
+        
+        .article-card .name {
+            font-weight: 600;
+            color: #90cdf4;
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <h1>📚 ДатаБазаАрхив №2</h1>
+    <p style="color: #a0aec0; margin-bottom: 20px;">
+        Личная энциклопедия — от гранита до SCP
+    </p>
+    
+    <!-- ПОИСК -->
+    <div class="search-box">
+        <input type="text" id="searchInput" 
+               placeholder="🔍 Поиск по базе... (например: гранит, золото, SCP)" 
+               autocomplete="off">
+        <div id="searchResults"></div>
+    </div>
+    
+    <!-- ОГЛАВЛЕНИЕ -->
+    <div id="tableOfContents">
+        
+        <!-- 🧪 ВЕЩЕСТВА -->
+        <div class="category-section">
+            <div class="category-title">🧪 Вещества</div>
+            <div class="articles-grid" data-category="Вещества">
+                <a href="гранит.html" class="article-card" data-name="гранит">
+                    <span class="icon">🪨</span>
+                    <span class="name">Гранит</span>
+                </a>
+                <!-- Сюда добавляй новые статьи по образцу выше -->
+            </div>
+        </div>
+        
+        <!-- 🎭 SCP -->
+        <div class="category-section">
+            <div class="category-title">🎭 Фонд SCP</div>
+            <div class="articles-grid" data-category="SCP">
+                <!-- <a href="SCP-999.html" class="article-card" data-name="SCP-999">...</a> -->
+            </div>
+        </div>
+        
+        <!-- 🌊 ЗАКУЛИСЬЕ -->
+        <div class="category-section">
+            <div class="category-title">🌊 Закулисье</div>
+            <div class="articles-grid" data-category="Закулисье">
+                <!-- <a href="миндальная вода.html" class="article-card" data-name="миндальная вода">...</a> -->
+            </div>
+        </div>
+        
+        <!-- 🎮 ИГРЫ -->
+        <div class="category-section">
+            <div class="category-title">🎮 Игры и фандомы</div>
+            <div class="articles-grid" data-category="Игры">
+                <!-- <a href="киллер!санс.html" class="article-card" data-name="киллер санс">...</a> -->
+            </div>
+        </div>
+        
+        <!-- 🤖 ИИ -->
+        <div class="category-section">
+            <div class="category-title">🤖 ИИ</div>
+            <div class="articles-grid" data-category="ИИ">
+                <!-- <a href="дипсик.html" class="article-card" data-name="дипсик">...</a> -->
+            </div>
+        </div>
+        
+        <!-- 📺 ЮТУБЕРЫ -->
+        <div class="category-section">
+            <div class="category-title">📺 Ютуберы</div>
+            <div class="articles-grid" data-category="Ютуберы">
+                <!-- <a href="3121534312.html" class="article-card" data-name="3121534312">...</a> -->
+            </div>
+        </div>
+        
+        <!-- 🔤 ЯЗЫКИ И ШРИФТЫ -->
+        <div class="category-section">
+            <div class="category-title">🔤 Языки и шрифты</div>
+            <div class="articles-grid" data-category="Языки">
+                <!-- <a href="футарк.html" class="article-card" data-name="футарк">...</a> -->
+            </div>
+        </div>
+        
+    </div>
+    
+    <div class="footer">
+        ДатаБазаАрхив №2 • <span id="totalCount">0</span> статей
+    </div>
+
+    <script>
+        // ==========================================
+        // ПОИСК — автоматически читает все статьи с главной
+        // ==========================================
+        
+        function performSearch() {
+            const query = document.getElementById('searchInput').value.toLowerCase().trim();
+            const resultsBox = document.getElementById('searchResults');
+            
+            if (query.length < 1) {
+                resultsBox.innerHTML = '';
+                return;
+            }
+            
+            const allArticles = document.querySelectorAll('.article-card');
+            const results = [];
+            
+            allArticles.forEach(card => {
+                const name = card.getAttribute('data-name') || card.querySelector('.name').textContent.toLowerCase();
+                const categorySection = card.closest('.category-section');
+                const category = categorySection ? categorySection.querySelector('.category-title').textContent : '';
+                const link = card.getAttribute('href');
+                const icon = card.querySelector('.icon')?.textContent || '📄';
+                const displayName = card.querySelector('.name')?.textContent || name;
+                
+                if (name.includes(query) || category.toLowerCase().includes(query) || displayName.toLowerCase().includes(query)) {
+                    results.push({ name: displayName, category, link, icon });
+                }
+            });
+            
+            if (results.length === 0) {
+                resultsBox.innerHTML = `<div style="color: #718096; padding: 12px; text-align: center;">Ничего не найдено по запросу "${query}"</div>`;
+                return;
+            }
+            
+            resultsBox.innerHTML = results.map(r => `
+                <a href="${r.link}" class="search-item">
+                    <div class="item-name">${r.icon} ${r.name}</div>
+                    <div class="item-cat">${r.category}</div>
+                </a>
+            `).join('');
+        }
+        
+        document.getElementById('searchInput').addEventListener('input', performSearch);
+        
+        function updateCount() {
+            const count = document.querySelectorAll('.article-card').length;
+            document.getElementById('totalCount').textContent = count;
+        }
+        updateCount();
+    </script>
+</body>
+</html>

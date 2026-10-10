@@ -1,0 +1,243 @@
+/* ==========================================
+   style.css — общий стиль для всей базы знаний
+   ========================================== */
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-size: 18px;
+    line-height: 1.6;
+    background: #0f1419;
+    color: #e2e8f0;
+    padding: 16px;
+    max-width: 800px;
+    margin: 0 auto;
+    min-height: 100vh;
+}
+
+/* ========== ШАПКА ========== */
+.header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+    padding-bottom: 16px;
+    border-bottom: 2px solid #2d3748;
+    flex-wrap: wrap;
+}
+
+.header .back-btn {
+    background: #2d3748;
+    color: #90cdf4;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 16px;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.header .back-btn:hover {
+    background: #4a5568;
+    text-decoration: none;
+}
+
+/* ========== ЗАГОЛОВКИ ========== */
+h1 {
+    font-size: 28px;
+    color: #90cdf4;
+    margin-bottom: 16px;
+    line-height: 1.3;
+}
+
+h2 {
+    font-size: 22px;
+    color: #63b3ed;
+    margin: 24px 0 12px 0;
+    padding-left: 12px;
+    border-left: 4px solid #4299e1;
+}
+
+h3 {
+    font-size: 19px;
+    color: #a0aec0;
+    margin: 16px 0 8px 0;
+}
+
+/* ========== КАРТОЧКИ ========== */
+.card {
+    background: #1a202c;
+    border: 1px solid #2d3748;
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 16px;
+}
+
+/* ========== СПИСКИ ========== */
+ul, ol {
+    padding-left: 24px;
+    margin: 8px 0;
+}
+
+li {
+    margin: 6px 0;
+}
+
+li::marker {
+    color: #4299e1;
+}
+
+/* ========== ТАБЛИЦА ХАРАКТЕРИСТИК ========== */
+.specs {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin: 12px 0;
+}
+
+.spec-item {
+    background: #2d3748;
+    padding: 10px 14px;
+    border-radius: 8px;
+    font-size: 15px;
+}
+
+.spec-item .label {
+    color: #a0aec0;
+    font-size: 13px;
+    display: block;
+    margin-bottom: 2px;
+}
+
+.spec-item .value {
+    color: #e2e8f0;
+    font-weight: 600;
+}
+
+@media (max-width: 480px) {
+    .specs {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* ========== ФОТОГРАФИИ ========== */
+.photos {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 10px;
+    margin: 12px 0;
+}
+
+.photos img {
+    width: 100%;
+    height: auto;
+    border-radius: 10px;
+    border: 2px solid #2d3748;
+    cursor: zoom-in;
+    transition: transform 0.2s, border-color 0.2s;
+}
+
+.photos img:hover {
+    transform: scale(1.02);
+    border-color: #4299e1;
+}
+
+/* ========== ЛАЙТБОКС ========== */
+.lightbox {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.95);
+    z-index: 9999;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+    cursor: zoom-out;
+}
+
+.lightbox.active {
+    display: flex;
+}
+
+.lightbox img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+    border-radius: 8px;
+    box-shadow: 0 0 40px rgba(0, 0, 0, 0.8);
+    animation: zoomIn 0.2s ease;
+}
+
+@keyframes zoomIn {
+    from { transform: scale(0.9); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+}
+
+.lightbox .close-hint {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    color: #fff;
+    font-size: 14px;
+    background: rgba(0, 0, 0, 0.6);
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-family: monospace;
+}
+
+/* ========== ССЫЛКИ ========== */
+a {
+    color: #63b3ed;
+    text-decoration: none;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+/* ========== ВЫДЕЛЕННЫЙ ТЕКСТ ========== */
+strong {
+    color: #f6e05e;
+}
+
+em {
+    color: #a0aec0;
+}
+
+/* ========== БЕЙДЖИ ========== */
+.badge {
+    display: inline-block;
+    background: #4299e1;
+    color: white;
+    font-size: 13px;
+    padding: 3px 10px;
+    border-radius: 12px;
+    margin-right: 6px;
+    margin-bottom: 6px;
+}
+
+.badge.green { background: #38a169; }
+.badge.red { background: #e53e3e; }
+.badge.yellow { background: #d69e2e; color: #1a202c; }
+.badge.purple { background: #805ad5; }
+
+/* ========== ПОДВАЛ ========== */
+.footer {
+    margin-top: 30px;
+    padding-top: 16px;
+    border-top: 1px solid #2d3748;
+    text-align: center;
+    font-size: 14px;
+    color: #4a5568;
+}
