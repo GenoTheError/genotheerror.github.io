@@ -6,18 +6,18 @@
     
     <title>База Знаний GenoTheError</title>
     
-    <meta name="description" content="База Знаний GenoTheError: вещества, SCP, Закулисье, персонажи, игры, еда, руны.">
-    <meta name="keywords" content="база знаний, энциклопедия, гранит, SCP, Закулисье, персонажи, руны, GenoTheError">
+    <meta name="description" content="База Знаний GenoTheError: вещества, еда, SCP, Закулисье, ИИ.">
+    <meta name="keywords" content="база знаний, энциклопедия, гранит, александрит, еда, рецепты, SCP, Закулисье, ИИ, GenoTheError">
     <meta name="author" content="GenoTheError, Geno">
     <meta name="robots" content="index, follow">
     
     <meta property="og:type" content="website">
     <meta property="og:title" content="База Знаний GenoTheError">
-    <meta property="og:description" content="Вещества, SCP, Закулисье, персонажи, игры, еда, руны.">
+    <meta property="og:description" content="Вещества, еда, SCP, Закулисье, ИИ.">
     
     <meta name="twitter:card" content="summary">
     <meta name="twitter:title" content="База Знаний GenoTheError">
-    <meta name="twitter:description" content="Вещества, SCP, Закулисье, персонажи, игры, еда, руны.">
+    <meta name="twitter:description" content="Вещества, еда, SCP, Закулисье, ИИ.">
     
     <link rel="icon" href="ico.png">
     
@@ -117,19 +117,12 @@
             transform: translateY(-2px);
         }
         
-        .article-card .icon {
-            font-size: 24px;
-            display: block;
-            margin-bottom: 6px;
-        }
-        
         .article-card .name {
             font-weight: 600;
             color: #90cdf4;
             display: block;
         }
         
-        /* Ссылка "Об..." в правом верхнем углу */
         .about-link {
             position: fixed;
             top: 16px;
@@ -155,18 +148,17 @@
 </head>
 <body>
     
-    <!-- ССЫЛКА "ОБ..." В ПРАВОМ ВЕРХНЕМ УГЛУ -->
     <a href="об проекте.html" class="about-link">Об...</a>
     
     <h1>📚 База Знаний GenoTheError</h1>
     <p style="color: #a0aec0; margin-bottom: 20px;">
-        Личная энциклопедия — от гранита до SCP
+        Личная энциклопедия
     </p>
     
     <!-- ПОИСК -->
     <div class="search-box">
         <input type="text" id="searchInput" 
-               placeholder="🔍 Поиск по базе... (например: гранит, золото, SCP)" 
+               placeholder="🔍 Поиск по базе..." 
                autocomplete="off">
         <div id="searchResults"></div>
     </div>
@@ -179,34 +171,29 @@
             <div class="category-title">🧪 Вещества</div>
             <div class="articles-grid" data-category="Вещества">
                 <a href="гранит.html" class="article-card" data-name="гранит">
-                    <span class="icon">🪨</span>
                     <span class="name">Гранит</span>
                 </a>
-                <!-- Сюда добавляй новые статьи по образцу выше -->
+                <a href="александрит.html" class="article-card" data-name="александрит">
+                    <span class="name">Александрит</span>
+                </a>
+                <!-- Сюда добавляй новые вещества -->
             </div>
         </div>
         
-        <!-- 🎭 SCP -->
+        <!-- 🍲 ЕДА -->
         <div class="category-section">
-            <div class="category-title">🎭 Фонд SCP</div>
-            <div class="articles-grid" data-category="SCP">
-                <!-- <a href="SCP-999.html" class="article-card" data-name="SCP-999">...</a> -->
-            </div>
-        </div>
-        
-        <!-- 🌊 ЗАКУЛИСЬЕ -->
-        <div class="category-section">
-            <div class="category-title">🌊 Закулисье</div>
-            <div class="articles-grid" data-category="Закулисье">
-                <!-- <a href="миндальная вода.html" class="article-card" data-name="миндальная вода">...</a> -->
-            </div>
-        </div>
-        
-        <!-- 🎮 ИГРЫ -->
-        <div class="category-section">
-            <div class="category-title">🎮 Игры и фандомы</div>
-            <div class="articles-grid" data-category="Игры">
-                <!-- <a href="киллер!санс.html" class="article-card" data-name="киллер санс">...</a> -->
+            <div class="category-title">🍲 Еда</div>
+            <div class="articles-grid" data-category="Еда">
+                <a href="борщ.html" class="article-card" data-name="борщ">
+                    <span class="name">Русский борщ</span>
+                </a>
+                <a href="лимонад.html" class="article-card" data-name="лимонад">
+                    <span class="name">Домашний лимонад</span>
+                </a>
+                <a href="сырники.html" class="article-card" data-name="сырники">
+                    <span class="name">Сырники</span>
+                </a>
+                <!-- Сюда добавляй новые блюда -->
             </div>
         </div>
         
@@ -214,23 +201,35 @@
         <div class="category-section">
             <div class="category-title">🤖 ИИ</div>
             <div class="articles-grid" data-category="ИИ">
-                <!-- <a href="дипсик.html" class="article-card" data-name="дипсик">...</a> -->
+                <a href="дипсик.html" class="article-card" data-name="deepseek">
+                    <span class="name">DeepSeek</span>
+                </a>
+                <a href="алиса-ai.html" class="article-card" data-name="алиса ai">
+                    <span class="name">Алиса AI</span>
+                </a>
+                <!-- Сюда добавляй новые ИИ -->
             </div>
         </div>
         
-        <!-- 📺 ЮТУБЕРЫ -->
+        <!-- 🎭 SCP -->
         <div class="category-section">
-            <div class="category-title">📺 Ютуберы</div>
-            <div class="articles-grid" data-category="Ютуберы">
-                <!-- <a href="3121534312.html" class="article-card" data-name="3121534312">...</a> -->
+            <div class="category-title">🎭 Фонд SCP</div>
+            <div class="articles-grid" data-category="SCP">
+                <a href="SCP-999.html" class="article-card" data-name="SCP-999">
+                    <span class="name">SCP-999</span>
+                </a>
+                <!-- Сюда добавляй новые SCP -->
             </div>
         </div>
         
-        <!-- 🔤 ЯЗЫКИ И ШРИФТЫ -->
+        <!-- 🌊 ЗАКУЛИСЬЕ -->
         <div class="category-section">
-            <div class="category-title">🔤 Языки и шрифты</div>
-            <div class="articles-grid" data-category="Языки">
-                <!-- <a href="футарк.html" class="article-card" data-name="футарк">...</a> -->
+            <div class="category-title">🌊 Закулисье</div>
+            <div class="articles-grid" data-category="Закулисье">
+                <a href="уровень-0.html" class="article-card" data-name="уровень 0">
+                    <span class="name">Уровень 0</span>
+                </a>
+                <!-- Сюда добавляй новые уровни -->
             </div>
         </div>
         
@@ -262,11 +261,10 @@
                 const categorySection = card.closest('.category-section');
                 const category = categorySection ? categorySection.querySelector('.category-title').textContent : '';
                 const link = card.getAttribute('href');
-                const icon = card.querySelector('.icon')?.textContent || '📄';
                 const displayName = card.querySelector('.name')?.textContent || name;
                 
                 if (name.includes(query) || category.toLowerCase().includes(query) || displayName.toLowerCase().includes(query)) {
-                    results.push({ name: displayName, category, link, icon });
+                    results.push({ name: displayName, category, link });
                 }
             });
             
@@ -277,7 +275,7 @@
             
             resultsBox.innerHTML = results.map(r => `
                 <a href="${r.link}" class="search-item">
-                    <div class="item-name">${r.icon} ${r.name}</div>
+                    <div class="item-name">${r.name}</div>
                     <div class="item-cat">${r.category}</div>
                 </a>
             `).join('');
