@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <title>лол</title>
+    
+    <meta name="description" content="Лол — режимы безумия.">
+    <meta name="keywords" content="лол, режимы, диско, безумие, GenoTheError">
+    <meta name="author" content="GenoTheError, Geno">
+    <meta name="robots" content="noindex, nofollow">
+    
+    <link rel="icon" href="ico.png">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    
+    <div class="header">
+        <a href="об проекте.html" class="back-btn">← Назад</a>
+        <span class="badge red">🤪 лол</span>
+    </div>
+    
+    <h1>🤪 лол</h1>
+    
+    <div class="card">
+        <p>
+            Добро пожаловать в <strong>секретную комнату</strong>. 
+            Тут можно включить разные безумные режимы. 
+            Выбирай осторожно!
+        </p>
+    </div>
+    
+    <!-- ПРЕДУПРЕЖДЕНИЕ -->
+    <div class="card" id="warningBox" style="display: none; border-color: #d69e2e;">
+        <h2 style="color:#d69e2e; border-left-color:#d69e2e;">⚠️ ВНИМАНИЕ!</h2>
+        <p>Режим содержит <strong>быстро мигающие цвета</strong> и <strong>эпилептические эффекты</strong>.</p>
+        <p>Если у тебя <strong>эпилепсия</strong> или чувствительность к мерцанию — 
+        <strong>не включай</strong>!</p>
+        <p>Режим <strong>распространяется на весь сайт</strong>. Остановить можно будет кнопкой слева сверху на любой странице.</p>
+        <p><strong>Ты уверен, что хочешь продолжить?</strong></p>
+        
+        <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:16px;">
+            <button class="mode-btn no-disco" id="confirmDiscoBtn" style="background:#38a169; border-color:#38a169; color:white; text-align:center; flex:1;">
+                ✅ Да, я уверен
+            </button>
+            <button class="mode-btn no-disco" id="cancelDiscoBtn" style="background:#e53e3e; border-color:#e53e3e; color:white; text-align:center; flex:1;">
+                ❌ Отмена
+            </button>
+        </div>
+    </div>
+    
+    <h2>🎮 Режимы</h2>
+    
+    <button class="mode-btn no-disco" id="discoBtn">
+        💃 Диско-стайл
+        <small>Безумные цвета, дрожание, смена шрифтов, искривления. Работает на всём сайте!</small>
+    </button>
+    
+    <button class="mode-btn no-disco" id="stopBtn" style="display:none; background:#e53e3e; border-color:#e53e3e; color:white;">
+        🛑 Остановить режим
+    </button>
+    
+    <div class="footer">
+        База Знаний GenoTheError • лол
+    </div>
+    
+    <script src="photos.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const discoBtn = document.getElementById('discoBtn');
+            const stopBtn = document.getElementById('stopBtn');
+            const warningBox = document.getElementById('warningBox');
+            const confirmDiscoBtn = document.getElementById('confirmDiscoBtn');
+            const cancelDiscoBtn = document.getElementById('cancelDiscoBtn');
+            
+            // Если диско уже включён — показываем кнопку "Остановить"
+            function updateUI() {
+                const isOn = document.body.classList.contains('disco-mode');
+                if (isOn) {
+                    stopBtn.style.display = 'block';
+                    discoBtn.style.display = 'none';
+                } else {
+                    stopBtn.style.display = 'none';
+                    discoBtn.style.display = 'block';
+                }
+            }
+            
+            updateUI();
+            
+            // Показать предупреждение
+            discoBtn.addEventListener('click', function() {
+                warningBox.style.display = 'block';
+                warningBox.scrollIntoView({ behavior: 'smooth' });
+            });
+            
+            // Отмена
+            cancelDiscoBtn.addEventListener('click', function() {
+                warningBox.style.display = 'none';
+            });
+            
+            // Подтверждение — включаем диско (глобально, через localStorage)
+            confirmDiscoBtn.addEventListener('click', function() {
+                warningBox.style.display = 'none';
+                window.discoEnable();
+                updateUI();
+            });
+            
+            // Остановка
+            stopBtn.addEventListener('click', function() {
+                window.discoDisable();
+                updateUI();
+            });
+        });
+    </script>
+    
+</body>
+</html>
