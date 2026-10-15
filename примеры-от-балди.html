@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <title>Примеры от Балди!</title>
+    
+    <meta name="description" content="Примеры от Балди — простые примеры на сложение и вычитание.">
+    <meta name="keywords" content="примеры, Балди, математика, сложение, вычитание">
+    <meta name="author" content="GenoTheError, Geno">
+    <meta name="robots" content="index, follow">
+    
+    <meta property="og:type" content="article">
+    <meta property="og:title" content="Примеры от Балди!">
+    <meta property="og:description" content="Простые примеры на сложение и вычитание.">
+    
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="Примеры от Балди!">
+    <meta name="twitter:description" content="Простые примеры на сложение и вычитание.">
+    
+    <link rel="icon" href="ico.png">
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .example-box {
+            background: #1a202c;
+            border: 2px solid #38a169;
+            border-radius: 16px;
+            padding: 32px 24px;
+            margin: 24px 0;
+            text-align: center;
+            font-size: 32px;
+            font-weight: 700;
+            color: #f6e05e;
+            min-height: 120px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+        }
+        
+        .example-box.loading {
+            color: #718096;
+            font-style: italic;
+            font-size: 20px;
+            font-weight: 400;
+        }
+        
+        .answer-input {
+            width: 100%;
+            font-size: 24px;
+            padding: 14px 16px;
+            border: 2px solid #2d3748;
+            border-radius: 12px;
+            background: #1a202c;
+            color: #e2e8f0;
+            outline: none;
+            text-align: center;
+            font-family: inherit;
+            margin-bottom: 12px;
+        }
+        
+        .answer-input:focus {
+            border-color: #4299e1;
+        }
+        
+        .example-actions {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 16px;
+        }
+        
+        .example-btn {
+            background: #38a169;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 24px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+        
+        .example-btn:hover {
+            background: #2f855a;
+            transform: translateY(-2px);
+        }
+        
+        .example-btn:active {
+            transform: translateY(0);
+        }
+        
+        .example-btn.skip {
+            background: #2d3748;
+        }
+        
+        .example-btn.skip:hover {
+            background: #4a5568;
+        }
+        
+        .result-message {
+            text-align: center;
+            font-size: 20px;
+            min-height: 30px;
+            margin-top: 16px;
+            font-weight: 600;
+        }
+        
+        .result-message.good {
+            color: #68d391;
+        }
+        
+        .result-message.bad {
+            color: #fc8181;
+        }
+    </style>
+</head>
+<body>
+    
+    <div class="header">
+        <a href="index.html" class="back-btn">← Назад</a>
+        <span class="badge">✨ Интересное</span>
+        <span class="badge green">Математика</span>
+    </div>
+    
+    <h1>📚 Примеры от Балди!</h1>
+    
+    <div class="card">
+        <p>
+            Реши пример и получи <strong>печеньку 🍪</strong> от Балди!
+        </p>
+    </div>
+    
+    <div class="example-box loading" id="exampleBox">
+        Загрузка примера...
+    </div>
+    
+    <input type="number" 
+           class="answer-input" 
+           id="answerInput" 
+           placeholder="Введи ответ..." 
+           autocomplete="off">
+    
+    <div class="example-actions">
+        <button class="example-btn" id="checkBtn">✅ Проверить</button>
+        <button class="example-btn skip" id="skipBtn">⏭ Пропустить</button>
+    </div>
+    
+    <div class="result-message" id="resultMessage"></div>
+    
+    <div class="footer">
+        База Знаний GenoTheError • Примеры от Балди!
+    </div>
+    
+    <script src="примеры.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const exampleBox = document.getElementById('exampleBox');
+            const answerInput = document.getElementById('answerInput');
+            const checkBtn = document.getElementById('checkBtn');
+            const skipBtn = document.getElementById('skipBtn');
+            const resultMessage = document.getElementById('resultMessage');
+            
+            let currentExample = null;
+            let currentAnswer = null;
+            
+            function parseExample(str) {
+                // "2 + 2" или "10 - 3"
+                const parts = str.split(' ');
+                const a = parseInt(parts[0]);
+                const op = parts[1];
+                const b = parseInt(parts[2]);
+                return {
+                    text: str,
+                    answer: op === '+' ? a + b : a - b
+                };
+            }
+            
+            function showRandomExample() {
+                if (typeof ПРИМЕРЫ === 'undefined' || ПРИМЕРЫ.length === 0) {
+                    exampleBox.textContent = '❌ Примеры не найдены.';
+                    exampleBox.classList.remove('loading');
+                    return;
+                }
+                
+                const randomIndex = Math.floor(Math.random() * ПРИМЕРЫ.length);
+                currentExample = parseExample(ПРИМЕРЫ[randomIndex]);
+                currentAnswer = currentExample.answer;
+                
+                exampleBox.classList.remove('loading');
+                exampleBox.textContent = currentExample.text + ' = ?';
+                answerInput.value = '';
+                resultMessage.textContent = '';
+                resultMessage.className = 'result-message';
+                answerInput.focus();
+            }
+            
+            function checkAnswer() {
+                const userAnswer = parseInt(answerInput.value);
+                
+                if (isNaN(userAnswer)) {
+                    resultMessage.textContent = '⚠️ Введи число!';
+                    resultMessage.className = 'result-message bad';
+                    return;
+                }
+                
+                if (userAnswer === currentAnswer) {
+                    resultMessage.textContent = 'Молодец, ученик! Балди даёт тебе 🍪!';
+                    resultMessage.className = 'result-message good';
+                    
+                    setTimeout(showRandomExample, 1500);
+                } else {
+                    resultMessage.textContent = '❌ Неправильно. Попробуй ещё!';
+                    resultMessage.className = 'result-message bad';
+                }
+            }
+            
+            showRandomExample();
+            
+            checkBtn.addEventListener('click', checkAnswer);
+            skipBtn.addEventListener('click', showRandomExample);
+            
+            answerInput.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') {
+                    checkAnswer();
+                }
+            });
+        });
+    </script>
+    
+</body>
+</html>

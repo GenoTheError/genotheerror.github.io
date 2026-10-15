@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <title>Интересный факт</title>
+    
+    <meta name="description" content="Интересный факт — рандомный факт из базы знаний.">
+    <meta name="keywords" content="интересный факт, факты, рандом, база знаний">
+    <meta name="author" content="GenoTheError, Geno">
+    <meta name="robots" content="index, follow">
+    
+    <meta property="og:type" content="article">
+    <meta property="og:title" content="Интересный факт">
+    <meta property="og:description" content="Рандомный факт из базы знаний.">
+    
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="Интересный факт">
+    <meta name="twitter:description" content="Рандомный факт из базы знаний.">
+    
+    <link rel="icon" href="ico.png">
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .fact-box {
+            background: #1a202c;
+            border: 2px solid #4299e1;
+            border-radius: 16px;
+            padding: 32px 24px;
+            margin: 24px 0;
+            text-align: center;
+            font-size: 20px;
+            line-height: 1.7;
+            min-height: 120px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+        }
+        
+        .fact-box.loading {
+            color: #718096;
+            font-style: italic;
+        }
+        
+        .fact-actions {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 16px;
+        }
+        
+        .fact-btn {
+            background: #4299e1;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 24px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+        
+        .fact-btn:hover {
+            background: #3182ce;
+            transform: translateY(-2px);
+        }
+        
+        .fact-btn:active {
+            transform: translateY(0);
+        }
+    </style>
+</head>
+<body>
+    
+    <div class="header">
+        <a href="index.html" class="back-btn">← Назад</a>
+        <span class="badge">✨ Интересное</span>
+    </div>
+    
+    <h1>✨ Интересный факт</h1>
+    
+    <div class="card">
+        <p>
+            Каждый раз, когда ты открываешь эту страницу, ты получаешь 
+            <strong>случайный интересный факт</strong> из базы.
+        </p>
+    </div>
+    
+    <div class="fact-box loading" id="factBox">
+        Загрузка факта...
+    </div>
+    
+    <div class="fact-actions">
+        <button class="fact-btn" id="newFactBtn">🎲 Ещё факт!</button>
+    </div>
+    
+    <div class="footer">
+        База Знаний GenoTheError • Интересный факт
+    </div>
+    
+    <script src="факты.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const factBox = document.getElementById('factBox');
+            const newFactBtn = document.getElementById('newFactBtn');
+            
+            function showRandomFact() {
+                if (typeof ФАКТЫ === 'undefined' || ФАКТЫ.length === 0) {
+                    factBox.textContent = '❌ Факты не найдены.';
+                    factBox.classList.remove('loading');
+                    return;
+                }
+                
+                const randomIndex = Math.floor(Math.random() * ФАКТЫ.length);
+                factBox.classList.remove('loading');
+                factBox.textContent = '💡 ' + ФАКТЫ[randomIndex];
+            }
+            
+            showRandomFact();
+            
+            newFactBtn.addEventListener('click', showRandomFact);
+        });
+    </script>
+    
+</body>
+</html>
