@@ -1,20 +1,6 @@
-// ==========================================
-// photos.js — загрузчик фото + лайтбокс
-// + автоподгрузка disco.js (глобальный режим)
-// ==========================================
-
-// Автоподгрузка disco.js — один раз, если ещё не подключён
-(function() {
-    if (!document.querySelector('script[src="disco.js"]')) {
-        const s = document.createElement('script');
-        s.src = 'disco.js';
-        document.head.appendChild(s);
-    }
-})();
-
 document.addEventListener('DOMContentLoaded', function() {
     
-    // ========== ЗАГРУЗКА ФОТО ==========
+    // ========== ЗАГРУЗКА ==========
     const containers = document.querySelectorAll('.photos[data-photo-base]');
     const FORMATS = ['png', 'jpg', 'jpeg', 'gif', 'webp'];
     
@@ -22,13 +8,18 @@ document.addEventListener('DOMContentLoaded', function() {
         const basePath = container.getAttribute('data-photo-base');
         const count = parseInt(container.getAttribute('data-count') || '10');
         
+        // Сначала пробуем загрузить файл БЕЗ номера: "имя.jpeg"
         tryLoadPhoto(container, basePath, null, 0);
         
+        // Потом пробуем с номерами: "имя (1).jpeg", "имя (2).jpeg" и т.д.
         for (let i = 1; i <= count; i++) {
             tryLoadPhoto(container, basePath, i, 0);
         }
     });
     
+    // Функция загрузки одного фото
+    // index = null — пробуем "имя.jpeg"
+    // index = 1,2,3... — пробуем "имя (1).jpeg", "имя (2).jpeg" и т.д.
     function tryLoadPhoto(container, basePath, index, formatIdx) {
         if (formatIdx >= FORMATS.length) return;
         
@@ -36,8 +27,10 @@ document.addEventListener('DOMContentLoaded', function() {
         let src;
         
         if (index === null) {
+            // Без номера: "имя.jpeg"
             src = basePath + '.' + format;
         } else {
+            // С номером: "имя (1).jpeg"
             src = basePath + ' (' + index + ').' + format;
         }
         
