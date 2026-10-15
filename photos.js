@@ -8,26 +8,45 @@ document.addEventListener('DOMContentLoaded', function() {
         const basePath = container.getAttribute('data-photo-base');
         const count = parseInt(container.getAttribute('data-count') || '10');
         
-        function loadNumber(index) {
-            let formatIdx = 0;
-            
-            function tryNext() {
-                if (formatIdx >= FORMATS.length) return;
-                const src = basePath + ' (' + index + ').' + FORMATS[formatIdx];
-                const img = new Image();
-                
-                img.onload = function() { container.appendChild(img); };
-                img.onerror = function() { formatIdx++; tryNext(); };
-                img.src = src;
-            }
-            
-            tryNext();
-        }
+        // Сначала пробуем загрузить файл БЕЗ номера: "имя.jpeg"
+        tryLoadPhoto(container, basePath, null, 0);
         
+        // Потом пробуем с номерами: "имя (1).jpeg", "имя (2).jpeg" и т.д.
         for (let i = 1; i <= count; i++) {
-            loadNumber(i);
+            tryLoadPhoto(container, basePath, i, 0);
         }
     });
+    
+    // Функция загрузки одного фото
+    // index = null — пробуем "имя.jpeg"
+    // index = 1,2,3... — пробуем "имя (1).jpeg", "имя (2).jpeg" и т.д.
+    function tryLoadPhoto(container, basePath, index, formatIdx) {
+        if (formatIdx >= FORMATS.length) return;
+        
+        const format = FORMATS[formatIdx];
+        let src;
+        
+        if (index === null) {
+            // Без номера: "имя.jpeg"
+            src = basePath + '.' + format;
+        } else {
+            // С номером: "имя (1).jpeg"
+            src = basePath + ' (' + index + ').' + format;
+        }
+        
+        const img = new Image();
+        
+        img.onload = function() { 
+            container.appendChild(img); 
+        };
+        
+        img.onerror = function() { 
+            formatIdx++; 
+            tryLoadPhoto(container, basePath, index, formatIdx); 
+        };
+        
+        img.src = src;
+    }
     
     // ========== ЛАЙТБОКС ==========
     try {
