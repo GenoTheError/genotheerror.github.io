@@ -1,6 +1,161 @@
-document.addEventListener('DOMContentLoaded', function() {
+// ==========================================
+// photos.js — фото + лайтбокс + иконки
+// ==========================================
+// Подключается в <head> с атрибутом defer.
+// ==========================================
+
+// ==========================================
+// 1. ИКОНКИ
+// ==========================================
+(function() {
+    const ИКОНКИ_ФОРМАТЫ = ['jpeg', 'jpg', 'png', 'webp', 'gif'];
+    const ИКОНКИ_ПАПКА = 'иконки/';
+    const ТАЙМАУТ_МС = 1000;
     
-    // ========== ЗАГРУЗКА ==========
+    const ЭМОДЗИ_КАТЕГОРИЙ = {
+        'Вещества': '🧪',
+        'Географические пейзажи': '🏔️',
+        'Еда': '🍲',
+        'Игры': '🎮',
+        'ИИ': '🤖',
+        'SCP': '🎭',
+        'Закулисье': '🌊',
+        'Персонажи': '👥',
+        'Блогеры': '🎥',
+        'Интересное': '✨'
+    };
+    
+    function получитьЭмодзи(категория) {
+        for (const ключ in ЭМОДЗИ_КАТЕГОРИЙ) {
+            if (категория.indexOf(ключ) !== -1) {
+                return ЭМОДЗИ_КАТЕГОРИЙ[ключ];
+            }
+        }
+        return '📄';
+    }
+    
+    function получитьИмяИзHref(href) {
+        return href.replace(/\.html$/, '').replace(/^.*\//, '');
+    }
+    
+    let загрузокОсталось = 0;
+    let иконкиПоказаны = false;
+    
+    function проверитьГотовность() {
+        if (иконкиПоказаны) return;
+        if (загрузокОсталось <= 0) {
+            иконкиПоказаны = true;
+            показатьИконки();
+        }
+    }
+    
+    function показатьИконки() {
+        // Плавно проявляем все иконки/заглушки
+        document.querySelectorAll('.card-icon').forEach(function(box) {
+            box.classList.add('видно');
+        });
+    }
+    
+    function попробоватьИконку(имя, box, formatIdx, эмодзи) {
+        if (formatIdx >= ИКОНКИ_ФОРМАТЫ.length) {
+            // Ничего не нашли — ставим эмодзи (появится при "видно")
+            box.textContent = эмодзи;
+            загрузокОсталось--;
+            проверитьГотовность();
+            return;
+        }
+        
+        const src = ИКОНКИ_ПАПКА + имя + '.' + ИКОНКИ_ФОРМАТЫ[formatIdx];
+        const img = new Image();
+        
+        img.onload = function() {
+            box.textContent = '';
+            box.appendChild(img);
+            загрузокОсталось--;
+            проверитьГотовность();
+        };
+        
+        img.onerror = function() {
+            попробоватьИконку(имя, box, formatIdx + 1, эмодзи);
+        };
+        
+        img.src = src;
+    }
+    
+    function обработатьКарточки() {
+        const карточки = document.querySelectorAll('.article-card');
+        
+        загрузокОсталось = 0;
+        
+        карточки.forEach(function(карточка) {
+            if (карточка.querySelector('.card-icon')) return;
+            
+            const href = карточка.getAttribute('href');
+            if (!href) return;
+            
+            const имя = получитьИмяИзHref(href);
+            
+            const grid = карточка.closest('.articles-grid');
+            const категория = grid ? (grid.getAttribute('data-category') || '') : '';
+            const эмодзи = получитьЭмодзи(категория);
+            
+            const box = document.createElement('div');
+            box.className = 'card-icon';
+            box.textContent = эмодзи; // эмодзи видно сразу, но прозрачно (CSS)
+            
+            const textBox = document.createElement('div');
+            textBox.className = 'card-text';
+            
+            while (карточка.firstChild) {
+                textBox.appendChild(карточка.firstChild);
+            }
+            
+            if (!textBox.querySelector('.name')) {
+                const dataName = карточка.getAttribute('data-name');
+                if (dataName) {
+                    const nameSpan = document.createElement('span');
+                    nameSpan.className = 'name';
+                    nameSpan.textContent = dataName;
+                    textBox.insertBefore(nameSpan, textBox.firstChild);
+                }
+            }
+            
+            if (!textBox.querySelector('.cat')) {
+                const catSpan = document.createElement('span');
+                catSpan.className = 'cat';
+                catSpan.textContent = категория;
+                textBox.appendChild(catSpan);
+            }
+            
+            карточка.appendChild(box);
+            карточка.appendChild(textBox);
+            
+            загрузокОсталось++;
+            попробоватьИконку(имя, box, 0, эмодзи);
+        });
+        
+        // Страховка: если через 1 секунду не все загрузились — показать что есть
+        setTimeout(function() {
+            if (!иконкиПоказаны) {
+                иконкиПоказаны = true;
+                показатьИконки();
+            }
+        }, ТАЙМАУТ_МС);
+        
+        // Если карточек нет — показать сразу
+        if (загрузокОсталось === 0) {
+            иконкиПоказаны = true;
+            показатьИконки();
+        }
+    }
+    
+    обработатьКарточки();
+})();
+
+// ==========================================
+// 2. ФОТО
+// ==========================================
+(function() {
     const containers = document.querySelectorAll('.photos[data-photo-base]');
     const FORMATS = ['png', 'jpg', 'jpeg', 'gif', 'webp'];
     
@@ -8,18 +163,13 @@ document.addEventListener('DOMContentLoaded', function() {
         const basePath = container.getAttribute('data-photo-base');
         const count = parseInt(container.getAttribute('data-count') || '10');
         
-        // Сначала пробуем загрузить файл БЕЗ номера: "имя.jpeg"
         tryLoadPhoto(container, basePath, null, 0);
         
-        // Потом пробуем с номерами: "имя (1).jpeg", "имя (2).jpeg" и т.д.
         for (let i = 1; i <= count; i++) {
             tryLoadPhoto(container, basePath, i, 0);
         }
     });
     
-    // Функция загрузки одного фото
-    // index = null — пробуем "имя.jpeg"
-    // index = 1,2,3... — пробуем "имя (1).jpeg", "имя (2).jpeg" и т.д.
     function tryLoadPhoto(container, basePath, index, formatIdx) {
         if (formatIdx >= FORMATS.length) return;
         
@@ -27,10 +177,8 @@ document.addEventListener('DOMContentLoaded', function() {
         let src;
         
         if (index === null) {
-            // Без номера: "имя.jpeg"
             src = basePath + '.' + format;
         } else {
-            // С номером: "имя (1).jpeg"
             src = basePath + ' (' + index + ').' + format;
         }
         
@@ -47,8 +195,12 @@ document.addEventListener('DOMContentLoaded', function() {
         
         img.src = src;
     }
-    
-    // ========== ЛАЙТБОКС ==========
+})();
+
+// ==========================================
+// 3. ЛАЙТБОКС
+// ==========================================
+(function() {
     try {
         const lightbox = document.getElementById('lightbox');
         const lightboxImg = document.getElementById('lightboxImg');
@@ -77,7 +229,6 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         }
     } catch (err) {
-        alert('❌ Ошибка в лайтбоксе: ' + err.message);
+        // тихо
     }
-    
-});
+})();

@@ -72,7 +72,7 @@ h3 {
     margin: 16px 0 8px 0;
 }
 
-/* ========== КАРТОЧКИ ========== */
+/* ========== КАРТОЧКИ (статьи) ========== */
 .card {
     background: #1a202c;
     border: 1px solid #2d3748;
@@ -240,4 +240,94 @@ em {
     text-align: center;
     font-size: 14px;
     color: #4a5568;
+}
+
+/* ==========================================
+   ГЛАВНАЯ: СЕТКА И КАРТОЧКИ С ИКОНКАМИ
+   ========================================== */
+
+.articles-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 6px;
+}
+
+.article-card {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 4px 10px;
+    background: #1a202c;
+    border: 1px solid #2d3748;
+    border-radius: 10px;
+    color: #e2e8f0;
+    text-decoration: none;
+    min-height: 55px;
+    transition: background 0.2s, border-color 0.2s, transform 0.2s;
+    
+    /* Мягкое быстрое появление карточки */
+    animation: cardIn 0.15s ease both;
+}
+
+@keyframes cardIn {
+    from { opacity: 0; transform: translateY(4px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+.article-card:hover {
+    background: #2d3748;
+    border-color: #4299e1;
+    text-decoration: none;
+    transform: translateY(-2px);
+}
+
+/* ИКОНКА — изначально прозрачная */
+.article-card .card-icon {
+    flex-shrink: 0;
+    width: 45px;
+    height: 45px;
+    border-radius: 6px;
+    overflow: hidden;
+    background: #2d3748;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    border: 2px solid #2d3748;
+    
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+
+/* Показываем иконку, когда фото/эмодзи на месте */
+.article-card .card-icon.видно {
+    opacity: 1;
+}
+
+.article-card .card-icon img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+/* ТЕКСТ */
+.article-card .card-text {
+    flex: 1;
+    min-width: 0;
+}
+
+.article-card .name {
+    font-weight: 600;
+    color: #90cdf4;
+    display: block;
+    font-size: 15px;
+    line-height: 1.2;
+    margin-bottom: 2px;
+}
+
+.article-card .cat {
+    font-size: 12px;
+    color: #718096;
+    line-height: 1.2;
 }
