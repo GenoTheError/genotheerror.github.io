@@ -145,49 +145,6 @@
     </div>
 
     <script>
-        function performSearch() {
-            const query = document.getElementById('searchInput').value.toLowerCase().trim();
-            const resultsBox = document.getElementById('searchResults');
-            
-            if (query.length < 1) { resultsBox.innerHTML = ''; return; }
-            
-            const allArticles = document.querySelectorAll('.article-card');
-            const results = [];
-            
-            allArticles.forEach(card => {
-                const name = card.getAttribute('data-name') || '';
-                const link = card.getAttribute('href');
-                const displayName = card.querySelector('.name')?.textContent || name;
-                const categorySection = card.closest('.category-section');
-                const category = categorySection ? categorySection.querySelector('.category-title').textContent : '';
-                
-                if (name.includes(query) || displayName.toLowerCase().includes(query) || category.toLowerCase().includes(query)) {
-                    results.push({ name: displayName, category, link });
-                }
-            });
-            
-            if (results.length === 0) {
-                resultsBox.innerHTML = `<div style="color: #718096; padding: 12px; text-align: center;">Ничего не найдено</div>`;
-                return;
-            }
-            
-            resultsBox.innerHTML = results.map(r => `
-                <a href="${r.link}" class="search-item">
-                    <div class="item-name">${r.name}</div>
-                    <div class="item-cat">${r.category}</div>
-                </a>
-            `).join('');
-        }
-        
-        document.getElementById('searchInput').addEventListener('input', performSearch);
-        
-        function updateCount() {
-            const count = document.querySelectorAll('.article-card').length;
-            document.getElementById('totalCount').textContent = count;
-        }
-        updateCount();
-    </script>
-<script>
     // ==========================================
     // СОХРАНЕНИЕ ПОЗИЦИИ СКРОЛЛА
     // ==========================================
@@ -227,8 +184,9 @@
             const displayName = card.querySelector('.name')?.textContent || name;
             const categorySection = card.closest('.category-section');
             const category = categorySection ? categorySection.querySelector('.category-title').textContent : '';
+            const теги = (card.getAttribute('data-теги') || '').toLowerCase();
             
-            if (name.includes(query) || displayName.toLowerCase().includes(query) || category.toLowerCase().includes(query)) {
+            if (name.includes(query) || displayName.toLowerCase().includes(query) || category.toLowerCase().includes(query) || теги.includes(query)) {
                 results.push({ name: displayName, category, link });
             }
         });
