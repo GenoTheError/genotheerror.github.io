@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Прыгающий шарик</title>
+    <link rel="icon" href="../ico.png">
+    <link rel="stylesheet" href="../style.css">
+    <style>
+        #игра {
+            position: relative;
+            width: 100%;
+            height: 400px;
+            background: #1a202c;
+            border: 2px solid #2d3748;
+            border-radius: 12px;
+            overflow: hidden;
+            margin: 16px 0;
+            touch-action: none;
+        }
+        #шарик {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            background: #4299e1;
+            border-radius: 50%;
+            left: 60px;
+            bottom: 0;
+        }
+        .препятствие {
+            position: absolute;
+            background: #e53e3e;
+            border-radius: 4px;
+        }
+        .счёт {
+            font-size: 28px;
+            font-weight: 700;
+            color: #f6e05e;
+            text-align: center;
+            margin: 12px 0;
+        }
+        .подсказка {
+            text-align: center;
+            color: #a0aec0;
+            font-size: 14px;
+            margin: 8px 0;
+        }
+        .кнопка {
+            background: #4299e1;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 20px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: inherit;
+            display: block;
+            margin: 10px auto;
+        }
+        .кнопка:hover {
+            background: #3182ce;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <a href="../игры.html" class="back-btn">← Назад</a>
+        <span class="badge purple">🎯 Аркада</span>
+    </div>
+    
+    <h1>⚪ Прыгающий шарик</h1>
+    
+    <div class="счёт">Счёт: <span id="счёт">0</span></div>
+    
+    <div id="игра">
+        <div id="шарик"></div>
+    </div>
+    
+    <div class="подсказка">Тапай по экрану или жми пробел, чтобы прыгнуть</div>
+    <button class="кнопка" onclick="начать()">🔄 Заново</button>
+    
+    <script>
+        const игра = document.getElementById('игра');
+        const шарик = document.getElementById('шарик');
+        let позиция = 0;
+        let скорость = 0;
+        let прыжок = false;
+        let препятствия = [];
+        let счёт = 0;
+        let играИдёт = false;
+        let анимация;
+        
+        const гравитация = 0.8;
+        const силаПрыжка = -14;
+        const скоростьИгры = 4;
+        
+        function начать() {
+            позиция = 0;
+            скорость = 0;
+            препятствия.forEach(p => p.element.remove());
+            препятствия = [];
+            счёт = 0;
+            играИдёт = true;
+            document.getElementById('счёт').textContent = 0;
+            шарик.style.bottom = '0';
+            
+            cancelAnimationFrame(анимация);
+            цикл();
+        }
+        
+        function прыгнуть() {
+            if (!играИдёт) return;
+            if (позиция <= 0) {
+                скорость = силаПрыжка;
+            }
+        }
+        
+        игра.addEventListener('click', прыгнуть);
+        игра.addEventListener('touchstart', (e) => { e.preventDefault(); прыгнуть(); });
+        document.addEventListener('keydown', (e) => {
+            if (e.code === 'Space') { e.preventDefault(); прыгнуть(); }
+        });
+        
+        let кадры = 0;
+        
+        function цикл() {
+            if (!играИдёт) return;
+            
+            // Физика
+            скорость += гравитация;
+            позиция += скорость;
+            if (позиция > 0) { позиция = 0; скорость = 0; }
+            шарик.style.bottom = (-позиция) + 'px';
+            
+            // Препятствия
+            кадры++;
+            if (кадры % 90 === 0) {
+                создатьПрепятствие();
+            }
+            
+            препятствия.forEach(p => {
+                p.x -= скоростьИгры;
+                p.element.style.left = p.x + 'px';
+                
+                // Проверка столкновения
+                const шарикBottom = -позиция;
+                if (p.x < 100 && p.x + p.ширина > 60 && 
+                    шарикBottom < p.высота) {
+                    играИдёт = false;
+                    setTimeout(() => alert('💥 Игра окончена! Счёт: ' + счёт), 100);
+                }
+            });
+            
+            // Удаление ушедших
+            препятствия = препятствия.filter(p => {
+                if (p.x < -100) { p.element.remove(); return false; }
+                return true;
+            });
+            
+            // Счёт
+            if (кадры % 90 === 0) {
+                счёт++;
+                document.getElementById('счёт').textContent = счёт;
+            }
+            
+            анимация = requestAnimationFrame(цикл);
+        }
+        
+        function создатьПрепятствие() {
+            const высота = 30 + Math.random() * 40;
+            const ширина = 25 + Math.random() * 25;
+            const element = document.createElement('div');
+            element.className = 'препятствие';
+            element.style.width = ширина + 'px';
+            element.style.height = высота + 'px';
+            element.style.left = игра.offsetWidth + 'px';
+            element.style.bottom = '0';
+            игра.appendChild(element);
+            препятствия.push({ x: игра.offsetWidth, ширина, высота, element });
+        }
+        
+        начать();
+    </script>
+</body>
+</html>

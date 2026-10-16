@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Найди пару</title>
+    <link rel="icon" href="../ico.png">
+    <link rel="stylesheet" href="../style.css">
+    <style>
+        .поле {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+            margin: 20px 0;
+        }
+        .карточка {
+            aspect-ratio: 1;
+            background: #2d3748;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            cursor: pointer;
+            user-select: none;
+            transition: all 0.2s;
+            transform-style: preserve-3d;
+        }
+        .карточка.закрыта {
+            background: #4299e1;
+        }
+        .карточка.открыта {
+            background: #1a202c;
+            border: 2px solid #4299e1;
+        }
+        .карточка.найдена {
+            background: #38a169;
+            cursor: default;
+        }
+        .инфо {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin: 16px 0;
+        }
+        .инфо-блок {
+            background: #2d3748;
+            padding: 10px 14px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        .инфо-блок .label {
+            color: #a0aec0;
+            font-size: 13px;
+        }
+        .инфо-блок .value {
+            color: #e2e8f0;
+            font-weight: 700;
+            font-size: 20px;
+        }
+        .кнопка {
+            background: #4299e1;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 20px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: inherit;
+            margin: 10px 0;
+        }
+        .кнопка:hover {
+            background: #3182ce;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <a href="../игры.html" class="back-btn">← Назад</a>
+        <span class="badge purple">🧠 Логика</span>
+    </div>
+    
+    <h1>🧠 Найди пару</h1>
+    
+    <div class="инфо">
+        <div class="инфо-блок">
+            <div class="label">Ходы</div>
+            <div class="value" id="ходы">0</div>
+        </div>
+        <div class="инфо-блок">
+            <div class="label">Пары</div>
+            <div class="value" id="пары">0/8</div>
+        </div>
+    </div>
+    
+    <div class="поле" id="поле"></div>
+    
+    <button class="кнопка" onclick="новаяИгра()">🔄 Новая игра</button>
+    
+    <script>
+        const эмодзи = ['🍎', '🍌', '🍇', '🍓', '🍒', '🍑', '🥝', '🍍'];
+        let карточки = [];
+        let открытые = [];
+        let ходы = 0;
+        let найдено = 0;
+        let блокировка = false;
+        
+        function новаяИгра() {
+            карточки = [...эмодзи, ...эмодзи].sort(() => Math.random() - 0.5);
+            открытые = [];
+            ходы = 0;
+            найдено = 0;
+            блокировка = false;
+            нарисовать();
+            обновить();
+        }
+        
+        function нарисовать() {
+            const поле = document.getElementById('поле');
+            поле.innerHTML = '';
+            карточки.forEach((э, i) => {
+                const карт = document.createElement('div');
+                карт.className = 'карточка закрыта';
+                карт.dataset.index = i;
+                карт.dataset.эмодзи = э;
+                карт.textContent = '';
+                карт.onclick = () => клик(i, карт);
+                поле.appendChild(карт);
+            });
+        }
+        
+        function клик(i, карт) {
+            if (блокировка) return;
+            if (карт.classList.contains('открыта')) return;
+            if (карт.classList.contains('найдена')) return;
+            if (открытые.includes(i)) return;
+            
+            карт.classList.remove('закрыта');
+            карт.classList.add('открыта');
+            карт.textContent = карт.dataset.эмодзи;
+            открытые.push(i);
+            
+            if (открытые.length === 2) {
+                ходы++;
+                обновить();
+                блокировка = true;
+                
+                const [a, b] = открытые;
+                const картA = document.querySelector(`[data-index="${a}"]`);
+                const картB = document.querySelector(`[data-index="${b}"]`);
+                
+                if (картA.dataset.эмодзи === картB.dataset.эмодзи) {
+                    setTimeout(() => {
+                        картA.classList.add('найдена');
+                        картB.classList.add('найдена');
+                        найдено++;
+                        открытые = [];
+                        блокировка = false;
+                        обновить();
+                    }, 500);
+                } else {
+                    setTimeout(() => {
+                        картA.classList.remove('открыта');
+                        картA.classList.add('закрыта');
+                        картA.textContent = '';
+                        картB.classList.remove('открыта');
+                        картB.classList.add('закрыта');
+                        картB.textContent = '';
+                        открытые = [];
+                        блокировка = false;
+                    }, 800);
+                }
+            }
+        }
+        
+        function обновить() {
+            document.getElementById('ходы').textContent = ходы;
+            document.getElementById('пары').textContent = найдено + '/8';
+            if (найдено === 8) {
+                setTimeout(() => alert('🎉 Победа! Ходов: ' + ходы), 300);
+            }
+        }
+        
+        новаяИгра();
+    </script>
+</body>
+</html>

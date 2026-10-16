@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Кликер</title>
+    <link rel="icon" href="../ico.png">
+    <link rel="stylesheet" href="../style.css">
+    <style>
+        .кликер-зона {
+            text-align: center;
+            margin: 20px 0;
+        }
+        #печенька {
+            font-size: 120px;
+            cursor: pointer;
+            user-select: none;
+            -webkit-user-select: none;
+            transition: transform 0.05s;
+            display: inline-block;
+        }
+        #печенька:active {
+            transform: scale(0.9);
+        }
+        .счёт {
+            font-size: 32px;
+            font-weight: 700;
+            color: #f6e05e;
+            text-align: center;
+            margin: 16px 0;
+        }
+        .улучшения {
+            display: grid;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        .улучшение {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #1a202c;
+            border: 1px solid #2d3748;
+            border-radius: 10px;
+            padding: 12px 16px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .улучшение:hover {
+            background: #2d3748;
+            border-color: #4299e1;
+        }
+        .улучшение .назв {
+            font-weight: 600;
+            color: #90cdf4;
+        }
+        .улучшение .цена {
+            color: #f6e05e;
+            font-weight: 600;
+        }
+        .инфо {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin: 16px 0;
+        }
+        .инфо-блок {
+            background: #2d3748;
+            padding: 10px 14px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        .инфо-блок .label {
+            color: #a0aec0;
+            font-size: 13px;
+        }
+        .инфо-блок .value {
+            color: #e2e8f0;
+            font-weight: 700;
+            font-size: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <a href="../игры.html" class="back-btn">← Назад</a>
+        <span class="badge purple">🖱️ Кликер</span>
+    </div>
+    
+    <h1>🍪 Кликер</h1>
+    
+    <div class="инфо">
+        <div class="инфо-блок">
+            <div class="label">Печенек</div>
+            <div class="value" id="счёт">0</div>
+        </div>
+        <div class="инфо-блок">
+            <div class="label">В секунду</div>
+            <div class="value" id="вСекунду">0</div>
+        </div>
+    </div>
+    
+    <div class="кликер-зона">
+        <div id="печенька">🍪</div>
+    </div>
+    
+    <h2>Улучшения</h2>
+    <div class="улучшения" id="улучшения"></div>
+    
+    <script>
+        let печеньки = 0;
+        let вСекунду = 0;
+        
+        const улучшения = [
+            { назв: 'Палец-помощник', цена: 10, бонус: 1, куплено: 0 },
+            { назв: 'Пекарня', цена: 100, бонус: 5, куплено: 0 },
+            { назв: 'Фабрика', цена: 1000, бонус: 25, куплено: 0 },
+            { назв: 'Завод', цена: 10000, бонус: 100, куплено: 0 },
+            { назв: 'Империя', цена: 100000, бонус: 500, куплено: 0 }
+        ];
+        
+        function обновить() {
+            document.getElementById('счёт').textContent = Math.floor(печеньки);
+            document.getElementById('вСекунду').textContent = вСекунду;
+            
+            const конт = document.getElementById('улучшения');
+            конт.innerHTML = '';
+            
+            улучшения.forEach((у, i) => {
+                const div = document.createElement('div');
+                div.className = 'улучшение';
+                div.innerHTML = `
+                    <div>
+                        <div class="назв">${у.назв} (${у.куплено})</div>
+                        <div style="font-size:13px;color:#718096;">+${у.бонус} в сек</div>
+                    </div>
+                    <div class="цена">${у.цена} 🍪</div>
+                `;
+                div.onclick = () => {
+                    if (печеньки >= у.цена) {
+                        печеньки -= у.цена;
+                        у.куплено++;
+                        вСекунду += у.бонус;
+                        у.цена = Math.floor(у.цена * 1.5);
+                        обновить();
+                    }
+                };
+                конт.appendChild(div);
+            });
+        }
+        
+        document.getElementById('печенька').addEventListener('click', () => {
+            печеньки++;
+            обновить();
+        });
+        
+        // Поддержка тапов на телефоне
+        document.getElementById('печенька').addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            печеньки++;
+            обновить();
+        });
+        
+        setInterval(() => {
+            печеньки += вСекунду;
+            обновить();
+        }, 1000);
+        
+        обновить();
+    </script>
+</body>
+</html>

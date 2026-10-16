@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Пиксель-арт</title>
+    <link rel="icon" href="../ico.png">
+    <link rel="stylesheet" href="../style.css">
+    <style>
+        .палитра {
+            display: grid;
+            grid-template-columns: repeat(8, 1fr);
+            gap: 6px;
+            margin: 12px 0;
+        }
+        .цвет {
+            aspect-ratio: 1;
+            border-radius: 6px;
+            cursor: pointer;
+            border: 2px solid #2d3748;
+            transition: transform 0.1s;
+        }
+        .цвет.выбран {
+            border-color: #f6e05e;
+            transform: scale(1.1);
+        }
+        .холст {
+            display: grid;
+            grid-template-columns: repeat(16, 1fr);
+            gap: 1px;
+            background: #2d3748;
+            border: 2px solid #2d3748;
+            border-radius: 8px;
+            aspect-ratio: 1;
+            margin: 12px 0;
+            touch-action: none;
+        }
+        .пиксель {
+            background: #ffffff;
+            cursor: pointer;
+        }
+        .пиксель:hover {
+            opacity: 0.8;
+        }
+        .кнопки {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin: 12px 0;
+        }
+        .кнопка {
+            background: #4299e1;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: inherit;
+        }
+        .кнопка:hover {
+            background: #3182ce;
+        }
+        .кнопка.опасно {
+            background: #e53e3e;
+        }
+        .кнопка.опасно:hover {
+            background: #c53030;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <a href="../игры.html" class="back-btn">← Назад</a>
+        <span class="badge purple">🎨 Творчество</span>
+    </div>
+    
+    <h1>🎨 Пиксель-арт</h1>
+    
+    <p style="color: #a0aec0; font-size: 14px;">Выбери цвет и рисуй пальцем/мышью</p>
+    
+    <div class="палитра" id="палитра"></div>
+    
+    <div class="холст" id="холст"></div>
+    
+    <div class="кнопки">
+        <button class="кнопка" onclick="очистить()">🗑️ Очистить</button>
+        <button class="кнопка" onclick="сохранить()">💾 Сохранить PNG</button>
+    </div>
+    
+    <script>
+        const цвета = [
+            '#000000', '#ffffff', '#e53e3e', '#dd6b20',
+            '#d69e2e', '#38a169', '#3182ce', '#805ad5',
+            '#fc8181', '#f6ad55', '#f6e05e', '#68d391',
+            '#63b3ed', '#b794f4', '#ed64a6', '#a0aec0'
+        ];
+        
+        let выбранныйЦвет = '#000000';
+        const размер = 16;
+        const пиксели = [];
+        
+        function инициализация() {
+            // Палитра
+            const палитра = document.getElementById('палитра');
+            цвета.forEach((ц, i) => {
+                const div = document.createElement('div');
+                div.className = 'цвет' + (i === 0 ? ' выбран' : '');
+                div.style.background = ц;
+                div.onclick = () => выбратьЦвет(ц, div);
+                палитра.appendChild(div);
+            });
+            
+            // Холст
+            const холст = document.getElementById('холст');
+            for (let i = 0; i < размер * размер; i++) {
+                const пиксель = document.createElement('div');
+                пиксель.className = 'пиксель';
+                пиксель.style.background = '#ffffff';
+                пиксель.dataset.index = i;
+                
+                let рисую = false;
+                
+                пиксель.addEventListener('mousedown', (e) => {
+                    e.preventDefault();
+                    рисую = true;
+                    пиксель.style.background = выбранныйЦвет;
+                });
+                
+                пиксель.addEventListener('mouseenter', () => {
+                    if (рисую) пиксель.style.background = выбранныйЦвет;
+                });
+                
+                пиксель.addEventListener('mouseup', () => { рисую = false; });
+                
+                пиксель.addEventListener('touchstart', (e) => {
+                    e.preventDefault();
+                    рисую = true;
+                    пиксель.style.background = выбранныйЦвет;
+                });
+                
+                пиксель.addEventListener('touchmove', (e) => {
+                    e.preventDefault();
+                    const touch = e.touches[0];
+                    const элемент = document.elementFromPoint(touch.clientX, touch.clientY);
+                    if (элемент && элемент.classList.contains('пиксель')) {
+                        элемент.style.background = выбранныйЦвет;
+                    }
+                });
+                
+                пиксель.addEventListener('touchend', () => { рисую = false; });
+                
+                холст.appendChild(пиксель);
+                пиксели.push(пиксель);
+            }
+            
+            document.addEventListener('mouseup', () => {
+                пиксели.forEach(p => p.dispatchEvent(new Event('mouseup')));
+            });
+        }
+        
+        function выбратьЦвет(ц, div) {
+            выбранныйЦвет = ц;
+            document.querySelectorAll('.цвет').forEach(d => d.classList.remove('выбран'));
+            div.classList.add('выбран');
+        }
+        
+        function очистить() {
+            пиксели.forEach(p => p.style.background = '#ffffff');
+        }
+        
+        function сохранить() {
+            const canvas = document.createElement('canvas');
+            canvas.width = размер;
+            canvas.height = размер;
+            const ctx = canvas.getContext('2d');
+            
+            пиксели.forEach((p, i) => {
+                const x = i % размер;
+                const y = Math.floor(i / размер);
+                ctx.fillStyle = p.style.background || '#ffffff';
+                ctx.fillRect(x, y, 1, 1);
+            });
+            
+            // Увеличиваем для сохранения
+            const canvas2 = document.createElement('canvas');
+            canvas2.width = 512;
+            canvas2.height = 512;
+            const ctx2 = canvas2.getContext('2d');
+            ctx2.imageSmoothingEnabled = false;
+            ctx2.drawImage(canvas, 0, 0, 512, 512);
+            
+            const ссылка = document.createElement('a');
+            ссылка.download = 'пиксель-арт.png';
+            ссылка.href = canvas2.toDataURL('image/png');
+            ссылка.click();
+        }
+        
+        инициализация();
+    </script>
+</body>
+</html>

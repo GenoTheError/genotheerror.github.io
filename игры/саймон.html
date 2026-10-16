@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Саймон</title>
+    <link rel="icon" href="../ico.png">
+    <link rel="stylesheet" href="../style.css">
+    <style>
+        .поле {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin: 20px auto;
+            aspect-ratio: 1;
+            max-width: 400px;
+            width: 100%;
+        }
+        .квадрат {
+            border-radius: 16px;
+            cursor: pointer;
+            transition: all 0.15s;
+            opacity: 0.6;
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+        .квадрат:hover {
+            opacity: 0.8;
+        }
+        .квадрат.активен {
+            opacity: 1;
+            transform: scale(1.05);
+            box-shadow: 0 0 30px currentColor;
+        }
+        .квадрат.красный { background: #e53e3e; color: #e53e3e; }
+        .квадрат.синий { background: #3182ce; color: #3182ce; }
+        .квадрат.зелёный { background: #38a169; color: #38a169; }
+        .квадрат.жёлтый { background: #d69e2e; color: #d69e2e; }
+        
+        .инфо {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin: 16px 0;
+        }
+        .инфо-блок {
+            background: #2d3748;
+            padding: 10px 14px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        .инфо-блок .label {
+            color: #a0aec0;
+            font-size: 13px;
+        }
+        .инфо-блок .value {
+            color: #e2e8f0;
+            font-weight: 700;
+            font-size: 22px;
+        }
+        .кнопка {
+            background: #4299e1;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 20px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: inherit;
+            display: block;
+            margin: 10px auto;
+            touch-action: manipulation;
+        }
+        .кнопка:hover {
+            background: #3182ce;
+        }
+        .статус {
+            text-align: center;
+            font-size: 16px;
+            color: #a0aec0;
+            min-height: 24px;
+            margin: 8px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <a href="../игры.html" class="back-btn">← Назад</a>
+        <span class="badge purple">🎵 Память</span>
+    </div>
+    
+    <h1>🎵 Саймон</h1>
+    
+    <div class="инфо">
+        <div class="инфо-блок">
+            <div class="label">Раунд</div>
+            <div class="value" id="раунд">0</div>
+        </div>
+        <div class="инфо-блок">
+            <div class="label">Рекорд</div>
+            <div class="value" id="рекорд">0</div>
+        </div>
+    </div>
+    
+    <div class="статус" id="статус">Нажми «Начать»</div>
+    
+    <div class="поле" id="поле">
+        <div class="квадрат красный" data-цвет="0"></div>
+        <div class="квадрат синий" data-цвет="1"></div>
+        <div class="квадрат зелёный" data-цвет="2"></div>
+        <div class="квадрат жёлтый" data-цвет="3"></div>
+    </div>
+    
+    <button class="кнопка" id="кнопкаНачать">▶️ Начать</button>
+    
+    <script>
+        const квадраты = document.querySelectorAll('.квадрат');
+        const статус = document.getElementById('статус');
+        const раундЭл = document.getElementById('раунд');
+        const рекордЭл = document.getElementById('рекорд');
+        
+        let последовательность = [];
+        let ходИгрока = 0;
+        let раунд = 0;
+        let рекорд = parseInt(localStorage.getItem('саймон-рекорд') || '0');
+        let идётПоказ = false;
+        let играИдёт = false;
+        
+        рекордЭл.textContent = рекорд;
+        
+        // Обработчик клика на квадраты
+        квадраты.forEach(function(к) {
+            к.addEventListener('click', function() {
+                клик(parseInt(к.dataset.цвет));
+            });
+        });
+        
+        // Кнопка "Начать"
+        document.getElementById('кнопкаНачать').addEventListener('click', начать);
+        
+        function начать() {
+            последовательность = [];
+            раунд = 0;
+            ходИгрока = 0;
+            играИдёт = true;
+            раундЭл.textContent = '0';
+            следующийРаунд();
+        }
+        
+        function следующийРаунд() {
+            раунд++;
+            раундЭл.textContent = раунд;
+            ходИгрока = 0;
+            последовательность.push(Math.floor(Math.random() * 4));
+            показать();
+        }
+        
+        function показать() {
+            идётПоказ = true;
+            статус.textContent = 'Смотри внимательно...';
+            
+            let i = 0;
+            const интервал = setInterval(function() {
+                if (i >= последовательность.length) {
+                    clearInterval(интервал);
+                    идётПоказ = false;
+                    статус.textContent = 'Твой ход!';
+                    return;
+                }
+                подсветить(последовательность[i]);
+                i++;
+            }, 700);
+        }
+        
+        function подсветить(цвет) {
+            const к = квадраты[цвет];
+            к.classList.add('активен');
+            setTimeout(function() {
+                к.classList.remove('активен');
+            }, 400);
+        }
+        
+        function клик(цвет) {
+            if (!играИдёт) return;
+            if (идётПоказ) return;
+            if (последовательность.length === 0) return;
+            
+            подсветить(цвет);
+            
+            if (цвет === последовательность[ходИгрока]) {
+                ходИгрока++;
+                if (ходИгрока === последовательность.length) {
+                    статус.textContent = '✅ Верно!';
+                    идётПоказ = true; // блокируем клики на время паузы
+                    setTimeout(function() {
+                        идётПоказ = false;
+                        следующийРаунд();
+                    }, 800);
+                }
+            } else {
+                // Проигрыш
+                играИдёт = false;
+                статус.textContent = '❌ Ошибка! Раунд: ' + раунд;
+                if (раунд - 1 > рекорд) {
+                    рекорд = раунд - 1;
+                    localStorage.setItem('саймон-рекорд', рекорд);
+                    рекордЭл.textContent = рекорд;
+                }
+                последовательность = [];
+            }
+        }
+    </script>
+</body>
+</html>
