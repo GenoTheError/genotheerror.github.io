@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <title>Игры</title>
+    
+    <meta name="description" content="Игры — коллекция мини-игр Базы Знаний GenoTheError.">
+    <meta name="keywords" content="игры, мини-игры, кликер, 2048, Саймон, пиксель-арт, найди пару">
+    <meta name="author" content="GenoTheError, Geno">
+    <meta name="robots" content="index, follow">
+    
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="Игры">
+    <meta property="og:description" content="Коллекция мини-игр.">
+    
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="Игры">
+    <meta name="twitter:description" content="Коллекция мини-игр.">
+    
+    <link rel="icon" href="ico.png">
+    <link rel="stylesheet" href="style.css">
+    <script src="photos.js" defer></script>
+    <style>
+        .search-box {
+            background: #2d3748;
+            padding: 16px;
+            border-radius: 12px;
+            margin-bottom: 24px;
+            border: 2px solid #4299e1;
+        }
+        
+        #searchInput {
+            width: 100%;
+            font-size: 18px;
+            padding: 14px 16px;
+            border: none;
+            border-radius: 8px;
+            background: #1a202c;
+            color: #e2e8f0;
+            outline: none;
+        }
+        
+        #searchInput::placeholder {
+            color: #718096;
+        }
+        
+        #searchResults {
+            margin-top: 12px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        
+        .search-item {
+            display: block;
+            padding: 12px 16px;
+            background: #1a202c;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            color: #e2e8f0;
+            text-decoration: none;
+            border-left: 3px solid #4299e1;
+            transition: all 0.2s;
+        }
+        
+        .search-item:hover {
+            background: #2d3748;
+            text-decoration: none;
+            border-left-color: #63b3ed;
+        }
+        
+        .search-item .item-name {
+            font-weight: 600;
+            color: #90cdf4;
+        }
+        
+        .search-item .item-cat {
+            font-size: 13px;
+            color: #718096;
+            margin-top: 2px;
+        }
+    </style>
+</head>
+<body>
+    
+    <div class="header">
+        <a href="index.html" class="back-btn">← Назад</a>
+        <span class="badge purple">🎮 Игры</span>
+    </div>
+    
+    <h1>🎮 Игры</h1>
+    <p style="color: #a0aec0; margin-bottom: 20px;">
+        Коллекция мини-игр
+    </p>
+    
+    <!-- ПОИСК -->
+    <div class="search-box">
+        <input type="text" id="searchInput" 
+               placeholder="🔍 Поиск по играм..." 
+               autocomplete="off">
+        <div id="searchResults"></div>
+    </div>
+    
+    <!-- ОГЛАВЛЕНИЕ -->
+    <div id="tableOfContents">
+        
+        <!-- 🖱️ КЛИКЕРЫ -->
+        <div class="category-section">
+            <div class="category-title">🖱️ Кликеры</div>
+            <div class="articles-grid" data-category="Кликеры">
+                <a href="игры/кликер.html" class="article-card" data-name="кликер">
+                    <span class="name">Кликер</span>
+                </a>
+            </div>
+        </div>
+        
+        <!-- 🧠 ЛОГИКА -->
+        <div class="category-section">
+            <div class="category-title">🧠 Логика</div>
+            <div class="articles-grid" data-category="Логика">
+                <a href="игры/найди-пару.html" class="article-card" data-name="найди пару">
+                    <span class="name">Найди пару</span>
+                </a>
+            </div>
+        </div>
+        
+        <!-- 🎯 АРКАДЫ -->
+        <div class="category-section">
+            <div class="category-title">🎯 Аркады</div>
+            <div class="articles-grid" data-category="Аркады">
+                <a href="игры/прыгающий-шарик.html" class="article-card" data-name="прыгающий шарик">
+                    <span class="name">Прыгающий шарик</span>
+                </a>
+            </div>
+        </div>
+        
+        <!-- 🎨 ТВОРЧЕСТВО -->
+        <div class="category-section">
+            <div class="category-title">🎨 Творчество</div>
+            <div class="articles-grid" data-category="Творчество">
+                <a href="игры/пиксель-арт.html" class="article-card" data-name="пиксель-арт">
+                    <span class="name">Пиксель-арт</span>
+                </a>
+            </div>
+        </div>
+        
+        <!-- 🎵 ПАМЯТЬ -->
+        <div class="category-section">
+            <div class="category-title">🎵 Память</div>
+            <div class="articles-grid" data-category="Память">
+                <a href="игры/саймон.html" class="article-card" data-name="саймон">
+                    <span class="name">Саймон</span>
+                </a>
+            </div>
+        </div>
+        
+    </div>
+    
+    <div class="footer">
+        База Знаний GenoTheError • <span id="totalCount">0</span> игр
+    </div>
+
+    <script>
+        function performSearch() {
+            const query = document.getElementById('searchInput').value.toLowerCase().trim();
+            const resultsBox = document.getElementById('searchResults');
+            
+            if (query.length < 1) {
+                resultsBox.innerHTML = '';
+                return;
+            }
+            
+            const allArticles = document.querySelectorAll('.article-card');
+            const results = [];
+            
+            allArticles.forEach(card => {
+                const name = card.getAttribute('data-name') || '';
+                const link = card.getAttribute('href');
+                const displayName = card.querySelector('.name')?.textContent || name;
+                const categorySection = card.closest('.category-section');
+                const category = categorySection ? categorySection.querySelector('.category-title').textContent : '';
+                
+                if (name.includes(query) || displayName.toLowerCase().includes(query) || category.toLowerCase().includes(query)) {
+                    results.push({ name: displayName, category, link });
+                }
+            });
+            
+            if (results.length === 0) {
+                resultsBox.innerHTML = `<div style="color: #718096; padding: 12px; text-align: center;">Ничего не найдено</div>`;
+                return;
+            }
+            
+            resultsBox.innerHTML = results.map(r => `
+                <a href="${r.link}" class="search-item">
+                    <div class="item-name">${r.name}</div>
+                    <div class="item-cat">${r.category}</div>
+                </a>
+            `).join('');
+        }
+        
+        document.getElementById('searchInput').addEventListener('input', performSearch);
+        
+        function updateCount() {
+            const count = document.querySelectorAll('.article-card').length;
+            document.getElementById('totalCount').textContent = count;
+        }
+        updateCount();
+    </script>
+</body>
+</html>
