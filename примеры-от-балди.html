@@ -157,80 +157,80 @@
     </div>
     
     <script src="примеры.js"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const exampleBox = document.getElementById('exampleBox');
-            const answerInput = document.getElementById('answerInput');
-            const checkBtn = document.getElementById('checkBtn');
-            const skipBtn = document.getElementById('skipBtn');
-            const resultMessage = document.getElementById('resultMessage');
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const exampleBox = document.getElementById('exampleBox');
+        const answerInput = document.getElementById('answerInput');
+        const checkBtn = document.getElementById('checkBtn');
+        const skipBtn = document.getElementById('skipBtn');
+        const resultMessage = document.getElementById('resultMessage');
+        
+        let currentExample = null;
+        let currentAnswer = null;
+        
+        function parseExample(str) {
+            const parts = str.split(' ');
+            const a = parseInt(parts[0]);
+            const op = parts[1];
+            const b = parseInt(parts[2]);
+            return {
+                text: str,
+                answer: op === '+' ? a + b : a - b
+            };
+        }
+        
+        function showRandomExample() {
+            const пример = window.следующийПример();
             
-            let currentExample = null;
-            let currentAnswer = null;
-            
-            function parseExample(str) {
-                // "2 + 2" или "10 - 3"
-                const parts = str.split(' ');
-                const a = parseInt(parts[0]);
-                const op = parts[1];
-                const b = parseInt(parts[2]);
-                return {
-                    text: str,
-                    answer: op === '+' ? a + b : a - b
-                };
-            }
-            
-            function showRandomExample() {
-                if (typeof ПРИМЕРЫ === 'undefined' || ПРИМЕРЫ.length === 0) {
-                    exampleBox.textContent = '❌ Примеры не найдены.';
-                    exampleBox.classList.remove('loading');
-                    return;
-                }
-                
-                const randomIndex = Math.floor(Math.random() * ПРИМЕРЫ.length);
-                currentExample = parseExample(ПРИМЕРЫ[randomIndex]);
-                currentAnswer = currentExample.answer;
-                
+            if (!пример) {
+                exampleBox.textContent = '❌ Примеры не найдены.';
                 exampleBox.classList.remove('loading');
-                exampleBox.textContent = currentExample.text + ' = ?';
-                answerInput.value = '';
-                resultMessage.textContent = '';
-                resultMessage.className = 'result-message';
-                answerInput.focus();
+                return;
             }
             
-            function checkAnswer() {
-                const userAnswer = parseInt(answerInput.value);
-                
-                if (isNaN(userAnswer)) {
-                    resultMessage.textContent = '⚠️ Введи число!';
-                    resultMessage.className = 'result-message bad';
-                    return;
-                }
-                
-                if (userAnswer === currentAnswer) {
-                    resultMessage.textContent = 'Молодец, ученик! Балди даёт тебе 🍪!';
-                    resultMessage.className = 'result-message good';
-                    
-                    setTimeout(showRandomExample, 1500);
-                } else {
-                    resultMessage.textContent = '❌ Неправильно. Попробуй ещё!';
-                    resultMessage.className = 'result-message bad';
-                }
+            currentExample = parseExample(пример);
+            currentAnswer = currentExample.answer;
+            
+            exampleBox.classList.remove('loading');
+            exampleBox.textContent = currentExample.text + ' = ?';
+            answerInput.value = '';
+            resultMessage.textContent = '';
+            resultMessage.className = 'result-message';
+            answerInput.focus();
+        }
+        
+        function checkAnswer() {
+            const userAnswer = parseInt(answerInput.value);
+            
+            if (isNaN(userAnswer)) {
+                resultMessage.textContent = '⚠️ Введи число!';
+                resultMessage.className = 'result-message bad';
+                return;
             }
             
-            showRandomExample();
-            
-            checkBtn.addEventListener('click', checkAnswer);
-            skipBtn.addEventListener('click', showRandomExample);
-            
-            answerInput.addEventListener('keydown', function(e) {
-                if (e.key === 'Enter') {
-                    checkAnswer();
-                }
-            });
+            if (userAnswer === currentAnswer) {
+                resultMessage.textContent = 'Молодец, ученик! Балди даёт тебе 🍪!';
+                resultMessage.className = 'result-message good';
+                
+                setTimeout(showRandomExample, 1500);
+            } else {
+                resultMessage.textContent = '❌ Неправильно. Попробуй ещё!';
+                resultMessage.className = 'result-message bad';
+            }
+        }
+        
+        showRandomExample();
+        
+        checkBtn.addEventListener('click', checkAnswer);
+        skipBtn.addEventListener('click', showRandomExample);
+        
+        answerInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                checkAnswer();
+            }
         });
-    </script>
+    });
+</script>
     
 </body>
 </html>

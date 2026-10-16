@@ -103,28 +103,20 @@
     </div>
     
     <script src="факты.js"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const factBox = document.getElementById('factBox');
-            const newFactBtn = document.getElementById('newFactBtn');
-            
-            function showRandomFact() {
-                if (typeof ФАКТЫ === 'undefined' || ФАКТЫ.length === 0) {
-                    factBox.textContent = '❌ Факты не найдены.';
-                    factBox.classList.remove('loading');
-                    return;
-                }
-                
-                const randomIndex = Math.floor(Math.random() * ФАКТЫ.length);
-                factBox.classList.remove('loading');
-                factBox.textContent = '💡 ' + ФАКТЫ[randomIndex];
-            }
-            
-            showRandomFact();
-            
-            newFactBtn.addEventListener('click', showRandomFact);
-        });
-    </script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const factBox = document.getElementById('factBox');
+        const newFactBtn = document.getElementById('newFactBtn');
+        
+        function показатьФакт() {
+            factBox.classList.remove('loading');
+            factBox.textContent = '💡 ' + window.следующийФакт();
+        }
+        
+        показатьФакт();
+        newFactBtn.addEventListener('click', показатьФакт);
+    });
+</script>
     
 </body>
 </html>
