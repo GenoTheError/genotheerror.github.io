@@ -84,6 +84,31 @@
             min-height: 24px;
             margin: 8px 0;
         }
+        
+        /* Кнопка вкл/выкл звука */
+        .звук-кнопка {
+            position: fixed;
+            top: 16px;
+            right: 70px;
+            background: #2d3748;
+            color: #90cdf4;
+            border: 1px solid #4299e1;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            font-size: 18px;
+            cursor: pointer;
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+            font-family: inherit;
+        }
+        .звук-кнопка:hover {
+            background: #4299e1;
+            color: white;
+        }
     </style>
 </head>
 <body>
@@ -91,6 +116,9 @@
         <a href="../игры.html" class="back-btn">← Назад</a>
         <span class="badge purple">🎵 Память</span>
     </div>
+    
+    <!-- Кнопка вкл/выкл звука -->
+    <button class="звук-кнопка" id="звукКнопка" title="Звук">🔊</button>
     
     <h1>🎵 Саймон</h1>
     
@@ -117,6 +145,91 @@
     <button class="кнопка" id="кнопкаНачать">▶️ Начать</button>
     
     <script>
+        // ==========================================
+        // ЗВУК (Web Audio API)
+        // ==========================================
+        let аудио = null;
+        let звукВкл = true;
+        
+        // Частоты для каждого квадрата
+        const НОТЫ = [
+            261.63, // 🔴 Красный — До первой октавы
+            329.63, // 🔵 Синий — Ми
+            392.00, // 🟢 Зелёный — Соль
+            523.25  // 🟡 Жёлтый — До второй октавы
+        ];
+        
+        function получитьАудио() {
+            if (!аудио) {
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                if (AudioContext) {
+                    аудио = new AudioContext();
+                }
+            }
+            return аудио;
+        }
+        
+        function игратьНоту(цвет) {
+    if (!звукВкл) return;
+    
+    const ctx = получитьАудио();
+    if (!ctx) return;
+    
+    if (ctx.state === 'suspended') {
+        ctx.resume();
+    }
+    
+    const частота = НОТЫ[цвет];
+    const сейчас = ctx.currentTime;
+    const длительность = 0.8;
+    
+    // Тон 1 — основной
+    const осц1 = ctx.createOscillator();
+    const усил1 = ctx.createGain();
+    осц1.type = 'sine';
+    осц1.frequency.value = частота;
+    усил1.gain.setValueAtTime(1.0, сейчас);
+    усил1.gain.exponentialRampToValueAtTime(0.001, сейчас + длительность);
+    осц1.connect(усил1);
+    усил1.connect(ctx.destination);
+    осц1.start(сейчас);
+    осц1.stop(сейчас + длительность);
+    
+    // Тон 2 — октавой выше
+    const осц2 = ctx.createOscillator();
+    const усил2 = ctx.createGain();
+    осц2.type = 'sine';
+    осц2.frequency.value = частота * 2;
+    усил2.gain.setValueAtTime(0.7, сейчас);
+    усил2.gain.exponentialRampToValueAtTime(0.001, сейчас + длительность);
+    осц2.connect(усил2);
+    усил2.connect(ctx.destination);
+    осц2.start(сейчас);
+    осц2.stop(сейчас + длительность);
+    
+    // Тон 3 — на октаву ниже (для "тела")
+    const осц3 = ctx.createOscillator();
+    const усил3 = ctx.createGain();
+    осц3.type = 'triangle';
+    осц3.frequency.value = частота / 2;
+    усил3.gain.setValueAtTime(0.8, сейчас);
+    усил3.gain.exponentialRampToValueAtTime(0.001, сейчас + длительность);
+    осц3.connect(усил3);
+    усил3.connect(ctx.destination);
+    осц3.start(сейчас);
+    осц3.stop(сейчас + длительность);
+}
+        
+        // Кнопка вкл/выкл звука
+        const звукКнопка = document.getElementById('звукКнопка');
+        звукКнопка.addEventListener('click', function() {
+            звукВкл = !звукВкл;
+            звукКнопка.textContent = звукВкл ? '🔊' : '🔇';
+        });
+        
+        // ==========================================
+        // ИГРА
+        // ==========================================
         const квадраты = document.querySelectorAll('.квадрат');
         const статус = document.getElementById('статус');
         const раундЭл = document.getElementById('раунд');
@@ -131,17 +244,21 @@
         
         рекордЭл.textContent = рекорд;
         
-        // Обработчик клика на квадраты
         квадраты.forEach(function(к) {
             к.addEventListener('click', function() {
                 клик(parseInt(к.dataset.цвет));
             });
         });
         
-        // Кнопка "Начать"
         document.getElementById('кнопкаНачать').addEventListener('click', начать);
         
         function начать() {
+            // Первый клик — разблокировка звука в браузере
+            const ctx = получитьАудио();
+            if (ctx && ctx.state === 'suspended') {
+                ctx.resume();
+            }
+            
             последовательность = [];
             раунд = 0;
             ходИгрока = 0;
@@ -178,6 +295,7 @@
         function подсветить(цвет) {
             const к = квадраты[цвет];
             к.classList.add('активен');
+            игратьНоту(цвет); // звук
             setTimeout(function() {
                 к.classList.remove('активен');
             }, 400);
@@ -194,14 +312,15 @@
                 ходИгрока++;
                 if (ходИгрока === последовательность.length) {
                     статус.textContent = '✅ Верно!';
-                    идётПоказ = true; // блокируем клики на время паузы
+                    идётПоказ = true;
                     setTimeout(function() {
                         идётПоказ = false;
                         следующийРаунд();
                     }, 800);
                 }
             } else {
-                // Проигрыш
+                // Проигрыш — звук ошибки (низкий тон)
+                игратьОшибку();
                 играИдёт = false;
                 статус.textContent = '❌ Ошибка! Раунд: ' + раунд;
                 if (раунд - 1 > рекорд) {
@@ -212,6 +331,39 @@
                 последовательность = [];
             }
         }
+        
+        function игратьОшибку() {
+    if (!звукВкл) return;
+    const ctx = получитьАудио();
+    if (!ctx) return;
+    if (ctx.state === 'suspended') ctx.resume();
+    
+    const сейчас = ctx.currentTime;
+    
+    const осц1 = ctx.createOscillator();
+    const усил1 = ctx.createGain();
+    осц1.type = 'sawtooth';
+    осц1.frequency.setValueAtTime(220, сейчас);
+    осц1.frequency.exponentialRampToValueAtTime(80, сейчас + 0.6);
+    усил1.gain.setValueAtTime(0.9, сейчас);
+    усил1.gain.exponentialRampToValueAtTime(0.001, сейчас + 0.6);
+    осц1.connect(усил1);
+    усил1.connect(ctx.destination);
+    осц1.start(сейчас);
+    осц1.stop(сейчас + 0.6);
+    
+    const осц2 = ctx.createOscillator();
+    const усил2 = ctx.createGain();
+    осц2.type = 'square';
+    осц2.frequency.setValueAtTime(110, сейчас);
+    осц2.frequency.exponentialRampToValueAtTime(40, сейчас + 0.6);
+    усил2.gain.setValueAtTime(0.5, сейчас);
+    усил2.gain.exponentialRampToValueAtTime(0.001, сейчас + 0.6);
+    осц2.connect(усил2);
+    усил2.connect(ctx.destination);
+    осц2.start(сейчас);
+    осц2.stop(сейчас + 0.6);
+}
     </script>
 </body>
 </html>

@@ -7,58 +7,144 @@
     <link rel="icon" href="../ico.png">
     <link rel="stylesheet" href="../style.css">
     <style>
+        /* Панель инструментов */
+        .инструменты {
+            display: flex;
+            gap: 6px;
+            margin: 12px 0;
+            flex-wrap: wrap;
+        }
+        .инструмент {
+            flex: 1;
+            min-width: 60px;
+            background: #2d3748;
+            color: #a0aec0;
+            border: 1px solid #2d3748;
+            padding: 10px 6px;
+            border-radius: 8px;
+            font-size: 18px;
+            cursor: pointer;
+            font-family: inherit;
+            transition: all 0.15s;
+            touch-action: manipulation;
+        }
+        .инструмент.активен {
+            background: #4299e1;
+            color: white;
+            border-color: #4299e1;
+        }
+        .инструмент:hover:not(.активен) {
+            background: #4a5568;
+        }
+        
+        /* Размер холста */
+        .размеры {
+            display: flex;
+            gap: 6px;
+            margin: 12px 0;
+            flex-wrap: wrap;
+        }
+        .размер {
+            flex: 1;
+            min-width: 50px;
+            background: #2d3748;
+            color: #a0aec0;
+            border: 1px solid #2d3748;
+            padding: 8px 4px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: inherit;
+            transition: all 0.15s;
+            touch-action: manipulation;
+        }
+        .размер.активен {
+            background: #4299e1;
+            color: white;
+            border-color: #4299e1;
+        }
+        .размер:hover:not(.активен) {
+            background: #4a5568;
+        }
+        
+        /* Палитра */
+        .палитра-обёртка {
+            margin: 12px 0;
+        }
+        .палитра-назв {
+            font-size: 13px;
+            color: #718096;
+            margin-bottom: 6px;
+        }
         .палитра {
             display: grid;
             grid-template-columns: repeat(8, 1fr);
-            gap: 6px;
-            margin: 12px 0;
+            gap: 5px;
         }
         .цвет {
             aspect-ratio: 1;
             border-radius: 6px;
             cursor: pointer;
             border: 2px solid #2d3748;
-            transition: transform 0.1s;
+            transition: transform 0.1s, border-color 0.1s;
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
         }
         .цвет.выбран {
             border-color: #f6e05e;
             transform: scale(1.1);
+            box-shadow: 0 0 12px rgba(246, 224, 94, 0.6);
+        }
+        
+        /* Холст */
+        .холст-обёртка {
+            display: flex;
+            justify-content: center;
+            margin: 16px 0;
         }
         .холст {
             display: grid;
-            grid-template-columns: repeat(16, 1fr);
-            gap: 1px;
+            gap: 0;
             background: #2d3748;
             border: 2px solid #2d3748;
             border-radius: 8px;
             aspect-ratio: 1;
-            margin: 12px 0;
+            width: 100%;
+            max-width: 500px;
             touch-action: none;
+            -webkit-user-select: none;
+            user-select: none;
+            overflow: hidden;
         }
         .пиксель {
             background: #ffffff;
-            cursor: pointer;
+            cursor: crosshair;
+            transition: background 0.05s;
         }
-        .пиксель:hover {
-            opacity: 0.8;
+        .пиксель.сетка {
+            box-shadow: inset 0 0 0 0.5px rgba(45, 55, 72, 0.5);
         }
-        .кнопки {
-            display: flex;
-            gap: 10px;
-            justify-content: center;
-            flex-wrap: wrap;
+        
+        /* Кнопки действий */
+        .действия {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
             margin: 12px 0;
         }
         .кнопка {
             background: #4299e1;
             color: white;
             border: none;
-            padding: 10px 20px;
-            border-radius: 20px;
-            font-size: 15px;
+            padding: 10px 14px;
+            border-radius: 10px;
+            font-size: 14px;
             font-weight: 600;
             cursor: pointer;
             font-family: inherit;
+            touch-action: manipulation;
+            transition: all 0.15s;
         }
         .кнопка:hover {
             background: #3182ce;
@@ -69,6 +155,90 @@
         .кнопка.опасно:hover {
             background: #c53030;
         }
+        .кнопка.нейтрально {
+            background: #2d3748;
+            color: #90cdf4;
+        }
+        .кнопка.нейтрально:hover {
+            background: #4a5568;
+        }
+        
+        /* Текущий цвет */
+        .текущий {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: #1a202c;
+            border: 1px solid #2d3748;
+            border-radius: 10px;
+            padding: 10px 14px;
+            margin: 12px 0;
+        }
+        .текущий-цвет {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            border: 2px solid #2d3748;
+            flex-shrink: 0;
+        }
+        .текущий-инфо {
+            flex: 1;
+        }
+        .текущий-инфо .label {
+            font-size: 12px;
+            color: #718096;
+        }
+        .текущий-инфо .value {
+            font-size: 15px;
+            color: #e2e8f0;
+            font-weight: 600;
+            font-family: monospace;
+        }
+        
+        /* Кнопка звука */
+        .звук-кнопка {
+            position: fixed;
+            top: 16px;
+            right: 70px;
+            background: #2d3748;
+            color: #90cdf4;
+            border: 1px solid #4299e1;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            font-size: 18px;
+            cursor: pointer;
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+            font-family: inherit;
+        }
+        .звук-кнопка:hover {
+            background: #4299e1;
+            color: white;
+        }
+        
+        /* Чекбокс */
+        .чекбокс {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: #2d3748;
+            padding: 10px 14px;
+            border-radius: 8px;
+            margin: 8px 0;
+            cursor: pointer;
+            font-size: 14px;
+            color: #a0aec0;
+        }
+        .чекбокс input {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+            accent-color: #4299e1;
+        }
     </style>
 </head>
 <body>
@@ -77,128 +247,434 @@
         <span class="badge purple">🎨 Творчество</span>
     </div>
     
+    <button class="звук-кнопка" id="звукКнопка">🔇</button>
+    
     <h1>🎨 Пиксель-арт</h1>
     
-    <p style="color: #a0aec0; font-size: 14px;">Выбери цвет и рисуй пальцем/мышью</p>
+    <!-- ИНСТРУМЕНТЫ -->
+    <div class="инструменты">
+        <button class="инструмент активен" data-инструмент="кисть" title="Кисть">✏️</button>
+        <button class="инструмент" data-инструмент="ластик" title="Ластик">🧽</button>
+        <button class="инструмент" data-инструмент="заливка" title="Залить область">🪣</button>
+        <button class="инструмент" data-инструмент="пипетка" title="Пипетка">💧</button>
+    </div>
     
-    <div class="палитра" id="палитра"></div>
+    <!-- РАЗМЕР ХОЛСТА -->
+    <div class="размеры">
+        <button class="размер" data-размер="8">8×8</button>
+        <button class="размер активен" data-размер="16">16×16</button>
+        <button class="размер" data-размер="24">24×24</button>
+        <button class="размер" data-размер="32">32×32</button>
+    </div>
     
-    <div class="холст" id="холст"></div>
+    <!-- ТЕКУЩИЙ ЦВЕТ -->
+    <div class="текущий">
+        <div class="текущий-цвет" id="текущийЦвет" style="background:#000000;"></div>
+        <div class="текущий-инфо">
+            <div class="label">Текущий цвет</div>
+            <div class="value" id="текущийКод">#000000</div>
+        </div>
+    </div>
     
-    <div class="кнопки">
-        <button class="кнопка" onclick="очистить()">🗑️ Очистить</button>
-        <button class="кнопка" onclick="сохранить()">💾 Сохранить PNG</button>
+    <!-- ПАЛИТРА -->
+    <div class="палитра-обёртка">
+        <div class="палитра-назв">Палитра (32 цвета)</div>
+        <div class="палитра" id="палитра"></div>
+    </div>
+    
+    <!-- ХОЛСТ -->
+    <div class="холст-обёртка">
+        <div class="холст" id="холст"></div>
+    </div>
+    
+    <!-- СЕТКА -->
+    <label class="чекбокс">
+        <input type="checkbox" id="чекбоксСетка" checked>
+        Показывать сетку
+    </label>
+    
+    <!-- ДЕЙСТВИЯ -->
+    <div class="действия">
+        <button class="кнопка нейтрально" id="кнопкаОтмена">↩️ Отменить</button>
+        <button class="кнопка опасно" id="кнопкаОчистить">🗑️ Очистить</button>
+        <button class="кнопка" id="кнопкаСохранить" style="grid-column: 1 / -1;">💾 Сохранить PNG</button>
     </div>
     
     <script>
-        const цвета = [
-            '#000000', '#ffffff', '#e53e3e', '#dd6b20',
-            '#d69e2e', '#38a169', '#3182ce', '#805ad5',
-            '#fc8181', '#f6ad55', '#f6e05e', '#68d391',
-            '#63b3ed', '#b794f4', '#ed64a6', '#a0aec0'
+        // ==========================================
+        // ЗВУК
+        // ==========================================
+        let аудио = null;
+        let звукВкл = false;
+        
+        function получитьАудио() {
+            if (!аудио) {
+                const AC = window.AudioContext || window.webkitAudioContext;
+                if (AC) аудио = new AC();
+            }
+            return аудио;
+        }
+        
+        function игратьПик() {
+            if (!звукВкл) return;
+            const ctx = получитьАудио();
+            if (!ctx) return;
+            if (ctx.state === 'suspended') ctx.resume();
+            
+            const сейчас = ctx.currentTime;
+            const осц = ctx.createOscillator();
+            const усил = ctx.createGain();
+            осц.type = 'sine';
+            осц.frequency.value = 600 + Math.random() * 400;
+            усил.gain.setValueAtTime(0.15, сейчас);
+            усил.gain.exponentialRampToValueAtTime(0.001, сейчас + 0.05);
+            осц.connect(усил);
+            усил.connect(ctx.destination);
+            осц.start(сейчас);
+            осц.stop(сейчас + 0.05);
+        }
+        
+        document.getElementById('звукКнопка').addEventListener('click', function() {
+            звукВкл = !звукВкл;
+            this.textContent = звукВкл ? '🔊' : '🔇';
+        });
+        
+        // ==========================================
+        // ЦВЕТА (32 штуки)
+        // ==========================================
+        const ЦВЕТА = [
+            '#000000', '#404040', '#808080', '#c0c0c0', '#ffffff',
+            '#7f0000', '#e53e3e', '#fc8181', '#fed7d7',
+            '#7b341e', '#dd6b20', '#f6ad55', '#fbd38d',
+            '#744210', '#d69e2e', '#f6e05e', '#fefcbf',
+            '#22543d', '#38a169', '#68d391', '#c6f6d5',
+            '#2a4365', '#3182ce', '#63b3ed', '#bee3f8',
+            '#44337a', '#805ad5', '#b794f4', '#e9d8fd',
+            '#702459', '#ed64a6', '#fbb6ce'
         ];
         
-        let выбранныйЦвет = '#000000';
-        const размер = 16;
-        const пиксели = [];
+        // ==========================================
+        // СОСТОЯНИЕ
+        // ==========================================
+        let текущийЦвет = '#000000';
+        let текущийИнструмент = 'кисть';
+        let размер = 16;
+        let пиксели = [];
+        let история = [];
+        let рисую = false;
+        let показатьСетку = true;
         
-        function инициализация() {
-            // Палитра
+        // ==========================================
+        // ПАЛИТРА
+        // ==========================================
+        function отрисоватьПалитру() {
             const палитра = document.getElementById('палитра');
-            цвета.forEach((ц, i) => {
+            палитра.innerHTML = '';
+            ЦВЕТА.forEach(ц => {
                 const div = document.createElement('div');
-                div.className = 'цвет' + (i === 0 ? ' выбран' : '');
+                div.className = 'цвет' + (ц === текущийЦвет ? ' выбран' : '');
                 div.style.background = ц;
-                div.onclick = () => выбратьЦвет(ц, div);
+                div.dataset.цвет = ц;
+                div.addEventListener('click', () => выбратьЦвет(ц));
                 палитра.appendChild(div);
             });
-            
-            // Холст
-            const холст = document.getElementById('холст');
-            for (let i = 0; i < размер * размер; i++) {
-                const пиксель = document.createElement('div');
-                пиксель.className = 'пиксель';
-                пиксель.style.background = '#ffffff';
-                пиксель.dataset.index = i;
-                
-                let рисую = false;
-                
-                пиксель.addEventListener('mousedown', (e) => {
-                    e.preventDefault();
-                    рисую = true;
-                    пиксель.style.background = выбранныйЦвет;
-                });
-                
-                пиксель.addEventListener('mouseenter', () => {
-                    if (рисую) пиксель.style.background = выбранныйЦвет;
-                });
-                
-                пиксель.addEventListener('mouseup', () => { рисую = false; });
-                
-                пиксель.addEventListener('touchstart', (e) => {
-                    e.preventDefault();
-                    рисую = true;
-                    пиксель.style.background = выбранныйЦвет;
-                });
-                
-                пиксель.addEventListener('touchmove', (e) => {
-                    e.preventDefault();
-                    const touch = e.touches[0];
-                    const элемент = document.elementFromPoint(touch.clientX, touch.clientY);
-                    if (элемент && элемент.classList.contains('пиксель')) {
-                        элемент.style.background = выбранныйЦвет;
-                    }
-                });
-                
-                пиксель.addEventListener('touchend', () => { рисую = false; });
-                
-                холст.appendChild(пиксель);
-                пиксели.push(пиксель);
-            }
-            
-            document.addEventListener('mouseup', () => {
-                пиксели.forEach(p => p.dispatchEvent(new Event('mouseup')));
+        }
+        
+        function выбратьЦвет(ц) {
+            текущийЦвет = ц;
+            document.getElementById('текущийЦвет').style.background = ц;
+            document.getElementById('текущийКод').textContent = ц;
+            document.querySelectorAll('.цвет').forEach(d => {
+                d.classList.toggle('выбран', d.dataset.цвет === ц);
             });
         }
         
-        function выбратьЦвет(ц, div) {
-            выбранныйЦвет = ц;
-            document.querySelectorAll('.цвет').forEach(d => d.classList.remove('выбран'));
-            div.classList.add('выбран');
+        // ==========================================
+        // ИНСТРУМЕНТЫ
+        // ==========================================
+        document.querySelectorAll('.инструмент').forEach(инст => {
+            инст.addEventListener('click', function() {
+                текущийИнструмент = this.dataset.инструмент;
+                document.querySelectorAll('.инструмент').forEach(i => i.classList.remove('активен'));
+                this.classList.add('активен');
+            });
+        });
+        
+        // ==========================================
+        // РАЗМЕР ХОЛСТА
+        // ==========================================
+        document.querySelectorAll('.размер').forEach(кн => {
+            кн.addEventListener('click', function() {
+                const новый = parseInt(this.dataset.размер);
+                if (новый === размер) return;
+                if (!confirm('Сменить размер холста? Текущий рисунок будет потерян.')) return;
+                
+                размер = новый;
+                document.querySelectorAll('.размер').forEach(k => k.classList.remove('активен'));
+                this.classList.add('активен');
+                
+                история = [];
+                создатьХолст();
+            });
+        });
+        
+        // ==========================================
+        // ХОЛСТ
+        // ==========================================
+        function создатьХолст() {
+            const холст = document.getElementById('холст');
+            холст.innerHTML = '';
+            холст.style.gridTemplateColumns = `repeat(${размер}, 1fr)`;
+            пиксели = [];
+            
+            for (let i = 0; i < размер * размер; i++) {
+                const п = document.createElement('div');
+                п.className = 'пиксель' + (показатьСетку ? ' сетка' : '');
+                п.style.background = '#ffffff';
+                п.dataset.index = i;
+                
+                добавитьОбработчики(п);
+                холст.appendChild(п);
+                пиксели.push(п);
+            }
+            
+            загрузитьРисунок();
         }
         
-        function очистить() {
-            пиксели.forEach(p => p.style.background = '#ffffff');
+        function добавитьОбработчики(п) {
+            // Мышь
+            п.addEventListener('mousedown', (e) => {
+                e.preventDefault();
+                if (текущийИнструмент === 'пипетка') { пипетка(п); return; }
+                if (текущийИнструмент === 'заливка') { заливка(parseInt(п.dataset.index)); return; }
+                сохранитьИсторию();
+                рисую = true;
+                нарисовать(п);
+            });
+            п.addEventListener('mouseenter', () => {
+                if (рисую && текущийИнструмент !== 'пипетка' && текущийИнструмент !== 'заливка') {
+                    нарисовать(п);
+                }
+            });
+            
+            // Тач
+            п.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                if (текущийИнструмент === 'пипетка') { пипетка(п); return; }
+                if (текущийИнструмент === 'заливка') { заливка(parseInt(п.dataset.index)); return; }
+                сохранитьИсторию();
+                рисую = true;
+                нарисовать(п);
+            }, { passive: false });
         }
         
-        function сохранить() {
+        // Конец рисования
+        document.addEventListener('mouseup', () => { рисую = false; сохранитьРисунок(); });
+        document.addEventListener('touchend', () => { рисую = false; сохранитьРисунок(); });
+        
+        // Движение пальца по холсту
+        document.getElementById('холст').addEventListener('touchmove', (e) => {
+            if (!рисую) return;
+            if (текущийИнструмент === 'пипетка' || текущийИнструмент === 'заливка') return;
+            e.preventDefault();
+            const touch = e.touches[0];
+            const элемент = document.elementFromPoint(touch.clientX, touch.clientY);
+            if (элемент && элемент.classList.contains('пиксель')) {
+                нарисовать(элемент);
+            }
+        }, { passive: false });
+        
+        function нарисовать(п) {
+            let цвет = текущийЦвет;
+            if (текущийИнструмент === 'ластик') цвет = '#ffffff';
+            
+            if (rgbВHex(п.style.background) !== цвет) {
+                п.style.background = цвет;
+                игратьПик();
+            }
+        }
+        
+        function пипетка(п) {
+            const цвет = rgbВHex(п.style.background);
+            выбратьЦвет(цвет);
+            текущийИнструмент = 'кисть';
+            document.querySelectorAll('.инструмент').forEach(i => {
+                i.classList.toggle('активен', i.dataset.инструмент === 'кисть');
+            });
+        }
+        
+        // ==========================================
+        // ЗАЛИВКА ОБЛАСТИ (flood fill)
+        // ==========================================
+        function заливка(startIndex) {
+            let новыйЦвет = текущийЦвет;
+            if (текущийИнструмент === 'ластик') новыйЦвет = '#ffffff';
+            
+            const старыйЦвет = rgbВHex(пиксели[startIndex].style.background);
+            if (старыйЦвет === новыйЦвет) return;
+            
+            сохранитьИсторию();
+            
+            const очередь = [startIndex];
+            const посещено = new Set();
+            посещено.add(startIndex);
+            
+            while (очередь.length > 0) {
+                const i = очередь.shift();
+                const п = пиксели[i];
+                if (!п) continue;
+                if (rgbВHex(п.style.background) !== старыйЦвет) continue;
+                
+                п.style.background = новыйЦвет;
+                
+                const x = i % размер;
+                const y = Math.floor(i / размер);
+                
+                // Вверх
+                if (y > 0) {
+                    const сосед = i - размер;
+                    if (!посещено.has(сосед)) { посещено.add(сосед); очередь.push(сосед); }
+                }
+                // Вниз
+                if (y < размер - 1) {
+                    const сосед = i + размер;
+                    if (!посещено.has(сосед)) { посещено.add(сосед); очередь.push(сосед); }
+                }
+                // Влево
+                if (x > 0) {
+                    const сосед = i - 1;
+                    if (!посещено.has(сосед)) { посещено.add(сосед); очередь.push(сосед); }
+                }
+                // Вправо
+                if (x < размер - 1) {
+                    const сосед = i + 1;
+                    if (!посещено.has(сосед)) { посещено.add(сосед); очередь.push(сосед); }
+                }
+            }
+            
+            игратьПик();
+            сохранитьРисунок();
+        }
+        
+        // ==========================================
+        // УТИЛИТЫ
+        // ==========================================
+        function rgbВHex(rgb) {
+            if (!rgb) return '#ffffff';
+            if (rgb.startsWith('#')) return rgb.toLowerCase();
+            const match = rgb.match(/\d+/g);
+            if (!match || match.length < 3) return '#ffffff';
+            const hex = match.slice(0, 3).map(n => {
+                const h = parseInt(n).toString(16);
+                return h.length === 1 ? '0' + h : h;
+            }).join('');
+            return '#' + hex;
+        }
+        
+        // ==========================================
+        // ИСТОРИЯ (ОТМЕНА)
+        // ==========================================
+        function сохранитьИсторию() {
+            const снимок = пиксели.map(п => rgbВHex(п.style.background));
+            история.push(снимок);
+            if (история.length > 20) история.shift();
+        }
+        
+        document.getElementById('кнопкаОтмена').addEventListener('click', function() {
+            if (история.length === 0) {
+                alert('Нечего отменять');
+                return;
+            }
+            const снимок = история.pop();
+            пиксели.forEach((п, i) => {
+                п.style.background = снимок[i] || '#ffffff';
+            });
+            сохранитьРисунок();
+        });
+        
+        // ==========================================
+        // СЕТКА
+        // ==========================================
+        document.getElementById('чекбоксСетка').addEventListener('change', function() {
+            показатьСетку = this.checked;
+            пиксели.forEach(п => {
+                п.classList.toggle('сетка', показатьСетку);
+            });
+        });
+        
+        // ==========================================
+        // ОЧИСТКА
+        // ==========================================
+        document.getElementById('кнопкаОчистить').addEventListener('click', function() {
+            if (!confirm('Очистить холст? Действие можно отменить.')) return;
+            сохранитьИсторию();
+            пиксели.forEach(п => п.style.background = '#ffffff');
+            сохранитьРисунок();
+        });
+        
+        // ==========================================
+        // СОХРАНЕНИЕ РИСУНКА (localStorage)
+        // ==========================================
+        const КЛЮЧ = 'пиксель-арт-рисунок';
+        
+        function сохранитьРисунок() {
+            const данные = {
+                размер,
+                пиксели: пиксели.map(п => rgbВHex(п.style.background))
+            };
+            try {
+                localStorage.setItem(КЛЮЧ, JSON.stringify(данные));
+            } catch (e) {}
+        }
+        
+        function загрузитьРисунок() {
+            try {
+                const сырое = localStorage.getItem(КЛЮЧ);
+                if (!сырое) return;
+                const данные = JSON.parse(сырое);
+                if (данные.размер !== размер) return;
+                данные.пиксели.forEach((ц, i) => {
+                    if (пиксели[i]) пиксели[i].style.background = ц;
+                });
+            } catch (e) {}
+        }
+        
+        // ==========================================
+        // СОХРАНЕНИЕ В PNG
+        // ==========================================
+        document.getElementById('кнопкаСохранить').addEventListener('click', function() {
+            const масштаб = 32;
             const canvas = document.createElement('canvas');
             canvas.width = размер;
             canvas.height = размер;
             const ctx = canvas.getContext('2d');
             
-            пиксели.forEach((p, i) => {
+            пиксели.forEach((п, i) => {
                 const x = i % размер;
                 const y = Math.floor(i / размер);
-                ctx.fillStyle = p.style.background || '#ffffff';
+                ctx.fillStyle = rgbВHex(п.style.background);
                 ctx.fillRect(x, y, 1, 1);
             });
             
-            // Увеличиваем для сохранения
             const canvas2 = document.createElement('canvas');
-            canvas2.width = 512;
-            canvas2.height = 512;
+            const итог = размер * масштаб;
+            canvas2.width = итог;
+            canvas2.height = итог;
             const ctx2 = canvas2.getContext('2d');
             ctx2.imageSmoothingEnabled = false;
-            ctx2.drawImage(canvas, 0, 0, 512, 512);
+            ctx2.drawImage(canvas, 0, 0, итог, итог);
             
             const ссылка = document.createElement('a');
             ссылка.download = 'пиксель-арт.png';
             ссылка.href = canvas2.toDataURL('image/png');
             ссылка.click();
-        }
+        });
         
-        инициализация();
+        // ==========================================
+        // СТАРТ
+        // ==========================================
+        отрисоватьПалитру();
+        создатьХолст();
     </script>
 </body>
 </html>

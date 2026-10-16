@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Лотерея</title>
+    <link rel="icon" href="../ico.png">
+    <link rel="stylesheet" href="../style.css">
+    <style>
+        .баланс {
+            background: #2d3748;
+            padding: 16px;
+            border-radius: 12px;
+            text-align: center;
+            margin: 16px 0;
+        }
+        .баланс .label {
+            color: #a0aec0;
+            font-size: 13px;
+        }
+        .баланс .value {
+            color: #f6e05e;
+            font-weight: 700;
+            font-size: 32px;
+        }
+        
+        .билеты {
+            display: grid;
+            gap: 12px;
+            margin: 20px 0;
+        }
+        .билет {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #1a202c;
+            border: 2px solid #2d3748;
+            border-radius: 12px;
+            padding: 16px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .билет:hover {
+            border-color: #4299e1;
+            background: #2d3748;
+        }
+        .билет .инфо {
+            flex: 1;
+        }
+        .билет .назв {
+            font-weight: 700;
+            color: #90cdf4;
+            font-size: 16px;
+            margin-bottom: 4px;
+        }
+        .билет .шанс {
+            font-size: 12px;
+            color: #718096;
+        }
+        .билет .цена {
+            background: #4299e1;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: 700;
+            font-size: 14px;
+        }
+        
+        .результат {
+            margin: 16px 0;
+            padding: 24px;
+            border-radius: 12px;
+            text-align: center;
+            font-size: 18px;
+            font-weight: 700;
+            min-height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+        }
+        .результат.выигрыш {
+            background: #38a169;
+            color: white;
+            animation: выигрыш 0.5s;
+        }
+        .результат.проигрыш {
+            background: #742a2a;
+            color: #fed7d7;
+        }
+        @keyframes выигрыш {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <a href="../игры.html" class="back-btn">← Назад</a>
+        <span class="badge purple">🎲 Удача</span>
+    </div>
+    
+    <h1>🎰 Лотерея</h1>
+    
+    <div class="баланс">
+        <div class="label">Монеты</div>
+        <div class="value" id="баланс">100</div>
+    </div>
+    
+    <div class="результат" id="результат">Купи билет и испытай удачу!</div>
+    
+    <h2>🎫 Билеты</h2>
+    <div class="билеты" id="билеты"></div>
+    
+    <button class="mode-btn no-disco" style="background:#2d3748;color:#90cdf4;border:none;padding:12px;border-radius:10px;font-family:inherit;font-size:14px;font-weight:600;width:100%;cursor:pointer;margin-top:20px;" id="сброс">
+        🔄 Начать заново (обнулить баланс)
+    </button>
+    
+    <script>
+        const билеты = [
+            { назв: '🎫 Обычный билет', цена: 10,   шанс: 0.4,  выигрыш: 25,  описание: 'Шанс 40% × 25' },
+            { назв: '🎫 Редкий билет',  цена: 50,   шанс: 0.25, выигрыш: 200, описание: 'Шанс 25% × 200' },
+            { назв: '🎫 Эпик билет',    цена: 200,  шанс: 0.15, выигрыш: 1500, описание: 'Шанс 15% × 1500' },
+            { назв: '🎫 Легендарный',   цена: 1000, шанс: 0.05, выигрыш: 25000,описание: 'Шанс 5% × 25000' },
+            { назв: '💎 ДЖЕКПОТ',       цена: 5000, шанс: 0.01, выигрыш: 500000,описание: 'Шанс 1% × 500000' }
+        ];
+        
+        let баланс = parseInt(localStorage.getItem('лотерея-баланс') || '100');
+        const балансЭл = document.getElementById('баланс');
+        const результатЭл = document.getElementById('результат');
+        const билетыЭл = document.getElementById('билеты');
+        
+        балансЭл.textContent = баланс;
+        
+        function сохранить() {
+            localStorage.setItem('лотерея-баланс', баланс);
+        }
+        
+        function отрисовать() {
+            билетыЭл.innerHTML = '';
+            билеты.forEach((б, i) => {
+                const div = document.createElement('div');
+                div.className = 'билет';
+                div.innerHTML = `
+                    <div class="инфо">
+                        <div class="назв">${б.назв}</div>
+                        <div class="шанс">${б.описание}</div>
+                    </div>
+                    <div class="цена">${б.цена} 🪙</div>
+                `;
+                div.onclick = () => купить(i);
+                билетыЭл.appendChild(div);
+            });
+        }
+        
+        function купить(i) {
+            const б = билеты[i];
+            if (баланс < б.цена) {
+                результатЭл.textContent = '❌ Не хватает монет!';
+                результатЭл.className = 'результат проигрыш';
+                return;
+            }
+            
+            баланс -= б.цена;
+            
+            if (Math.random() < б.шанс) {
+                баланс += б.выигрыш;
+                результатЭл.textContent = `🎉 ВЫИГРЫШ! +${б.выигрыш} 🪙`;
+                результатЭл.className = 'результат выигрыш';
+            } else {
+                результатЭл.textContent = `😢 Проигрыш. -${б.цена} 🪙`;
+                результатЭл.className = 'результат проигрыш';
+            }
+            
+            балансЭл.textContent = баланс;
+            сохранить();
+        }
+        
+        document.getElementById('сброс').onclick = () => {
+            if (!confirm('Сбросить баланс до 100 монет?')) return;
+            if (!confirm('Точно? Весь прогресс будет потерян!')) return;
+            баланс = 100;
+            балансЭл.textContent = баланс;
+            результатЭл.textContent = 'Баланс сброшен. Начни заново!';
+            результатЭл.className = 'результат';
+            сохранить();
+        };
+        
+        отрисовать();
+    </script>
+</body>
+</html>

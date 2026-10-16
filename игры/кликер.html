@@ -7,32 +7,90 @@
     <link rel="icon" href="../ico.png">
     <link rel="stylesheet" href="../style.css">
     <style>
-        .кликер-зона {
+        .стат {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin: 16px 0;
+        }
+        .стат-блок {
+            background: #2d3748;
+            padding: 10px 14px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        .стат-блок .label {
+            color: #a0aec0;
+            font-size: 12px;
+        }
+        .стат-блок .value {
+            color: #e2e8f0;
+            font-weight: 700;
+            font-size: 20px;
+        }
+        
+        .печенька-зона {
             text-align: center;
             margin: 20px 0;
+            position: relative;
         }
         #печенька {
-            font-size: 120px;
+            font-size: 130px;
             cursor: pointer;
             user-select: none;
             -webkit-user-select: none;
-            transition: transform 0.05s;
             display: inline-block;
+            transition: transform 0.05s;
+            -webkit-tap-highlight-color: transparent;
         }
         #печенька:active {
             transform: scale(0.9);
         }
-        .счёт {
-            font-size: 32px;
-            font-weight: 700;
+        
+        /* Летящие "+1" */
+        .плюсик {
+            position: absolute;
             color: #f6e05e;
-            text-align: center;
-            margin: 16px 0;
+            font-weight: 700;
+            font-size: 22px;
+            pointer-events: none;
+            animation: улетает 1s ease-out forwards;
+            z-index: 10;
         }
+        @keyframes улетает {
+            0% { opacity: 1; transform: translateY(0); }
+            100% { opacity: 0; transform: translateY(-80px); }
+        }
+        
+        /* Вкладки */
+        .вкладки {
+            display: flex;
+            gap: 6px;
+            margin: 16px 0 12px;
+        }
+        .вкладка {
+            flex: 1;
+            background: #2d3748;
+            color: #a0aec0;
+            border: none;
+            padding: 10px 8px;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: inherit;
+            transition: all 0.2s;
+            touch-action: manipulation;
+        }
+        .вкладка.активна {
+            background: #4299e1;
+            color: white;
+        }
+        
+        /* Улучшения */
         .улучшения {
             display: grid;
-            gap: 10px;
-            margin-top: 20px;
+            gap: 8px;
         }
         .улучшение {
             display: flex;
@@ -41,42 +99,105 @@
             background: #1a202c;
             border: 1px solid #2d3748;
             border-radius: 10px;
-            padding: 12px 16px;
+            padding: 12px 14px;
             cursor: pointer;
             transition: all 0.2s;
+            touch-action: manipulation;
         }
-        .улучшение:hover {
+        .улучшение.доступно {
+            border-color: #38a169;
+        }
+        .улучшение.доступно:hover {
             background: #2d3748;
             border-color: #4299e1;
+        }
+        .улучшение.недоступно {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .улучшение .лево {
+            flex: 1;
+            min-width: 0;
         }
         .улучшение .назв {
             font-weight: 600;
             color: #90cdf4;
+            font-size: 15px;
+            margin-bottom: 2px;
+        }
+        .улучшение .опис {
+            font-size: 12px;
+            color: #718096;
+        }
+        .улучшение .право {
+            text-align: right;
+            flex-shrink: 0;
+            margin-left: 10px;
         }
         .улучшение .цена {
             color: #f6e05e;
             font-weight: 600;
+            font-size: 14px;
         }
-        .инфо {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 8px;
-            margin: 16px 0;
+        .улучшение .куплено {
+            color: #38a169;
+            font-size: 12px;
+            margin-top: 2px;
         }
-        .инфо-блок {
+        
+        /* Кнопка звука */
+        .звук-кнопка {
+            position: fixed;
+            top: 16px;
+            right: 70px;
             background: #2d3748;
-            padding: 10px 14px;
-            border-radius: 8px;
-            text-align: center;
+            color: #90cdf4;
+            border: 1px solid #4299e1;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            font-size: 18px;
+            cursor: pointer;
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+            font-family: inherit;
         }
-        .инфо-блок .label {
-            color: #a0aec0;
-            font-size: 13px;
+        .звук-кнопка:hover {
+            background: #4299e1;
+            color: white;
         }
-        .инфо-блок .value {
-            color: #e2e8f0;
-            font-weight: 700;
-            font-size: 20px;
+        
+        /* Кнопка сброса */
+        .сброс-кнопка {
+            display: block;
+            width: 100%;
+            margin-top: 30px;
+            background: transparent;
+            color: #e53e3e;
+            border: 1px solid #e53e3e;
+            padding: 10px;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: inherit;
+            touch-action: manipulation;
+            transition: all 0.2s;
+        }
+        .сброс-кнопка:hover {
+            background: #e53e3e;
+            color: white;
+        }
+        
+        .вкладка-содержимое {
+            display: none;
+        }
+        .вкладка-содержимое.активна {
+            display: grid;
+            gap: 8px;
         }
     </style>
 </head>
@@ -86,85 +207,351 @@
         <span class="badge purple">🖱️ Кликер</span>
     </div>
     
+    <button class="звук-кнопка" id="звукКнопка">🔊</button>
+    
     <h1>🍪 Кликер</h1>
     
-    <div class="инфо">
-        <div class="инфо-блок">
+    <div class="стат">
+        <div class="стат-блок">
             <div class="label">Печенек</div>
             <div class="value" id="счёт">0</div>
         </div>
-        <div class="инфо-блок">
+        <div class="стат-блок">
             <div class="label">В секунду</div>
             <div class="value" id="вСекунду">0</div>
         </div>
+        <div class="стат-блок">
+            <div class="label">За клик</div>
+            <div class="value" id="заКлик">1</div>
+        </div>
+        <div class="стат-блок">
+            <div class="label">Всего</div>
+            <div class="value" id="всего">0</div>
+        </div>
     </div>
     
-    <div class="кликер-зона">
+    <div class="печенька-зона">
         <div id="печенька">🍪</div>
     </div>
     
-    <h2>Улучшения</h2>
-    <div class="улучшения" id="улучшения"></div>
+    <!-- ВКЛАДКИ -->
+    <div class="вкладки">
+        <button class="вкладка активна" data-вкладка="ручная">🖱️ Ручная</button>
+        <button class="вкладка" data-вкладка="авто">⚙️ Авто</button>
+        <button class="вкладка" data-вкладка="особая">✨ Особая</button>
+    </div>
+    
+    <!-- СОДЕРЖИМОЕ ВКЛАДОК -->
+    <div class="вкладка-содержимое активна" data-вкладка="ручная" id="улучшения-ручная"></div>
+    <div class="вкладка-содержимое" data-вкладка="авто" id="улучшения-авто"></div>
+    <div class="вкладка-содержимое" data-вкладка="особая" id="улучшения-особая"></div>
+    
+    <button class="сброс-кнопка" id="кнопкаСброса">🗑️ Сбросить весь прогресс</button>
     
     <script>
-        let печеньки = 0;
-        let вСекунду = 0;
+        // ==========================================
+        // ЗВУК
+        // ==========================================
+        let аудио = null;
+        let звукВкл = true;
         
-        const улучшения = [
-            { назв: 'Палец-помощник', цена: 10, бонус: 1, куплено: 0 },
-            { назв: 'Пекарня', цена: 100, бонус: 5, куплено: 0 },
-            { назв: 'Фабрика', цена: 1000, бонус: 25, куплено: 0 },
-            { назв: 'Завод', цена: 10000, бонус: 100, куплено: 0 },
-            { назв: 'Империя', цена: 100000, бонус: 500, куплено: 0 }
-        ];
+        function получитьАудио() {
+            if (!аудио) {
+                const AC = window.AudioContext || window.webkitAudioContext;
+                if (AC) аудио = new AC();
+            }
+            return аудио;
+        }
         
-        function обновить() {
-            document.getElementById('счёт').textContent = Math.floor(печеньки);
-            document.getElementById('вСекунду').textContent = вСекунду;
+        function игратьКлик() {
+            if (!звукВкл) return;
+            const ctx = получитьАудио();
+            if (!ctx) return;
+            if (ctx.state === 'suspended') ctx.resume();
             
-            const конт = document.getElementById('улучшения');
-            конт.innerHTML = '';
+            const сейчас = ctx.currentTime;
+            const осц = ctx.createOscillator();
+            const усил = ctx.createGain();
+            осц.type = 'sine';
+            осц.frequency.setValueAtTime(800, сейчас);
+            осц.frequency.exponentialRampToValueAtTime(400, сейчас + 0.08);
+            усил.gain.setValueAtTime(0.4, сейчас);
+            усил.gain.exponentialRampToValueAtTime(0.001, сейчас + 0.1);
+            осц.connect(усил);
+            усил.connect(ctx.destination);
+            осц.start(сейчас);
+            осц.stop(сейчас + 0.1);
+        }
+        
+        function игратьПокупку() {
+            if (!звукВкл) return;
+            const ctx = получитьАудио();
+            if (!ctx) return;
+            if (ctx.state === 'suspended') ctx.resume();
             
-            улучшения.forEach((у, i) => {
-                const div = document.createElement('div');
-                div.className = 'улучшение';
-                div.innerHTML = `
-                    <div>
-                        <div class="назв">${у.назв} (${у.куплено})</div>
-                        <div style="font-size:13px;color:#718096;">+${у.бонус} в сек</div>
-                    </div>
-                    <div class="цена">${у.цена} 🍪</div>
-                `;
-                div.onclick = () => {
-                    if (печеньки >= у.цена) {
-                        печеньки -= у.цена;
-                        у.куплено++;
-                        вСекунду += у.бонус;
-                        у.цена = Math.floor(у.цена * 1.5);
-                        обновить();
-                    }
-                };
-                конт.appendChild(div);
+            const сейчас = ctx.currentTime;
+            // Два тона — "дилинь"
+            [523.25, 783.99].forEach((част, i) => {
+                const осц = ctx.createOscillator();
+                const усил = ctx.createGain();
+                осц.type = 'sine';
+                осц.frequency.value = част;
+                усил.gain.setValueAtTime(0, сейчас + i * 0.08);
+                усил.gain.linearRampToValueAtTime(0.4, сейчас + i * 0.08 + 0.02);
+                усил.gain.exponentialRampToValueAtTime(0.001, сейчас + i * 0.08 + 0.25);
+                осц.connect(усил);
+                усил.connect(ctx.destination);
+                осц.start(сейчас + i * 0.08);
+                осц.stop(сейчас + i * 0.08 + 0.25);
             });
         }
         
-        document.getElementById('печенька').addEventListener('click', () => {
-            печеньки++;
+        document.getElementById('звукКнопка').addEventListener('click', function() {
+            звукВкл = !звукВкл;
+            this.textContent = звукВкл ? '🔊' : '🔇';
+        });
+        
+        // ==========================================
+        // ДАННЫЕ ИГРЫ
+        // ==========================================
+        const КЛЮЧ = 'кликер-прогресс';
+        
+        // Улучшения
+        const УЛУЧШЕНИЯ = {
+            ручная: [
+                { id: 'палец', назв: 'Крепкий палец', опис: '+1 к клику', база: 15, бонус: 1, куплено: 0 },
+                { id: 'рука', назв: 'Ловкая рука', опис: '+2 к клику', база: 100, бонус: 2, куплено: 0 },
+                { id: 'перчатка', назв: 'Магическая перчатка', опис: '+5 к клику', база: 500, бонус: 5, куплено: 0 },
+                { id: 'мульти', назв: 'Мультипалец', опис: '+15 к клику', база: 5000, бонус: 15, куплено: 0 },
+                { id: 'бог', назв: 'Рука богов', опис: '+50 к клику', база: 50000, бонус: 50, куплено: 0 }
+            ],
+            авто: [
+                { id: 'бабушка', назв: 'Бабушка', опис: '+1 в секунду', база: 50, бонус: 1, куплено: 0 },
+                { id: 'пекарня', назв: 'Пекарня', опис: '+5 в секунду', база: 500, бонус: 5, куплено: 0 },
+                { id: 'фабрика', назв: 'Фабрика', опис: '+25 в секунду', база: 5000, бонус: 25, куплено: 0 },
+                { id: 'завод', назв: 'Завод', опис: '+100 в секунду', база: 50000, бонус: 100, куплено: 0 },
+                { id: 'корпорация', назв: 'Корпорация', опис: '+500 в секунду', база: 500000, бонус: 500, куплено: 0 }
+            ],
+            особая: [
+                { id: 'золото', назв: 'Золотая печенька', опис: '×2 к клику', база: 1000, тип: 'множитель-клик', значение: 2, куплено: 0 },
+                { id: 'ускорение', назв: 'Ускорение', опис: '×2 к авто', база: 10000, тип: 'множитель-авто', значение: 2, куплено: 0 },
+                { id: 'кристалл', назв: 'Кристалл', опис: '×3 к клику', база: 100000, тип: 'множитель-клик', значение: 3, куплено: 0 },
+                { id: 'ядро', назв: 'Ядро', опис: '×3 к авто', база: 1000000, тип: 'множитель-авто', значение: 3, куплено: 0 }
+            ]
+        };
+        
+        let печеньки = 0;
+        let всегоПеченек = 0;
+        let кликов = 0;
+        let множительКлик = 1;
+        let множительАвто = 1;
+        
+        // ==========================================
+        // СОХРАНЕНИЕ
+        // ==========================================
+        function сохранить() {
+            const данные = {
+                печеньки,
+                всегоПеченек,
+                кликов,
+                множительКлик,
+                множительАвто,
+                улучшения: {}
+            };
+            for (const кат in УЛУЧШЕНИЯ) {
+                данные.улучшения[кат] = УЛУЧШЕНИЯ[кат].map(у => у.куплено);
+            }
+            try {
+                localStorage.setItem(КЛЮЧ, JSON.stringify(данные));
+            } catch (e) {}
+        }
+        
+        function загрузить() {
+            try {
+                const сырое = localStorage.getItem(КЛЮЧ);
+                if (!сырое) return;
+                const данные = JSON.parse(сырое);
+                печеньки = данные.печеньки || 0;
+                всегоПеченек = данные.всегоПеченек || 0;
+                кликов = данные.кликов || 0;
+                множительКлик = данные.множительКлик || 1;
+                множительАвто = данные.множительАвто || 1;
+                if (данные.улучшения) {
+                    for (const кат in данные.улучшения) {
+                        if (УЛУЧШЕНИЯ[кат]) {
+                            данные.улучшения[кат].forEach((кол, i) => {
+                                if (УЛУЧШЕНИЯ[кат][i]) УЛУЧШЕНИЯ[кат][i].куплено = кол;
+                            });
+                        }
+                    }
+                }
+            } catch (e) {}
+        }
+        
+        // ==========================================
+        // РАСЧЁТЫ
+        // ==========================================
+        function ценаУлучшения(у) {
+            return Math.floor(у.база * Math.pow(1.15, у.куплено));
+        }
+        
+        function заКлик() {
+            let база = 1;
+            УЛУЧШЕНИЯ.ручная.forEach(у => база += у.бонус * у.куплено);
+            return база * множительКлик;
+        }
+        
+        function вСекунду() {
+            let база = 0;
+            УЛУЧШЕНИЯ.авто.forEach(у => база += у.бонус * у.куплено);
+            return база * множительАвто;
+        }
+        
+        // ==========================================
+        // ФОРМАТИРОВАНИЕ ЧИСЕЛ
+        // ==========================================
+        function формат(число) {
+            число = Math.floor(число);
+            if (число < 1000) return число.toString();
+            if (число < 1000000) return (число / 1000).toFixed(1) + 'К';
+            if (число < 1000000000) return (число / 1000000).toFixed(1) + 'М';
+            if (число < 1000000000000) return (число / 1000000000).toFixed(1) + 'Б';
+            return (число / 1000000000000).toFixed(1) + 'Т';
+        }
+        
+        // ==========================================
+        // ОТРИСОВКА
+        // ==========================================
+        function обновить() {
+            document.getElementById('счёт').textContent = формат(печеньки);
+            document.getElementById('вСекунду').textContent = формат(вСекунду());
+            document.getElementById('заКлик').textContent = формат(заКлик());
+            document.getElementById('всего').textContent = формат(всегоПеченек);
+            
+            for (const кат in УЛУЧШЕНИЯ) {
+                const конт = document.getElementById('улучшения-' + кат);
+                конт.innerHTML = '';
+                
+                УЛУЧШЕНИЯ[кат].forEach(у => {
+                    const цена = ценаУлучшения(у);
+                    const доступно = печеньки >= цена;
+                    
+                    const div = document.createElement('div');
+                    div.className = 'улучшение ' + (доступно ? 'доступно' : 'недоступно');
+                    div.innerHTML = `
+                        <div class="лево">
+                            <div class="назв">${у.назв}</div>
+                            <div class="опис">${у.опис}</div>
+                        </div>
+                        <div class="право">
+                            <div class="цена">🍪 ${формат(цена)}</div>
+                            <div class="куплено">Куплено: ${у.куплено}</div>
+                        </div>
+                    `;
+                    
+                    if (доступно) {
+                        div.addEventListener('click', function() {
+                            купить(кат, у);
+                        });
+                    }
+                    
+                    конт.appendChild(div);
+                });
+            }
+        }
+        
+        function купить(кат, у) {
+            const цена = ценаУлучшения(у);
+            if (печеньки < цена) return;
+            
+            печеньки -= цена;
+            у.куплено++;
+            
+            if (у.тип === 'множитель-клик') множительКлик *= у.значение;
+            if (у.тип === 'множитель-авто') множительАвто *= у.значение;
+            
+            игратьПокупку();
+            обновить();
+            сохранить();
+        }
+        
+        // ==========================================
+        // КЛИК ПО ПЕЧЕНЬКЕ
+        // ==========================================
+        const печенька = document.getElementById('печенька');
+        const зона = document.querySelector('.печенька-зона');
+        
+        function добавитьПлюсик(x, y) {
+            const плюс = document.createElement('div');
+            плюс.className = 'плюсик';
+            плюс.textContent = '+' + формат(заКлик());
+            плюс.style.left = x + 'px';
+            плюс.style.top = y + 'px';
+            зона.appendChild(плюс);
+            setTimeout(() => плюс.remove(), 1000);
+        }
+        
+        печенька.addEventListener('click', function(e) {
+            const прибавка = заКлик();
+            печеньки += прибавка;
+            всегоПеченек += прибавка;
+            кликов++;
+            игратьКлик();
+            
+            // Плюсик у места клика
+            const rect = зона.getBoundingClientRect();
+            добавитьПлюсик(e.clientX - rect.left - 15, e.clientY - rect.top - 15);
+            
             обновить();
         });
         
-        // Поддержка тапов на телефоне
-        document.getElementById('печенька').addEventListener('touchstart', (e) => {
-            e.preventDefault();
-            печеньки++;
-            обновить();
+        // ==========================================
+        // ВКЛАДКИ
+        // ==========================================
+        document.querySelectorAll('.вкладка').forEach(вкл => {
+            вкл.addEventListener('click', function() {
+                const кат = this.dataset.вкладка;
+                document.querySelectorAll('.вкладка').forEach(в => в.classList.remove('активна'));
+                document.querySelectorAll('.вкладка-содержимое').forEach(с => с.classList.remove('активна'));
+                this.classList.add('активна');
+                document.querySelector(`.вкладка-содержимое[data-вкладка="${кат}"]`).classList.add('активна');
+            });
         });
         
-        setInterval(() => {
-            печеньки += вСекунду;
-            обновить();
-        }, 1000);
+        // ==========================================
+        // СБРОС ПРОГРЕССА (2 предупреждения)
+        // ==========================================
+        document.getElementById('кнопкаСброса').addEventListener('click', function() {
+            if (!confirm('⚠️ Первое предупреждение!\n\nТы уверен, что хочешь сбросить ВЕСЬ прогресс?')) return;
+            if (!confirm('⚠️⚠️ ВТОРОЕ предупреждение!\n\nЭто действие НЕЛЬЗЯ отменить. Всё будет потеряно. Точно сбросить?')) return;
+            
+            localStorage.removeItem(КЛЮЧ);
+            location.reload();
+        });
         
+        // ==========================================
+        // АВТОСОХРАНЕНИЕ
+        // ==========================================
+        setInterval(сохранить, 3000);
+        window.addEventListener('beforeunload', сохранить);
+        
+        // ==========================================
+        // АВТОДОХОД
+        // ==========================================
+        let накопление = 0;
+        setInterval(function() {
+            const прибавка = вСекунду();
+            if (прибавка > 0) {
+                печеньки += прибавка / 10;
+                всегоПеченек += прибавка / 10;
+                обновить();
+            }
+        }, 100);
+        
+        // ==========================================
+        // СТАРТ
+        // ==========================================
+        загрузить();
         обновить();
     </script>
 </body>

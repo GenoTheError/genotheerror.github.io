@@ -7,59 +7,198 @@
     <link rel="icon" href="../ico.png">
     <link rel="stylesheet" href="../style.css">
     <style>
-        #игра {
+        .счёт-зона {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin: 12px 0;
+        }
+        .счёт-блок {
+            background: #2d3748;
+            padding: 10px 14px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        .счёт-блок .label {
+            color: #a0aec0;
+            font-size: 12px;
+        }
+        .счёт-блок .value {
+            color: #e2e8f0;
+            font-weight: 700;
+            font-size: 22px;
+        }
+        
+        #обёртка {
             position: relative;
             width: 100%;
-            height: 400px;
-            background: #1a202c;
+            aspect-ratio: 16 / 9;
+            max-height: 400px;
+            background: linear-gradient(180deg, #0f1419 0%, #1a202c 60%, #2d3748 100%);
             border: 2px solid #2d3748;
             border-radius: 12px;
             overflow: hidden;
             margin: 16px 0;
             touch-action: none;
+            cursor: pointer;
+            -webkit-tap-highlight-color: transparent;
         }
+        
+        /* Облака на фоне */
+        .облако {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 50%;
+            pointer-events: none;
+        }
+        
+        /* Земля */
+        #земля {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 40px;
+            background: linear-gradient(180deg, #38a169 0%, #22543d 100%);
+            border-top: 3px solid #48bb78;
+        }
+        
+        /* Шарик */
         #шарик {
             position: absolute;
-            width: 40px;
-            height: 40px;
-            background: #4299e1;
+            width: 32px;
+            height: 32px;
             border-radius: 50%;
-            left: 60px;
-            bottom: 0;
+            background: radial-gradient(circle at 30% 30%, #90cdf4, #4299e1 60%, #2c5282 100%);
+            box-shadow: 0 0 20px rgba(66, 153, 225, 0.6);
+            z-index: 10;
+            will-change: bottom;
         }
+        
+        /* Препятствие */
         .препятствие {
             position: absolute;
-            background: #e53e3e;
-            border-radius: 4px;
+            background: linear-gradient(180deg, #e53e3e 0%, #c53030 100%);
+            border-radius: 6px 6px 0 0;
+            bottom: 40px;
+            will-change: left;
         }
-        .счёт {
-            font-size: 28px;
-            font-weight: 700;
-            color: #f6e05e;
-            text-align: center;
-            margin: 12px 0;
+        
+        /* Частицы */
+        .частица {
+            position: absolute;
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: #63b3ed;
+            pointer-events: none;
+            z-index: 20;
         }
-        .подсказка {
+        
+        /* Тряска */
+        @keyframes тряска {
+            0%, 100% { transform: translate(0, 0); }
+            20% { transform: translate(-4px, 2px); }
+            40% { transform: translate(4px, -2px); }
+            60% { transform: translate(-3px, 1px); }
+            80% { transform: translate(3px, -1px); }
+        }
+        #обёртка.тряска {
+            animation: тряска 0.3s;
+        }
+        
+        /* Вспышка */
+        @keyframes вспышка {
+            from { opacity: 0.6; }
+            to { opacity: 0; }
+        }
+        #вспышка {
+            position: absolute;
+            inset: 0;
+            background: white;
+            pointer-events: none;
+            opacity: 0;
+            z-index: 100;
+        }
+        #вспышка.активна {
+            animation: вспышка 0.3s;
+        }
+        
+        /* Кнопка старта / сообщение */
+        #сообщение {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: rgba(15, 20, 25, 0.85);
+            z-index: 50;
             text-align: center;
+            padding: 20px;
+        }
+        #сообщение.скрыто {
+            display: none;
+        }
+        #сообщение h2 {
+            color: #90cdf4;
+            margin: 0 0 8px 0;
+            border: none;
+            padding: 0;
+            font-size: 24px;
+        }
+        #сообщение p {
             color: #a0aec0;
             font-size: 14px;
-            margin: 8px 0;
+            margin: 0 0 16px 0;
         }
-        .кнопка {
+        #сообщение .старт-кнопка {
             background: #4299e1;
             color: white;
             border: none;
-            padding: 12px 24px;
-            border-radius: 20px;
+            padding: 12px 32px;
+            border-radius: 24px;
             font-size: 16px;
-            font-weight: 600;
+            font-weight: 700;
             cursor: pointer;
             font-family: inherit;
-            display: block;
-            margin: 10px auto;
+            transition: all 0.2s;
         }
-        .кнопка:hover {
+        #сообщение .старт-кнопка:hover {
             background: #3182ce;
+            transform: scale(1.05);
+        }
+        
+        /* Кнопка звука */
+        .звук-кнопка {
+            position: fixed;
+            top: 16px;
+            right: 70px;
+            background: #2d3748;
+            color: #90cdf4;
+            border: 1px solid #4299e1;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            font-size: 18px;
+            cursor: pointer;
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+            font-family: inherit;
+        }
+        .звук-кнопка:hover {
+            background: #4299e1;
+            color: white;
+        }
+        
+        .подсказка {
+            text-align: center;
+            color: #718096;
+            font-size: 13px;
+            margin: 8px 0;
         }
     </style>
 </head>
@@ -69,41 +208,220 @@
         <span class="badge purple">🎯 Аркада</span>
     </div>
     
+    <button class="звук-кнопка" id="звукКнопка">🔊</button>
+    
     <h1>⚪ Прыгающий шарик</h1>
     
-    <div class="счёт">Счёт: <span id="счёт">0</span></div>
-    
-    <div id="игра">
-        <div id="шарик"></div>
+    <div class="счёт-зона">
+        <div class="счёт-блок">
+            <div class="label">Счёт</div>
+            <div class="value" id="счёт">0</div>
+        </div>
+        <div class="счёт-блок">
+            <div class="label">Рекорд</div>
+            <div class="value" id="рекорд">0</div>
+        </div>
     </div>
     
-    <div class="подсказка">Тапай по экрану или жми пробел, чтобы прыгнуть</div>
-    <button class="кнопка" onclick="начать()">🔄 Заново</button>
+    <div id="обёртка">
+        <div id="вспышка"></div>
+        <div id="земля"></div>
+        <div id="шарик"></div>
+        <div id="сообщение">
+            <h2>⚪ Прыгающий шарик</h2>
+            <p>Тапай / жми пробел, чтобы прыгнуть<br>Уклоняйся от красных препятствий</p>
+            <button class="старт-кнопка" id="кнопкаСтарт">▶️ Начать</button>
+        </div>
+    </div>
+    
+    <div class="подсказка">Управление: тап, клик, пробел или ↑</div>
     
     <script>
-        const игра = document.getElementById('игра');
+        // ==========================================
+        // ЗВУК
+        // ==========================================
+        let аудио = null;
+        let звукВкл = true;
+        
+        function получитьАудио() {
+            if (!аудио) {
+                const AC = window.AudioContext || window.webkitAudioContext;
+                if (AC) аудио = new AC();
+            }
+            return аудио;
+        }
+        
+        function игратьПрыжок() {
+            if (!звукВкл) return;
+            const ctx = получитьАудио();
+            if (!ctx) return;
+            if (ctx.state === 'suspended') ctx.resume();
+            
+            const сейчас = ctx.currentTime;
+            const осц = ctx.createOscillator();
+            const усил = ctx.createGain();
+            осц.type = 'sine';
+            осц.frequency.setValueAtTime(400, сейчас);
+            осц.frequency.exponentialRampToValueAtTime(800, сейчас + 0.1);
+            усил.gain.setValueAtTime(0.2, сейчас);
+            усил.gain.exponentialRampToValueAtTime(0.001, сейчас + 0.15);
+            осц.connect(усил);
+            усил.connect(ctx.destination);
+            осц.start(сейчас);
+            осц.stop(сейчас + 0.15);
+        }
+        
+        function игратьСмерть() {
+            if (!звукВкл) return;
+            const ctx = получитьАудио();
+            if (!ctx) return;
+            if (ctx.state === 'suspended') ctx.resume();
+            
+            const сейчас = ctx.currentTime;
+            const осц = ctx.createOscillator();
+            const усил = ctx.createGain();
+            осц.type = 'sawtooth';
+            осц.frequency.setValueAtTime(300, сейчас);
+            осц.frequency.exponentialRampToValueAtTime(60, сейчас + 0.5);
+            усил.gain.setValueAtTime(0.3, сейчас);
+            усил.gain.exponentialRampToValueAtTime(0.001, сейчас + 0.5);
+            осц.connect(усил);
+            усил.connect(ctx.destination);
+            осц.start(сейчас);
+            осц.stop(сейчас + 0.5);
+        }
+        
+        function игратьОчко() {
+            if (!звукВкл) return;
+            const ctx = получитьАудио();
+            if (!ctx) return;
+            if (ctx.state === 'suspended') ctx.resume();
+            
+            const сейчас = ctx.currentTime;
+            const осц = ctx.createOscillator();
+            const усил = ctx.createGain();
+            осц.type = 'sine';
+            осц.frequency.value = 1000;
+            усил.gain.setValueAtTime(0.15, сейчас);
+            усил.gain.exponentialRampToValueAtTime(0.001, сейчас + 0.15);
+            осц.connect(усил);
+            усил.connect(ctx.destination);
+            осц.start(сейчас);
+            осц.stop(сейчас + 0.15);
+        }
+        
+        document.getElementById('звукКнопка').addEventListener('click', function() {
+            звукВкл = !звукВкл;
+            this.textContent = звукВкл ? '🔊' : '🔇';
+        });
+        
+        // ==========================================
+        // ЭЛЕМЕНТЫ
+        // ==========================================
+        const обёртка = document.getElementById('обёртка');
         const шарик = document.getElementById('шарик');
-        let позиция = 0;
+        const земля = document.getElementById('земля');
+        const вспышка = document.getElementById('вспышка');
+        const сообщение = document.getElementById('сообщение');
+        const счётЭл = document.getElementById('счёт');
+        const рекордЭл = document.getElementById('рекорд');
+        
+        // ==========================================
+        // КОНСТАНТЫ
+        // ==========================================
+        const ЗЕМЛЯ_ВЫСОТА = 40;
+        const ШАРИК_РАЗМЕР = 32;
+        const ШАРИК_РАДИУС = ШАРИК_РАЗМЕР / 2;
+        const ШАРИК_X = 60;
+        const ГРАВИТАЦИЯ = 0.6;
+        const СИЛА_ПРЫЖКА = -11;
+        const МАКС_СКОРОСТЬ_ПАДЕНИЯ = 16;
+        
+        // ==========================================
+        // СОСТОЯНИЕ
+        // ==========================================
+        let позиция = 0; // 0 = на земле, отрицательные — вверх
         let скорость = 0;
         let прыжок = false;
         let препятствия = [];
         let счёт = 0;
+        let рекорд = parseInt(localStorage.getItem('шарик-рекорд') || '0');
         let играИдёт = false;
-        let анимация;
+        let кадры = 0;
+        let скоростьМира = 4;
+        let анимация = null;
+        let последнееОчко = 0;
         
-        const гравитация = 0.8;
-        const силаПрыжка = -14;
-        const скоростьИгры = 4;
+        рекордЭл.textContent = рекорд;
         
+        // ==========================================
+        // ОБЛАКА (фон)
+        // ==========================================
+        function создатьОблака() {
+            for (let i = 0; i < 5; i++) {
+                const обл = document.createElement('div');
+                обл.className = 'облако';
+                const ш = 60 + Math.random() * 100;
+                обл.style.width = ш + 'px';
+                обл.style.height = (ш * 0.5) + 'px';
+                обл.style.left = Math.random() * 100 + '%';
+                обл.style.top = (10 + Math.random() * 50) + '%';
+                обёртка.insertBefore(обл, шарик);
+            }
+        }
+        
+        // ==========================================
+        // ЧАСТИЦЫ
+        // ==========================================
+        function создатьЧастицы(x, y, количество) {
+            for (let i = 0; i < количество; i++) {
+                const ч = document.createElement('div');
+                ч.className = 'частица';
+                ч.style.left = x + 'px';
+                ч.style.top = y + 'px';
+                обёртка.appendChild(ч);
+                
+                const vx = (Math.random() - 0.5) * 6;
+                const vy = -Math.random() * 4 - 1;
+                let x2 = x, y2 = y;
+                let vx2 = vx, vy2 = vy;
+                let жизнь = 30;
+                
+                const аним = setInterval(() => {
+                    x2 += vx2;
+                    y2 += vy2;
+                    vy2 += 0.3;
+                    жизнь--;
+                    ч.style.left = x2 + 'px';
+                    ч.style.top = y2 + 'px';
+                    ч.style.opacity = (жизнь / 30).toString();
+                    
+                    if (жизнь <= 0) {
+                        clearInterval(аним);
+                        ч.remove();
+                    }
+                }, 16);
+            }
+        }
+        
+        // ==========================================
+        // ИГРА
+        // ==========================================
         function начать() {
             позиция = 0;
             скорость = 0;
             препятствия.forEach(p => p.element.remove());
             препятствия = [];
             счёт = 0;
+            кадры = 0;
+            скоростьМира = 4;
+            последнееОчко = 0;
             играИдёт = true;
-            document.getElementById('счёт').textContent = 0;
-            шарик.style.bottom = '0';
+            счётЭл.textContent = '0';
+            сообщение.classList.add('скрыто');
+            
+            // Сброс позиции шарика
+            шарик.style.bottom = ЗЕМЛЯ_ВЫСОТА + 'px';
             
             cancelAnimationFrame(анимация);
             цикл();
@@ -111,76 +429,171 @@
         
         function прыгнуть() {
             if (!играИдёт) return;
-            if (позиция <= 0) {
-                скорость = силаПрыжка;
+            if (позиция >= 0) {
+                скорость = СИЛА_ПРЫЖКА;
+                игратьПрыжок();
+                // Частицы под шариком
+                const x = ШАРИК_X + ШАРИК_РАДИУС;
+                const y = обёртка.offsetHeight - ЗЕМЛЯ_ВЫСОТА - 5;
+                создатьЧастицы(x, y, 6);
             }
         }
         
-        игра.addEventListener('click', прыгнуть);
-        игра.addEventListener('touchstart', (e) => { e.preventDefault(); прыгнуть(); });
-        document.addEventListener('keydown', (e) => {
-            if (e.code === 'Space') { e.preventDefault(); прыгнуть(); }
-        });
-        
-        let кадры = 0;
+        function умереть() {
+            играИдёт = false;
+            игратьСмерть();
+            вспышка.classList.add('активна');
+            обёртка.classList.add('тряска');
+            
+            setTimeout(() => {
+                вспышка.classList.remove('активна');
+                обёртка.classList.remove('тряска');
+            }, 300);
+            
+            if (счёт > рекорд) {
+                рекорд = счёт;
+                localStorage.setItem('шарик-рекорд', рекорд);
+                рекордЭл.textContent = рекорд;
+            }
+            
+            сообщение.classList.remove('скрыто');
+            сообщение.querySelector('h2').textContent = '💥 Игра окончена';
+            сообщение.querySelector('p').innerHTML = `Счёт: <strong>${счёт}</strong>${счёт >= рекорд ? ' 🏆 Новый рекорд!' : ''}<br>Рекорд: ${рекорд}`;
+            сообщение.querySelector('.старт-кнопка').textContent = '🔄 Заново';
+        }
         
         function цикл() {
             if (!играИдёт) return;
             
-            // Физика
-            скорость += гравитация;
+            // === ФИЗИКА ===
+            скорость += ГРАВИТАЦИЯ;
+            if (скорость > МАКС_СКОРОСТЬ_ПАДЕНИЯ) скорость = МАКС_СКОРОСТЬ_ПАДЕНИЯ;
             позиция += скорость;
-            if (позиция > 0) { позиция = 0; скорость = 0; }
-            шарик.style.bottom = (-позиция) + 'px';
             
-            // Препятствия
+            if (позиция > 0) {
+                позиция = 0;
+                скорость = 0;
+            }
+            
+            // Позиция шарика (bottom относительно земли)
+            шарик.style.bottom = (ЗЕМЛЯ_ВЫСОТА - позиция) + 'px';
+            шарик.style.left = ШАРИК_X + 'px';
+            
+            // === ПРЕПЯТСТВИЯ ===
             кадры++;
-            if (кадры % 90 === 0) {
+            const частота = Math.max(40, 80 - Math.floor(счёт / 5) * 3);
+            if (кадры % частота === 0) {
                 создатьПрепятствие();
             }
             
+            // === РАСЧЁТ ХИТБОКСА ШАРИКА ===
+            // Центр шарика
+            const шЦентрX = ШАРИК_X + ШАРИК_РАДИУС;
+            const шЦентрY = обёртка.offsetHeight - ЗЕМЛЯ_ВЫСОТА + позиция - ШАРИК_РАДИУС;
+            // Хитбокс уменьшен на 30% — честнее
+            const шРадиус = ШАРИК_РАДИУС * 0.7;
+            
             препятствия.forEach(p => {
-                p.x -= скоростьИгры;
+                p.x -= скоростьМира;
                 p.element.style.left = p.x + 'px';
                 
-                // Проверка столкновения
-                const шарикBottom = -позиция;
-                if (p.x < 100 && p.x + p.ширина > 60 && 
-                    шарикBottom < p.высота) {
-                    играИдёт = false;
-                    setTimeout(() => alert('💥 Игра окончена! Счёт: ' + счёт), 100);
+                // === ХИТБОКС ПРЕПЯТСТВИЯ ===
+                // Прямоугольник: p.x ... p.x+p.ширина; снизу вверх
+                const пЛево = p.x + 3; // уменьшенный хитбокс
+                const пПраво = p.x + p.ширина - 3;
+                const пВерх = обёртка.offsetHeight - ЗЕМЛЯ_ВЫСОТА - p.высота + 3;
+                const пНиз = обёртка.offsetHeight - ЗЕМЛЯ_ВЫСОТА;
+                
+                // Проверка: круг vs прямоугольник
+                const ближайшийX = Math.max(пЛево, Math.min(шЦентрX, пПраво));
+                const ближайшийY = Math.max(пВерх, Math.min(шЦентрY, пНиз));
+                const dx = шЦентрX - ближайшийX;
+                const dy = шЦентрY - ближайшийY;
+                const расстояние = Math.sqrt(dx * dx + dy * dy);
+                
+                if (расстояние < шРадиус) {
+                    умереть();
                 }
             });
             
             // Удаление ушедших
             препятствия = препятствия.filter(p => {
-                if (p.x < -100) { p.element.remove(); return false; }
+                if (p.x < -150) {
+                    p.element.remove();
+                    return false;
+                }
                 return true;
             });
             
-            // Счёт
-            if (кадры % 90 === 0) {
-                счёт++;
-                document.getElementById('счёт').textContent = счёт;
-            }
+            // === СЧЁТ ===
+            // Очко за каждое пройденное препятствие
+            препятствия.forEach(p => {
+                if (!p.засчитано && p.x + p.ширина < ШАРИК_X) {
+                    p.засчитано = true;
+                    счёт++;
+                    счётЭл.textContent = счёт;
+                    игратьОчко();
+                    
+                    // Постепенное ускорение
+                    скоростьМира = 4 + Math.floor(счёт / 5) * 0.3;
+                }
+            });
             
             анимация = requestAnimationFrame(цикл);
         }
         
         function создатьПрепятствие() {
-            const высота = 30 + Math.random() * 40;
-            const ширина = 25 + Math.random() * 25;
+            const высота = 25 + Math.random() * 55;
+            const ширина = 22 + Math.random() * 20;
             const element = document.createElement('div');
             element.className = 'препятствие';
             element.style.width = ширина + 'px';
             element.style.height = высота + 'px';
-            element.style.left = игра.offsetWidth + 'px';
-            element.style.bottom = '0';
-            игра.appendChild(element);
-            препятствия.push({ x: игра.offsetWidth, ширина, высота, element });
+            element.style.left = обёртка.offsetWidth + 'px';
+            обёртка.appendChild(element);
+            
+            препятствия.push({
+                x: обёртка.offsetWidth,
+                ширина,
+                высота,
+                element,
+                засчитано: false
+            });
         }
         
-        начать();
+        // ==========================================
+        // УПРАВЛЕНИЕ
+        // ==========================================
+        document.getElementById('кнопкаСтарт').addEventListener('click', function(e) {
+            e.stopPropagation();
+            начать();
+        });
+        
+        обёртка.addEventListener('click', function(e) {
+            if (!играИдёт) return;
+            прыгнуть();
+        });
+        
+        обёртка.addEventListener('touchstart', function(e) {
+            if (!играИдёт) return;
+            e.preventDefault();
+            прыгнуть();
+        }, { passive: false });
+        
+        document.addEventListener('keydown', function(e) {
+            if (e.code === 'Space' || e.code === 'ArrowUp') {
+                e.preventDefault();
+                if (играИдёт) прыгнуть();
+                else начать();
+            }
+        });
+        
+        // ==========================================
+        // СТАРТ
+        // ==========================================
+        создатьОблака();
+        шарик.style.bottom = ЗЕМЛЯ_ВЫСОТА + 'px';
+        шарик.style.left = ШАРИК_X + 'px';
     </script>
 </body>
 </html>

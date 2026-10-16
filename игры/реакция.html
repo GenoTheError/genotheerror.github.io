@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Реакция</title>
+    <link rel="icon" href="../ico.png">
+    <link rel="stylesheet" href="../style.css">
+    <style>
+        .поле-реакции {
+            width: 100%;
+            aspect-ratio: 1;
+            max-height: 60vh;
+            background: #e53e3e;
+            border-radius: 16px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            user-select: none;
+            -webkit-user-select: none;
+            transition: background 0.1s;
+            margin: 16px 0;
+            text-align: center;
+            padding: 20px;
+        }
+        .поле-реакции.ждём { background: #e53e3e; }
+        .поле-реакции.готово { background: #38a169; }
+        .поле-реакции.рано { background: #805ad5; }
+        .поле-реакции .текст {
+            color: white;
+            font-size: 24px;
+            font-weight: 700;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+        .поле-реакции .подсказка {
+            color: rgba(255,255,255,0.7);
+            font-size: 14px;
+            margin-top: 12px;
+        }
+        .инфо {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin: 16px 0;
+        }
+        .инфо-блок {
+            background: #2d3748;
+            padding: 10px 14px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        .инфо-блок .label {
+            color: #a0aec0;
+            font-size: 12px;
+        }
+        .инфо-блок .value {
+            color: #e2e8f0;
+            font-weight: 700;
+            font-size: 22px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <a href="../игры.html" class="back-btn">← Назад</a>
+        <span class="badge purple">🎯 Реакция</span>
+    </div>
+    
+    <h1>⚡ Реакция</h1>
+    
+    <div class="инфо">
+        <div class="инфо-блок">
+            <div class="label">Последнее</div>
+            <div class="value" id="последнее">-- мс</div>
+        </div>
+        <div class="инфо-блок">
+            <div class="label">Рекорд</div>
+            <div class="value" id="рекорд">-- мс</div>
+        </div>
+    </div>
+    
+    <div class="поле-реакции ждём" id="поле">
+        <div class="текст" id="текст">Нажми, чтобы начать</div>
+        <div class="подсказка" id="подсказка">Жди зелёного и тапай</div>
+    </div>
+    
+    <script>
+        const поле = document.getElementById('поле');
+        const текст = document.getElementById('текст');
+        const подсказка = document.getElementById('подсказка');
+        const последнее = document.getElementById('последнее');
+        const рекордЭл = document.getElementById('рекорд');
+        
+        let состояние = 'ожидание'; // ожидание / ждём / готово / рано / результат
+        let таймер = null;
+        let времяСтарта = 0;
+        let рекорд = parseInt(localStorage.getItem('реакция-рекорд') || '0');
+        
+        if (рекорд > 0) рекордЭл.textContent = рекорд + ' мс';
+        
+        поле.addEventListener('click', () => {
+            if (состояние === 'ожидание' || состояние === 'результат' || состояние === 'рано') {
+                начать();
+            } else if (состояние === 'ждём') {
+                // Рано!
+                clearTimeout(таймер);
+                состояние = 'рано';
+                поле.className = 'поле-реакции рано';
+                текст.textContent = '❌ Рано!';
+                подсказка.textContent = 'Нажми, чтобы попробовать снова';
+            } else if (состояние === 'готово') {
+                // Замер!
+                const время = Date.now() - времяСтарта;
+                состояние = 'результат';
+                поле.className = 'поле-реакции';
+                поле.style.background = '#4299e1';
+                текст.textContent = время + ' мс';
+                последнее.textContent = время + ' мс';
+                
+                if (время < рекорд || рекорд === 0) {
+                    рекорд = время;
+                    рекордЭл.textContent = время + ' мс';
+                    localStorage.setItem('реакция-рекорд', время);
+                    подсказка.textContent = '🏆 Новый рекорд! Нажми ещё раз';
+                } else {
+                    подсказка.textContent = 'Нажми, чтобы попробовать снова';
+                }
+            }
+        });
+        
+        function начать() {
+            состояние = 'ждём';
+            поле.className = 'поле-реакции ждём';
+            поле.style.background = '#e53e3e';
+            текст.textContent = 'Жди...';
+            подсказка.textContent = 'Не тапай раньше времени!';
+            
+            const задержка = 1500 + Math.random() * 3500;
+            таймер = setTimeout(() => {
+                состояние = 'готово';
+                поле.className = 'поле-реакции готово';
+                поле.style.background = '#38a169';
+                текст.textContent = 'ТАПАЙ!';
+                подсказка.textContent = '';
+                времяСтарта = Date.now();
+            }, задержка);
+        }
+    </script>
+</body>
+</html>

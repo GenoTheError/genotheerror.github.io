@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Дудл-прыжок</title>
+    <link rel="icon" href="../ico.png">
+    <link rel="stylesheet" href="../style.css">
+    <style>
+        #игра {
+            position: relative;
+            width: 100%;
+            height: 70vh;
+            max-height: 600px;
+            background: linear-gradient(180deg, #87ceeb 0%, #e0f4ff 100%);
+            border-radius: 16px;
+            overflow: hidden;
+            margin: 12px 0;
+            touch-action: none;
+            -webkit-tap-highlight-color: transparent;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+        #игрок {
+            position: absolute;
+            width: 44px;
+            height: 44px;
+            background: radial-gradient(circle at 35% 35%, #90cdf4, #3182ce);
+            border-radius: 50%;
+            box-shadow: 0 0 15px rgba(66, 153, 225, 0.6);
+            z-index: 10;
+        }
+        .платформа {
+            position: absolute;
+            height: 14px;
+            background: linear-gradient(180deg, #38a169 0%, #22543d 100%);
+            border-radius: 7px;
+            box-shadow: 0 3px 0 #1a3a28;
+        }
+        .платформа.движущаяся {
+            background: linear-gradient(180deg, #d69e2e 0%, #744210 100%);
+            box-shadow: 0 3px 0 #4a2a08;
+        }
+        .платформа.ломающаяся {
+            background: linear-gradient(180deg, #a0aec0 0%, #4a5568 100%);
+            box-shadow: 0 3px 0 #2d3748;
+        }
+        .платформа.сломанная {
+            opacity: 0.2;
+        }
+        #счёт {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: rgba(0,0,0,0.5);
+            color: white;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-weight: 700;
+            font-size: 18px;
+            z-index: 20;
+        }
+        #рекорд {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(0,0,0,0.5);
+            color: #f6e05e;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-weight: 700;
+            font-size: 14px;
+            z-index: 20;
+        }
+        .подсказка {
+            text-align: center;
+            color: #718096;
+            font-size: 13px;
+            margin: 8px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <a href="../игры.html" class="back-btn">← Назад</a>
+        <span class="badge purple">🎯 Аркада</span>
+    </div>
+    
+    <h1>🦘 Дудл-прыжок</h1>
+    
+    <div id="игра">
+        <div id="счёт">0</div>
+        <div id="рекорд">🏆 0</div>
+        <div id="игрок"></div>
+    </div>
+    
+    <div class="подсказка">Стрелки ← → / A D на компе · Свайп на телефоне. Прыгает сам!</div>
+    
+    <script>
+        const игра = document.getElementById('игра');
+        const игрок = document.getElementById('игрок');
+        const счётЭл = document.getElementById('счёт');
+        const рекордЭл = document.getElementById('рекорд');
+        
+        let позицияX = 0;
+        let позицияY = 0;
+        let скоростьY = 0;
+        let скоростьX = 0;
+        let платформы = [];
+        let счёт = 0;
+        let рекорд = parseInt(localStorage.getItem('дудл-рекорд') || '0');
+        let играИдёт = true;
+        let последняяY = 0;
+        let анимация;
+        let клавиши = {};
+        let свайпX = 0;
+        let тачИд = null;
+        
+        const ГРАВИТАЦИЯ = 0.5;
+        const СИЛА_ПРЫЖКА = -13;
+        const ШИРИНА_ИГРОКА = 44;
+        const ВЫСОТА_ИГРОКА = 44;
+        const СКОРОСТЬ_Х = 6;
+        
+        рекордЭл.textContent = '🏆 ' + рекорд;
+        
+        function старт() {
+            играИдёт = true;
+            счёт = 0;
+            позицияX = игра.offsetWidth / 2 - ШИРИНА_ИГРОКА / 2;
+            позицияY = игра.offsetHeight - 200;
+            скоростьY = СИЛА_ПРЫЖКА;
+            скоростьX = 0;
+            платформы.forEach(p => p.element.remove());
+            платформы = [];
+            
+            добавитьПлатформу(позицияX - 50, позицияY + ВЫСОТА_ИГРОКА, 'обычная');
+            
+            for (let i = 1; i < 10; i++) {
+                const y = позицияY - i * 90;
+                const x = Math.random() * (игра.offsetWidth - 100);
+                добавитьПлатформу(x, y, 'обычная');
+            }
+            
+            последняяY = платформы.reduce((min, p) => Math.min(min, p.y), 0);
+            
+            cancelAnimationFrame(анимация);
+            цикл();
+        }
+        
+        function добавитьПлатформу(x, y, тип) {
+            const ширина = 70;
+            const element = document.createElement('div');
+            element.className = 'платформа' + (тип !== 'обычная' ? ' ' + тип : '');
+            element.style.width = ширина + 'px';
+            element.style.left = x + 'px';
+            element.style.top = y + 'px';
+            игра.appendChild(element);
+            
+            платформы.push({
+                x, y, ширина, тип,
+                element,
+                сломана: false,
+                направление: Math.random() > 0.5 ? 1 : -1
+            });
+        }
+        
+        // Управление
+        document.addEventListener('keydown', e => {
+            клавиши[e.code] = true;
+        });
+        document.addEventListener('keyup', e => {
+            клавиши[e.code] = false;
+        });
+        
+        // Свайп на телефоне
+        игра.addEventListener('touchstart', e => {
+            e.preventDefault();
+            тачИд = e.touches[0].identifier;
+            свайпX = e.touches[0].clientX;
+        }, { passive: false });
+        
+        игра.addEventListener('touchmove', e => {
+            e.preventDefault();
+            for (let i = 0; i < e.touches.length; i++) {
+                if (e.touches[i].identifier === тачИд) {
+                    свайпX = e.touches[i].clientX;
+                }
+            }
+        }, { passive: false });
+        
+        игра.addEventListener('touchend', e => {
+            e.preventDefault();
+            тачИд = null;
+            свайпX = 0;
+        }, { passive: false });
+        
+        // Для телефона — наклон по позиции пальца
+        function получитьНаклонТача() {
+            if (тачИд === null || свайпX === 0) return 0;
+            const центр = игра.offsetWidth / 2;
+            const разница = (свайпX - центр) / центр;
+            return Math.max(-1, Math.min(1, разница));
+        }
+        
+        function цикл() {
+            if (!играИдёт) return;
+            
+            // Управление по X
+            let dx = 0;
+            if (клавиши['ArrowLeft'] || клавиши['KeyA']) dx -= 1;
+            if (клавиши['ArrowRight'] || клавиши['KeyD']) dx += 1;
+            
+            // Телефон
+            const наклон = получитьНаклонТача();
+            if (наклон !== 0) dx = наклон;
+            
+            позицияX += dx * СКОРОСТЬ_Х;
+            
+            // Границы экрана — телепорт на другую сторону
+            if (позицияX + ШИРИНА_ИГРОКА < 0) позицияX = игра.offsetWidth;
+            if (позицияX > игра.offsetWidth) позицияX = -ШИРИНА_ИГРОКА;
+            
+            // Физика
+            скоростьY += ГРАВИТАЦИЯ;
+            позицияY += скоростьY;
+            
+            // Камера следует за игроком вверх
+            const экранY = игра.offsetHeight / 2;
+            if (позицияY < экранY) {
+                const сдвиг = экранY - позицияY;
+                позицияY = экранY;
+                платформы.forEach(p => {
+                    p.y += сдвиг;
+                    p.element.style.top = p.y + 'px';
+                });
+                последняяY += сдвиг;
+                счёт += сдвиг * 0.1;
+                счётЭл.textContent = Math.floor(счёт);
+            }
+            
+            // Упал вниз
+            if (позицияY > игра.offsetHeight + 50) {
+                умереть();
+                return;
+            }
+            
+            // Столкновение с платформой (только когда падаем)
+            if (скоростьY > 0) {
+                платформы.forEach(p => {
+                    if (p.сломана) return;
+                    if (позицияX + ШИРИНА_ИГРОКА > p.x && 
+                        позицияX < p.x + p.ширина &&
+                        позицияY + ВЫСОТА_ИГРОКА > p.y &&
+                        позицияY + ВЫСОТА_ИГРОКА < p.y + 20) {
+                        скоростьY = СИЛА_ПРЫЖКА;
+                        
+                        if (p.тип === 'ломающаяся') {
+                            p.сломана = true;
+                            p.element.classList.add('сломанная');
+                            setTimeout(() => {
+                                p.element.remove();
+                                платформы = платформы.filter(pp => pp !== p);
+                            }, 300);
+                        }
+                    }
+                });
+            }
+            
+            // Движущиеся платформы
+            платформы.forEach(p => {
+                if (p.тип === 'движущаяся') {
+                    p.x += p.направление * 1.5;
+                    if (p.x < 0 || p.x + p.ширина > игра.offsetWidth) {
+                        p.направление *= -1;
+                    }
+                    p.element.style.left = p.x + 'px';
+                }
+            });
+            
+            // Генерация новых платформ сверху
+            while (последняяY > -100) {
+                последняяY -= 90;
+                const x = Math.random() * (игра.offsetWidth - 100);
+                const rand = Math.random();
+                let тип = 'обычная';
+                if (счёт > 100 && rand > 0.85) тип = 'ломающаяся';
+                else if (счёт > 50 && rand > 0.7) тип = 'движущаяся';
+                добавитьПлатформу(x, последняяY, тип);
+            }
+            
+            // Удаляем платформы внизу
+            платформы = платформы.filter(p => {
+                if (p.y > игра.offsetHeight + 50) {
+                    p.element.remove();
+                    return false;
+                }
+                return true;
+            });
+            
+            // Рисуем игрока
+            игрок.style.left = позицияX + 'px';
+            игрок.style.top = позицияY + 'px';
+            
+            анимация = requestAnimationFrame(цикл);
+        }
+        
+        function умереть() {
+            играИдёт = false;
+            if (Math.floor(счёт) > рекорд) {
+                рекорд = Math.floor(счёт);
+                localStorage.setItem('дудл-рекорд', рекорд);
+                рекордЭл.textContent = '🏆 ' + рекорд;
+            }
+            
+            setTimeout(() => {
+                if (confirm('💀 Игра окончена!\nСчёт: ' + Math.floor(счёт) + '\n\nИграть заново?')) {
+                    старт();
+                }
+            }, 100);
+        }
+        
+        setTimeout(старт, 100);
+    </script>
+</body>
+</html>

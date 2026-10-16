@@ -7,36 +7,43 @@
     <link rel="icon" href="../ico.png">
     <link rel="stylesheet" href="../style.css">
     <style>
-        .поле {
+        /* Выбор уровня */
+        .уровни {
             display: grid;
-            grid-template-columns: repeat(4, 1fr);
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
             gap: 8px;
-            margin: 20px 0;
+            margin: 16px 0;
         }
-        .карточка {
-            aspect-ratio: 1;
-            background: #2d3748;
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 32px;
-            cursor: pointer;
-            user-select: none;
-            transition: all 0.2s;
-            transform-style: preserve-3d;
-        }
-        .карточка.закрыта {
-            background: #4299e1;
-        }
-        .карточка.открыта {
+        .уровень {
             background: #1a202c;
-            border: 2px solid #4299e1;
+            border: 1px solid #2d3748;
+            border-radius: 10px;
+            padding: 12px 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
+            touch-action: manipulation;
         }
-        .карточка.найдена {
-            background: #38a169;
-            cursor: default;
+        .уровень:hover {
+            background: #2d3748;
+            border-color: #4299e1;
         }
+        .уровень.активен {
+            border-color: #4299e1;
+            background: #2d3748;
+        }
+        .уровень .назв {
+            font-weight: 600;
+            color: #90cdf4;
+            font-size: 15px;
+            margin-bottom: 2px;
+        }
+        .уровень .опис {
+            font-size: 12px;
+            color: #718096;
+        }
+        
+        /* Инфо */
         .инфо {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -58,6 +65,57 @@
             font-weight: 700;
             font-size: 20px;
         }
+        
+        /* Игровое поле */
+        .поле {
+            display: grid;
+            gap: 6px;
+            margin: 20px auto;
+            width: 100%;
+            max-width: 600px;
+            touch-action: manipulation;
+        }
+        
+        .карточка {
+            aspect-ratio: 1;
+            background: #2d3748;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            user-select: none;
+            -webkit-user-select: none;
+            transition: all 0.2s;
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
+            overflow: hidden;
+        }
+        
+        .карточка.закрыта {
+            background: #4299e1;
+        }
+        .карточка.закрыта::after {
+            content: '?';
+            color: rgba(255, 255, 255, 0.5);
+            font-weight: 700;
+        }
+        .карточка.открыта {
+            background: #1a202c;
+            border: 2px solid #4299e1;
+        }
+        .карточка.найдена {
+            background: #38a169;
+            cursor: default;
+            animation: найдена 0.4s ease;
+        }
+        @keyframes найдена {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+        
+        /* Кнопки */
         .кнопка {
             background: #4299e1;
             color: white;
@@ -69,9 +127,37 @@
             cursor: pointer;
             font-family: inherit;
             margin: 10px 0;
+            touch-action: manipulation;
+            display: block;
+            width: 100%;
         }
         .кнопка:hover {
             background: #3182ce;
+        }
+        
+        .кнопка-назад {
+            background: #2d3748;
+            color: #90cdf4;
+        }
+        .кнопка-назад:hover {
+            background: #4a5568;
+        }
+        
+        /* Сообщение о победе */
+        .победа {
+            display: none;
+            background: #38a169;
+            color: white;
+            padding: 16px;
+            border-radius: 12px;
+            text-align: center;
+            font-weight: 600;
+            font-size: 18px;
+            margin: 16px 0;
+            animation: cardIn 0.3s ease both;
+        }
+        .победа.активна {
+            display: block;
         }
     </style>
 </head>
@@ -83,6 +169,11 @@
     
     <h1>🧠 Найди пару</h1>
     
+    <!-- ВЫБОР УРОВНЯ -->
+    <h2>Выбери уровень</h2>
+    <div class="уровни" id="уровни"></div>
+    
+    <!-- ИНФО -->
     <div class="инфо">
         <div class="инфо-блок">
             <div class="label">Ходы</div>
@@ -94,47 +185,140 @@
         </div>
     </div>
     
+    <!-- ПОЛЕ -->
     <div class="поле" id="поле"></div>
     
-    <button class="кнопка" onclick="новаяИгра()">🔄 Новая игра</button>
+    <!-- ПОБЕДА -->
+    <div class="победа" id="победа">🎉 Победа!</div>
+    
+    <!-- КНОПКИ -->
+    <button class="кнопка" id="кнопкаЗаново">🔄 Новая игра</button>
     
     <script>
-        const эмодзи = ['🍎', '🍌', '🍇', '🍓', '🍒', '🍑', '🥝', '🍍'];
+        // ==========================================
+        // УРОВНИ СЛОЖНОСТИ
+        // ==========================================
+        const УРОВНИ = [
+            { id: 0, назв: '🌱 Новичок', опис: '3×3 · 4 пары',     колонки: 3, ряды: 3,  эмодзи: 4 },
+            { id: 1, назв: '🙂 Лёгкий',  опис: '4×4 · 8 пар',      колонки: 4, ряды: 4,  эмодзи: 8 },
+            { id: 2, назв: '😐 Средний', опис: '5×4 · 10 пар',     колонки: 5, ряды: 4,  эмодзи: 10 },
+            { id: 3, назв: '😰 Сложный', опис: '6×5 · 15 пар',     колонки: 6, ряды: 5,  эмодзи: 15 },
+            { id: 4, назв: '💀 Профи',   опис: '10×10 · 50 пар',   колонки: 10, ряды: 10, эмодзи: 50 }
+        ];
+        
+        // Пул эмодзи (50 штук — хватит для всех уровней)
+        const ПУЛ_ЭМОДЗИ = [
+            '🍎', '🍌', '🍇', '🍓', '🍒', '🍑', '🥝', '🍍', '🍊', '🍋',
+            '🐶', '🐱', '🐭', '🐹', '🐰', '🦊', '🐻', '🐼', '🐨', '🐯',
+            '⚽', '🏀', '🏈', '⚾', '🎾', '🏐', '🎱', '🏓', '🏸', '🥊',
+            '🚗', '🚕', '🚌', '🚓', '🚑', '🚒', '🚜', '🏍️', '🚲', '✈️',
+            '⭐', '🌟', '✨', '💫', '🌙', '☀️', '⛅', '🌈', '❄️', '⚡'
+        ];
+        
+        let текущийУровень = УРОВНИ[1]; // Лёгкий по умолчанию
         let карточки = [];
         let открытые = [];
         let ходы = 0;
         let найдено = 0;
+        let всего = 0;
         let блокировка = false;
         
+        // ==========================================
+        // ОТРИСОВКА УРОВНЕЙ
+        // ==========================================
+        function отрисоватьУровни() {
+            const конт = document.getElementById('уровни');
+            конт.innerHTML = '';
+            УРОВНИ.forEach(у => {
+                const div = document.createElement('div');
+                div.className = 'уровень' + (у.id === текущийУровень.id ? ' активен' : '');
+                div.innerHTML = `
+                    <div class="назв">${у.назв}</div>
+                    <div class="опис">${у.опис}</div>
+                `;
+                div.addEventListener('click', function() {
+                    текущийУровень = у;
+                    отрисоватьУровни();
+                    новаяИгра();
+                });
+                конт.appendChild(div);
+            });
+        }
+        
+        // ==========================================
+        // ИГРА
+        // ==========================================
         function новаяИгра() {
-            карточки = [...эмодзи, ...эмодзи].sort(() => Math.random() - 0.5);
+            const кол = текущийУровень.колонки;
+            const ряд = текущийУровень.ряды;
+            const всего_клеток = кол * ряд;
+            const пар = Math.floor(всего_клеток / 2);
+            
+            // Берём нужное количество эмодзи
+            const нужные = ПУЛ_ЭМОДЗИ.slice(0, пар);
+            карточки = [...нужные, ...нужные];
+            
+            // Если клеток нечётное — добавляем пустую
+            if (всего_клеток % 2 === 1) {
+                карточки.push('⬜');
+            }
+            
+            карточки.sort(() => Math.random() - 0.5);
+            
             открытые = [];
             ходы = 0;
             найдено = 0;
+            всего = пар;
             блокировка = false;
+            
             нарисовать();
             обновить();
         }
         
         function нарисовать() {
             const поле = document.getElementById('поле');
+            поле.style.gridTemplateColumns = `repeat(${текущийУровень.колонки}, 1fr)`;
             поле.innerHTML = '';
+            
             карточки.forEach((э, i) => {
                 const карт = document.createElement('div');
                 карт.className = 'карточка закрыта';
                 карт.dataset.index = i;
                 карт.dataset.эмодзи = э;
-                карт.textContent = '';
-                карт.onclick = () => клик(i, карт);
+                карт.addEventListener('click', () => клик(i, карт));
                 поле.appendChild(карт);
             });
+            
+            // АДАПТИВНЫЙ РАЗМЕР ЭМОДЗИ
+            адаптироватьРазмер();
         }
+        
+        function адаптироватьРазмер() {
+            const поле = document.getElementById('поле');
+            const карточки = поле.querySelectorAll('.карточка');
+            if (карточки.length === 0) return;
+            
+            // Ждём, пока поле отрисуется
+            requestAnimationFrame(() => {
+                const первая = карточки[0];
+                const размер = первая.offsetWidth;
+                // Эмодзи занимают ~60% от размера карточки
+                const размерШрифта = Math.max(14, Math.floor(размер * 0.6));
+                
+                карточки.forEach(к => {
+                    к.style.fontSize = размерШрифта + 'px';
+                });
+            });
+        }
+        
+        // Пересчёт при изменении окна
+        window.addEventListener('resize', адаптироватьРазмер);
         
         function клик(i, карт) {
             if (блокировка) return;
             if (карт.classList.contains('открыта')) return;
             if (карт.classList.contains('найдена')) return;
-            if (открытые.includes(i)) return;
+            if (карт.dataset.эмодзи === '⬜') return;
             
             карт.classList.remove('закрыта');
             карт.classList.add('открыта');
@@ -158,7 +342,7 @@
                         открытые = [];
                         блокировка = false;
                         обновить();
-                    }, 500);
+                    }, 400);
                 } else {
                     setTimeout(() => {
                         картA.classList.remove('открыта');
@@ -169,19 +353,30 @@
                         картB.textContent = '';
                         открытые = [];
                         блокировка = false;
-                    }, 800);
+                    }, 700);
                 }
             }
         }
         
         function обновить() {
             document.getElementById('ходы').textContent = ходы;
-            document.getElementById('пары').textContent = найдено + '/8';
-            if (найдено === 8) {
-                setTimeout(() => alert('🎉 Победа! Ходов: ' + ходы), 300);
+            document.getElementById('пары').textContent = найдено + '/' + всего;
+            
+            if (найдено === всего && всего > 0) {
+                const победа = document.getElementById('победа');
+                победа.textContent = `🎉 Победа! Уровень «${текущийУровень.назв}», ходов: ${ходы}`;
+                победа.classList.add('активна');
+            } else {
+                document.getElementById('победа').classList.remove('активна');
             }
         }
         
+        // ==========================================
+        // СТАРТ
+        // ==========================================
+        document.getElementById('кнопкаЗаново').addEventListener('click', новаяИгра);
+        
+        отрисоватьУровни();
         новаяИгра();
     </script>
 </body>
