@@ -24,83 +24,7 @@
     <link rel="stylesheet" href="style.css">
     <script src="photos.js" defer></script>
     <script src="теги.js" defer></script>
-    <style>
-    .search-box {
-        background: #2d3748;
-        padding: 16px;
-        border-radius: 12px;
-        margin-bottom: 24px;
-        border: 2px solid #4299e1;
-    }
-    #searchInput {
-        width: 100%;
-        font-size: 18px;
-        padding: 14px 16px;
-        border: none;
-        border-radius: 8px;
-        background: #1a202c;
-        color: #e2e8f0;
-        outline: none;
-    }
-    #searchInput::placeholder { color: #718096; }
-    #searchResults { margin-top: 12px; max-height: 400px; overflow-y: auto; }
-    .search-item {
-        display: block;
-        padding: 12px 16px;
-        background: #1a202c;
-        border-radius: 8px;
-        margin-bottom: 8px;
-        color: #e2e8f0;
-        text-decoration: none;
-        border-left: 3px solid #4299e1;
-        transition: all 0.2s;
-    }
-    .search-item:hover {
-        background: #2d3748;
-        text-decoration: none;
-        border-left-color: #63b3ed;
-    }
-    .search-item .item-name { font-weight: 600; color: #90cdf4; }
-    .search-item .item-cat { font-size: 13px; color: #718096; margin-top: 2px; }
-    
-    .category-section { margin-bottom: 28px; }
-    .category-title {
-        font-size: 20px;
-        color: #63b3ed;
-        margin-bottom: 12px;
-        padding-left: 12px;
-        border-left: 4px solid #4299e1;
-    }
-    
-    .article-card .подпись {
-        display: block;
-        font-size: 12px;
-        color: #718096;
-        margin-top: 2px;
-        line-height: 1.2;
-    }
-    
-    .about-link {
-        position: fixed;
-        top: 16px;
-        right: 16px;
-        background: #2d3748;
-        color: #90cdf4;
-        padding: 6px 14px;
-        border-radius: 20px;
-        font-size: 14px;
-        font-weight: 500;
-        text-decoration: none;
-        z-index: 100;
-        border: 1px solid #4299e1;
-        transition: all 0.2s;
-    }
-    .about-link:hover {
-        background: #4299e1;
-        color: white;
-        text-decoration: none;
-    }
-    </style>
+    <script src="поиск.js" defer></script>
 </head>
 <body>
     
@@ -596,75 +520,33 @@
         // ==========================================
         // СОХРАНЕНИЕ ПОЗИЦИИ СКРОЛЛА
         // ==========================================
-        window.addEventListener('load', function() {
-            const savedScroll = sessionStorage.getItem('scrollPosition');
-            if (savedScroll) {
-                window.scrollTo(0, parseInt(savedScroll));
-                sessionStorage.removeItem('scrollPosition');
-            }
-        });
-        
-        window.addEventListener('beforeunload', function() {
-            sessionStorage.setItem('scrollPosition', window.scrollY);
-        });
-        
         document.querySelectorAll('.article-card').forEach(function(card) {
             card.addEventListener('click', function() {
                 sessionStorage.setItem('scrollPosition', window.scrollY);
             });
         });
         
-        // ==========================================
-        // ПОИСК — теги берутся из теги.js
-        // ==========================================
-        function performSearch() {
-            const query = document.getElementById('searchInput').value.toLowerCase().trim();
-            const resultsBox = document.getElementById('searchResults');
-            
-            if (query.length < 1) {
-                resultsBox.innerHTML = '';
-                return;
-            }
-            
-            const allArticles = document.querySelectorAll('.article-card');
-            const results = [];
-            
-            allArticles.forEach(card => {
-                const name = card.getAttribute('data-name') || '';
-                const link = card.getAttribute('href');
-                const displayName = card.querySelector('.name')?.textContent || name;
-                const categorySection = card.closest('.category-section');
-                const category = categorySection ? categorySection.querySelector('.category-title').textContent : '';
-                
-                const имяФайла = link.replace(/\.html$/, '').replace(/^.*\//, '');
-                const теги = (ТЕГИ && ТЕГИ[имяФайла] ? ТЕГИ[имяФайла].join(' ') : '').toLowerCase();
-                
-                if (name.includes(query) || 
-                    displayName.toLowerCase().includes(query) || 
-                    category.toLowerCase().includes(query) || 
-                    теги.includes(query)) {
-                    results.push({ name: displayName, category, link });
-                }
-            });
-            
-            if (results.length === 0) {
-                resultsBox.innerHTML = `<div style="color: #718096; padding: 12px; text-align: center;">Ничего не найдено по запросу "${query}"</div>`;
-                return;
-            }
-            
-            resultsBox.innerHTML = results.map(r => `
-                <a href="${r.link}" class="search-item">
-                    <div class="item-name">${r.name}</div>
-                    <div class="item-cat">${r.category}</div>
-                </a>
-            `).join('');
-        }
+        window.addEventListener('beforeunload', function() {
+            sessionStorage.setItem('scrollPosition', window.scrollY);
+        });
         
-        document.getElementById('searchInput').addEventListener('input', performSearch);
+        window.addEventListener('load', function() {
+            const savedScroll = sessionStorage.getItem('scrollPosition');
+            if (savedScroll) {
+                setTimeout(function() {
+                    window.scrollTo(0, parseInt(savedScroll));
+                    sessionStorage.removeItem('scrollPosition');
+                }, 100);
+            }
+        });
         
+        // ==========================================
+        // СЧЁТЧИК СТАТЕЙ
+        // ==========================================
         function updateCount() {
             const count = document.querySelectorAll('.article-card').length;
-            document.getElementById('totalCount').textContent = count;
+            const el = document.getElementById('totalCount');
+            if (el) el.textContent = count;
         }
         updateCount();
     </script>

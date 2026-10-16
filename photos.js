@@ -1,16 +1,13 @@
 // ==========================================
-// photos.js — фото + лайтбокс + иконки
-// ==========================================
-// Подключается в <head> с атрибутом defer.
+// photos.js — иконки + фото + лайтбокс
 // ==========================================
 
 // ==========================================
-// 1. ИКОНКИ
+// 1. ИКОНКИ НА ГЛАВНОЙ
 // ==========================================
 (function() {
     const ИКОНКИ_ФОРМАТЫ = ['jpeg', 'jpg', 'png', 'webp', 'gif'];
     const ИКОНКИ_ПАПКА = 'иконки/';
-    const ТАЙМАУТ_МС = 1000;
     
     const ЭМОДЗИ_КАТЕГОРИЙ = {
         'Вещества': '🧪',
@@ -27,9 +24,7 @@
     
     function получитьЭмодзи(категория) {
         for (const ключ in ЭМОДЗИ_КАТЕГОРИЙ) {
-            if (категория.indexOf(ключ) !== -1) {
-                return ЭМОДЗИ_КАТЕГОРИЙ[ключ];
-            }
+            if (категория.indexOf(ключ) !== -1) return ЭМОДЗИ_КАТЕГОРИЙ[ключ];
         }
         return '📄';
     }
@@ -38,30 +33,10 @@
         return href.replace(/\.html$/, '').replace(/^.*\//, '');
     }
     
-    let загрузокОсталось = 0;
-    let иконкиПоказаны = false;
-    
-    function проверитьГотовность() {
-        if (иконкиПоказаны) return;
-        if (загрузокОсталось <= 0) {
-            иконкиПоказаны = true;
-            показатьИконки();
-        }
-    }
-    
-    function показатьИконки() {
-        // Плавно проявляем все иконки/заглушки
-        document.querySelectorAll('.card-icon').forEach(function(box) {
-            box.classList.add('видно');
-        });
-    }
-    
     function попробоватьИконку(имя, box, formatIdx, эмодзи) {
         if (formatIdx >= ИКОНКИ_ФОРМАТЫ.length) {
-            // Ничего не нашли — ставим эмодзи (появится при "видно")
             box.textContent = эмодзи;
-            загрузокОсталось--;
-            проверитьГотовность();
+            box.classList.add('видно');
             return;
         }
         
@@ -71,8 +46,7 @@
         img.onload = function() {
             box.textContent = '';
             box.appendChild(img);
-            загрузокОсталось--;
-            проверитьГотовность();
+            box.classList.add('видно');
         };
         
         img.onerror = function() {
@@ -85,8 +59,6 @@
     function обработатьКарточки() {
         const карточки = document.querySelectorAll('.article-card');
         
-        загрузокОсталось = 0;
-        
         карточки.forEach(function(карточка) {
             if (карточка.querySelector('.card-icon')) return;
             
@@ -94,14 +66,13 @@
             if (!href) return;
             
             const имя = получитьИмяИзHref(href);
-            
             const grid = карточка.closest('.articles-grid');
             const категория = grid ? (grid.getAttribute('data-category') || '') : '';
             const эмодзи = получитьЭмодзи(категория);
             
             const box = document.createElement('div');
             box.className = 'card-icon';
-            box.textContent = эмодзи; // эмодзи видно сразу, но прозрачно (CSS)
+            box.textContent = эмодзи;
             
             const textBox = document.createElement('div');
             textBox.className = 'card-text';
@@ -120,115 +91,118 @@
                 }
             }
             
-            if (!textBox.querySelector('.cat')) {
-                const catSpan = document.createElement('span');
-                catSpan.className = 'cat';
-                catSpan.textContent = категория;
-                textBox.appendChild(catSpan);
-            }
-            
             карточка.appendChild(box);
             карточка.appendChild(textBox);
             
-            загрузокОсталось++;
             попробоватьИконку(имя, box, 0, эмодзи);
         });
-        
-        // Страховка: если через 1 секунду не все загрузились — показать что есть
-        setTimeout(function() {
-            if (!иконкиПоказаны) {
-                иконкиПоказаны = true;
-                показатьИконки();
-            }
-        }, ТАЙМАУТ_МС);
-        
-        // Если карточек нет — показать сразу
-        if (загрузокОсталось === 0) {
-            иконкиПоказаны = true;
-            показатьИконки();
-        }
     }
     
-    обработатьКарточки();
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', обработатьКарточки);
+    } else {
+        обработатьКарточки();
+    }
 })();
 
 // ==========================================
 // 2. ФОТО
 // ==========================================
 (function() {
-    const containers = document.querySelectorAll('.photos[data-photo-base]');
-    const FORMATS = ['png', 'jpg', 'jpeg', 'gif', 'webp'];
-    
-    containers.forEach(function(container) {
-        const basePath = container.getAttribute('data-photo-base');
-        const count = parseInt(container.getAttribute('data-count') || '10');
+    function загрузитьФото() {
+        const containers = document.querySelectorAll('.photos[data-photo-base]');
+        const FORMATS = ['png', 'jpg', 'jpeg', 'gif', 'webp'];
         
-        tryLoadPhoto(container, basePath, null, 0);
+        containers.forEach(function(container) {
+            if (container.dataset.загружено === 'да') return;
+            container.dataset.загружено = 'да';
+            
+            const basePath = container.getAttribute('data-photo-base');
+            const count = parseInt(container.getAttribute('data-count') || '10');
+            
+            tryLoadPhoto(container, basePath, null, 0);
+            
+            for (let i = 1; i <= count; i++) {
+                tryLoadPhoto(container, basePath, i, 0);
+            }
+        });
         
-        for (let i = 1; i <= count; i++) {
-            tryLoadPhoto(container, basePath, i, 0);
+        function tryLoadPhoto(container, basePath, index, formatIdx) {
+            if (formatIdx >= FORMATS.length) return;
+            
+            const format = FORMATS[formatIdx];
+            let src;
+            
+            if (index === null) {
+                src = basePath + '.' + format;
+            } else {
+                src = basePath + ' (' + index + ').' + format;
+            }
+            
+            const img = new Image();
+            
+            img.onload = function() { 
+                container.appendChild(img); 
+            };
+            
+            img.onerror = function() { 
+                formatIdx++; 
+                tryLoadPhoto(container, basePath, index, formatIdx); 
+            };
+            
+            img.src = src;
         }
-    });
-    
-    function tryLoadPhoto(container, basePath, index, formatIdx) {
-        if (formatIdx >= FORMATS.length) return;
-        
-        const format = FORMATS[formatIdx];
-        let src;
-        
-        if (index === null) {
-            src = basePath + '.' + format;
-        } else {
-            src = basePath + ' (' + index + ').' + format;
-        }
-        
-        const img = new Image();
-        
-        img.onload = function() { 
-            container.appendChild(img); 
-        };
-        
-        img.onerror = function() { 
-            formatIdx++; 
-            tryLoadPhoto(container, basePath, index, formatIdx); 
-        };
-        
-        img.src = src;
     }
+    
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', загрузитьФото);
+    } else {
+        загрузитьФото();
+    }
+    
+    window.addEventListener('load', function() {
+        setTimeout(загрузитьФото, 200);
+    });
 })();
 
 // ==========================================
 // 3. ЛАЙТБОКС
 // ==========================================
 (function() {
-    try {
-        const lightbox = document.getElementById('lightbox');
-        const lightboxImg = document.getElementById('lightboxImg');
-        
-        if (lightbox && lightboxImg) {
-            document.addEventListener('click', function(e) {
-                if (e.target.matches('.photos img')) {
-                    lightboxImg.src = e.target.src;
-                    lightbox.classList.add('active');
-                    document.body.style.overflow = 'hidden';
-                }
-            });
+    function запустить() {
+        try {
+            const lightbox = document.getElementById('lightbox');
+            const lightboxImg = document.getElementById('lightboxImg');
             
-            lightbox.addEventListener('click', function() {
-                lightbox.classList.remove('active');
-                lightboxImg.src = '';
-                document.body.style.overflow = '';
-            });
-            
-            document.addEventListener('keydown', function(e) {
-                if (e.key === 'Escape') {
+            if (lightbox && lightboxImg) {
+                document.addEventListener('click', function(e) {
+                    if (e.target.matches('.photos img')) {
+                        lightboxImg.src = e.target.src;
+                        lightbox.classList.add('active');
+                        document.body.style.overflow = 'hidden';
+                    }
+                });
+                
+                lightbox.addEventListener('click', function() {
                     lightbox.classList.remove('active');
                     lightboxImg.src = '';
                     document.body.style.overflow = '';
-                }
-            });
-        }
-    } catch (err) {
-        // тихо
+                });
+                
+                document.addEventListener('keydown', function(e) {
+                    if (e.key === 'Escape') {
+                        lightbox.classList.remove('active');
+                        lightboxImg.src = '';
+                        document.body.style.overflow = '';
+                    }
+                });
+            }
+        } catch (err) {}
+    }
+    
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', запустить);
+    } else {
+        запустить();
     }
 })();

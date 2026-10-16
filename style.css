@@ -87,13 +87,8 @@ ul, ol {
     margin: 8px 0;
 }
 
-li {
-    margin: 6px 0;
-}
-
-li::marker {
-    color: #4299e1;
-}
+li { margin: 6px 0; }
+li::marker { color: #4299e1; }
 
 /* ========== ТАБЛИЦА ХАРАКТЕРИСТИК ========== */
 .specs {
@@ -123,9 +118,7 @@ li::marker {
 }
 
 @media (max-width: 480px) {
-    .specs {
-        grid-template-columns: 1fr;
-    }
+    .specs { grid-template-columns: 1fr; }
 }
 
 /* ========== ФОТОГРАФИИ ========== */
@@ -154,10 +147,8 @@ li::marker {
 .lightbox {
     display: none;
     position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
     background: rgba(0, 0, 0, 0.95);
     z-index: 9999;
     justify-content: center;
@@ -166,9 +157,7 @@ li::marker {
     cursor: zoom-out;
 }
 
-.lightbox.active {
-    display: flex;
-}
+.lightbox.active { display: flex; }
 
 .lightbox img {
     max-width: 100%;
@@ -186,8 +175,7 @@ li::marker {
 
 .lightbox .close-hint {
     position: absolute;
-    top: 20px;
-    right: 20px;
+    top: 20px; right: 20px;
     color: #fff;
     font-size: 14px;
     background: rgba(0, 0, 0, 0.6);
@@ -202,18 +190,11 @@ a {
     text-decoration: none;
 }
 
-a:hover {
-    text-decoration: underline;
-}
+a:hover { text-decoration: underline; }
 
 /* ========== ВЫДЕЛЕННЫЙ ТЕКСТ ========== */
-strong {
-    color: #f6e05e;
-}
-
-em {
-    color: #a0aec0;
-}
+strong { color: #f6e05e; }
+em { color: #a0aec0; }
 
 /* ========== БЕЙДЖИ ========== */
 .badge {
@@ -264,8 +245,6 @@ em {
     text-decoration: none;
     min-height: 55px;
     transition: background 0.2s, border-color 0.2s, transform 0.2s;
-    
-    /* Мягкое быстрое появление карточки */
     animation: cardIn 0.15s ease both;
 }
 
@@ -281,7 +260,6 @@ em {
     transform: translateY(-2px);
 }
 
-/* ИКОНКА — изначально прозрачная */
 .article-card .card-icon {
     flex-shrink: 0;
     width: 45px;
@@ -294,15 +272,11 @@ em {
     justify-content: center;
     font-size: 22px;
     border: 2px solid #2d3748;
-    
     opacity: 0;
     transition: opacity 0.2s ease;
 }
 
-/* Показываем иконку, когда фото/эмодзи на месте */
-.article-card .card-icon.видно {
-    opacity: 1;
-}
+.article-card .card-icon.видно { opacity: 1; }
 
 .article-card .card-icon img {
     width: 100%;
@@ -311,7 +285,6 @@ em {
     display: block;
 }
 
-/* ТЕКСТ */
 .article-card .card-text {
     flex: 1;
     min-width: 0;
@@ -326,8 +299,106 @@ em {
     margin-bottom: 2px;
 }
 
-.article-card .cat {
+.article-card .cat,
+.article-card .подпись {
     font-size: 12px;
     color: #718096;
     line-height: 1.2;
+}
+
+/* ==========================================
+   ГЛАВНАЯ: ПОИСК И КАТЕГОРИИ
+   ========================================== */
+
+.search-box {
+    background: #2d3748;
+    padding: 16px;
+    border-radius: 12px;
+    margin-bottom: 24px;
+    border: 2px solid #4299e1;
+}
+
+#searchInput {
+    width: 100%;
+    font-size: 18px;
+    padding: 14px 16px;
+    border: none;
+    border-radius: 8px;
+    background: #1a202c;
+    color: #e2e8f0;
+    outline: none;
+}
+
+#searchInput::placeholder { color: #718096; }
+
+#searchResults {
+    margin-top: 12px;
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.search-item {
+    display: block;
+    padding: 12px 16px;
+    background: #1a202c;
+    border-radius: 8px;
+    margin-bottom: 8px;
+    color: #e2e8f0;
+    text-decoration: none;
+    border-left: 3px solid #4299e1;
+    transition: all 0.2s;
+}
+
+.search-item:hover {
+    background: #2d3748;
+    text-decoration: none;
+    border-left-color: #63b3ed;
+}
+
+.search-item .item-name {
+    font-weight: 600;
+    color: #90cdf4;
+}
+
+.search-item .item-cat {
+    font-size: 13px;
+    color: #718096;
+    margin-top: 2px;
+}
+
+.category-section { margin-bottom: 28px; }
+
+.category-title {
+    font-size: 20px;
+    color: #63b3ed;
+    margin-bottom: 12px;
+    padding-left: 12px;
+    border-left: 4px solid #4299e1;
+}
+
+/* ==========================================
+   КНОПКА "ОБ..." — справа сверху
+   ========================================== */
+
+.about-link {
+    position: fixed;
+    top: 12px;
+    right: 12px;
+    background: #2d3748;
+    color: #90cdf4;
+    padding: 5px 10px;
+    border-radius: 14px;
+    font-size: 12px;
+    font-weight: 500;
+    text-decoration: none;
+    z-index: 100;
+    border: 1px solid #4299e1;
+    transition: all 0.2s;
+    line-height: 1;
+}
+
+.about-link:hover {
+    background: #4299e1;
+    color: white;
+    text-decoration: none;
 }
