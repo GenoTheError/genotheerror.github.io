@@ -17,10 +17,11 @@
         body {
             display: flex;
             flex-direction: column;
-            min-height: 100vh;
+            height: 100vh;
+            height: 100dvh; /* Учитывает динамическую панель браузера */
             margin: 0;
             padding: 0;
-            overflow: hidden; /* Чтобы панели не скроллили страницу */
+            overflow: hidden;
         }
 
         /* Шапка */
@@ -32,6 +33,7 @@
             background: #1a202c;
             border-bottom: 1px solid #2d3748;
             z-index: 10;
+            flex-shrink: 0;
         }
         .calc-back {
             color: #90cdf4;
@@ -67,11 +69,11 @@
 
         /* Экран */
         .calc-display {
-            padding: 20px 16px;
+            padding: 10px 16px 20px 16px;
             text-align: right;
             background: #0f1419;
             flex-shrink: 0;
-            min-height: 120px;
+            min-height: 100px;
             display: flex;
             flex-direction: column;
             justify-content: flex-end;
@@ -95,14 +97,17 @@
             display: flex;
             flex-direction: column;
             flex-grow: 1;
-            padding: 16px;
+            padding: 10px 16px;
+            /* Жесткий отступ снизу (80px), чтобы кнопки не заезжали под панель телефона */
+            padding-bottom: 80px; 
             overflow-y: auto;
         }
+        
         .calc-keys {
             display: grid;
             gap: 8px;
             flex-grow: 1;
-            align-content: end;
+            align-content: stretch;
         }
         
         .keys-basic { grid-template-columns: repeat(4, 1fr); }
@@ -116,21 +121,26 @@
             border-radius: 12px;
             font-size: 24px;
             font-weight: 500;
-            padding: 20px 0;
             cursor: pointer;
             font-family: inherit;
             transition: background 0.1s;
             user-select: none;
             -webkit-user-select: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+            min-height: 50px;
         }
+        
         .key:active { background: #4a5568; }
         .key.func { background: #4a5568; color: #90cdf4; }
         .key.op { background: #3182ce; color: white; }
-        .key.eq { background: #38a169; color: white; grid-column: span 2; }
-        .key.zero { grid-column: span 2; }
-        
-        .keys-scientific .key { font-size: 18px; padding: 16px 0; }
-        .keys-fractions .key { font-size: 20px; }
+        .key.eq { background: #38a169; color: white; }
+
+        .keys-basic .key.zero { grid-column: span 2; }
+        .keys-scientific .key { font-size: 18px; min-height: 45px; }
+        .keys-fractions .key { font-size: 20px; min-height: 50px; }
 
         /* Блок конвертера */
         .converter-panel {
@@ -142,15 +152,13 @@
             border-radius: 12px;
             border: 1px solid #2d3748;
             margin: 16px;
+            margin-bottom: 80px; /* Отступ для конвертера тоже */
             width: calc(100% - 32px);
         }
         .converter-panel.active {
             display: flex;
         }
-        .converter-row {
-            display: flex;
-            gap: 10px;
-        }
+        .converter-row { display: flex; gap: 10px; }
         .converter-input {
             flex: 1;
             background: #2d3748;
@@ -207,6 +215,7 @@
         }
         .panel-content {
             padding: 16px;
+            padding-bottom: 80px;
             overflow-y: auto;
             flex-grow: 1;
         }
@@ -278,7 +287,7 @@
         <div class="calc-keys keys-basic" id="calc-keys"></div>
     </div>
 
-    <!-- Блок конвертера (скрыт по умолчанию) -->
+    <!-- Блок конвертера -->
     <div class="converter-panel" id="converter-panel">
         <div class="converter-row">
             <input type="number" class="converter-input" id="conv-val" value="1">
@@ -327,9 +336,6 @@
     <div class="overlay" id="overlay"></div>
 
     <script>
-        // ==========================================
-        // СОСТОЯНИЕ
-        // ==========================================
         let currentExpr = '';
         let currentResult = '0';
         let mode = 'basic';
@@ -342,9 +348,6 @@
         const converterPanel = document.getElementById('converter-panel');
         const historyList = document.getElementById('history-list');
 
-        // ==========================================
-        // ЭКРАН И ВЫЧИСЛЕНИЯ
-        // ==========================================
         function updateDisplay() {
             exprEl.textContent = currentExpr;
             resultEl.textContent = currentResult;
@@ -384,9 +387,6 @@
             updateDisplay();
         }
 
-        // ==========================================
-        // КЛАВИАТУРА
-        // ==========================================
         keysEl.addEventListener('click', (e) => {
             const btn = e.target.closest('.key');
             if (!btn) return;
@@ -460,7 +460,7 @@
                     <button class="key" data-val="3">3</button>
                     <button class="key op" data-val="-">−</button>
                     <button class="key op" data-val="+">+</button>
-                    <button class="key zero" data-val="0">0</button>
+                    <button class="key" data-val="0">0</button>
                     <button class="key" data-val=".">.</button>
                     <button class="key eq" data-val="=">=</button>
                 `;
@@ -479,7 +479,7 @@
                     <button class="key" data-val="1">1</button>
                     <button class="key" data-val="2">2</button>
                     <button class="key" data-val="3">3</button>
-                    <button class="key zero" data-val="0">0</button>
+                    <button class="key" data-val="0">0</button>
                     <button class="key" data-val=".">.</button>
                     <button class="key eq" data-val="=">=</button>
                 `;
@@ -488,11 +488,7 @@
             keysEl.innerHTML = html;
         }
 
-        // ==========================================
-        // КОНВЕРТЕРЫ
-        // ==========================================
         function setupConverter(type) {
-            // Скрываем клавиатуру, показываем конвертер
             keysWrapper.style.display = 'none';
             converterPanel.classList.add('active');
 
@@ -518,7 +514,6 @@
                 let to = toSel.value;
                 let base = v;
                 
-                // В базовые (м, кг, МБ)
                 if (type === 'length') {
                     if (from === 'cm') base = v / 100;
                     if (from === 'in') base = v * 0.0254;
@@ -529,7 +524,6 @@
                     if (from === 'gb') base = v * 1024;
                 }
 
-                // Из базовых
                 let result = base;
                 if (type === 'length') {
                     if (to === 'cm') result = base * 100;
@@ -544,7 +538,6 @@
                 resVal.value = parseFloat(result.toFixed(6));
             }
 
-            // Удаляем старые обработчики, чтобы не дублировались
             inVal.oninput = convert;
             fromSel.onchange = convert;
             toSel.onchange = convert;
@@ -552,9 +545,6 @@
             convert();
         }
 
-        // ==========================================
-        // ПЕРЕКЛЮЧЕНИЕ РЕЖИМОВ ИЗ НАСТРОЕК
-        // ==========================================
         document.querySelectorAll('.settings-item[data-mode]').forEach(item => {
             item.addEventListener('click', () => {
                 const newMode = item.dataset.mode;
@@ -564,11 +554,9 @@
                 item.classList.add('active');
                 
                 if (newMode === 'length' || newMode === 'mass' || newMode === 'data') {
-                    // Включаем конвертер
                     document.getElementById('calc-display').style.display = 'none';
                     setupConverter(newMode);
                 } else {
-                    // Включаем обычный калькулятор
                     document.getElementById('calc-display').style.display = 'block';
                     converterPanel.classList.remove('active');
                     keysWrapper.style.display = 'flex';
@@ -579,9 +567,6 @@
             });
         });
 
-        // ==========================================
-        // ИСТОРИЯ И ПАНЕЛИ
-        // ==========================================
         function renderHistory() {
             if (history.length === 0) {
                 historyList.innerHTML = '<li style="color: #718096; text-align: center; padding: 20px;">История пуста</li>';
@@ -598,7 +583,6 @@
                 item.addEventListener('click', () => {
                     currentExpr = item.dataset.expr;
                     if (mode === 'length' || mode === 'mass' || mode === 'data') {
-                        // Если в конвертере, переключаем на обычный
                         document.querySelector('.settings-item[data-mode="basic"]').click();
                     }
                     updateDisplay();
@@ -630,9 +614,6 @@
             btn.addEventListener('click', closePanels);
         });
 
-        // ==========================================
-        // СТАРТ
-        // ==========================================
         renderHistory();
         renderKeys('basic');
     </script>
