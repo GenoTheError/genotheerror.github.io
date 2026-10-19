@@ -448,4 +448,66 @@
             д.у1.с.forEach((v,i)=>У1.синергия[i].куплено=v);
             д.у2.р.forEach((v,i)=>У2.ручная[i].куплено=v);
             д.у2.а.forEach((v,i)=>У2.авто[i].куплено=v);
-            д
+            д.у2.с.forEach((v,i)=>У2.синергия[i].куплено=v);
+            обновить();
+        }
+
+        document.getElementById('btn-сохранить').onclick = () => {
+            const д = собратьДанные();
+            const стр = JSON.stringify(д);
+            const подп = хэш(стр + СЕКРЕТ);
+            const код = btoa(unescape(encodeURIComponent(стр))) + '.' + подп;
+            
+            const blob = new Blob([код], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'кликер_сейв.txt';
+            a.click();
+            URL.revokeObjectURL(url);
+            показатьУведомление('Файл сохранения скачан!');
+        };
+
+        document.getElementById('btn-загрузить').onclick = () => document.getElementById('файл-загрузки').click();
+
+        document.getElementById('файл-загрузки').onchange = (e) => {
+            const файл = e.target.files[0];
+            if (!файл) return;
+            const reader = new FileReader();
+            reader.onload = (ev) => {
+                try {
+                    const ч = ev.target.result.trim().split('.');
+                    if (ч.length !== 2) throw new Error('Формат');
+                    const стр = decodeURIComponent(escape(atob(ч[0])));
+                    if (хэш(стр + СЕКРЕТ) !== ч[1]) throw new Error('Подпись не совпадает! Сейв взломан.');
+                    применитьДанные(JSON.parse(стр));
+                    показатьУведомление('Прогресс загружен!');
+                } catch(e) { alert('❌ ' + e.message); }
+            };
+            reader.readAsText(файл);
+        };
+
+        document.getElementById('кнопкаСброса').onclick = () => {
+            if (confirm('Полный сброс (удалит и престиж)?')) {
+                localStorage.removeItem('кликер_3_0_сейв');
+                location.reload();
+            }
+        };
+
+        // СТАРТ
+        (function() {
+            const сейв = localStorage.getItem('кликер_3_0_сейв');
+            if (сейв) {
+                try {
+                    const ч = сейв.split('.');
+                    if (ч.length === 2) {
+                        const стр = decodeURIComponent(escape(atob(ч[0])));
+                        if (хэш(стр + СЕКРЕТ) === ч[1]) применитьДанные(JSON.parse(стр));
+                    }
+                } catch(e) {}
+            }
+            обновить();
+        })();
+    </script>
+</body>
+</html>
