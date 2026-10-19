@@ -2,19 +2,32 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Кликер 2.0 - Два Мира</title>
     <link rel="icon" href="../ico.png">
     <link rel="stylesheet" href="../style.css">
     <style>
+        /* Убираем синюю подсветку везде */
+        * {
+            -webkit-tap-highlight-color: transparent;
+            outline: none;
+        }
+
         .мир-переключатель { display: flex; gap: 8px; margin-bottom: 16px; }
         .мир-кнопка { flex: 1; background: #1a202c; color: #718096; border: 2px solid #2d3748; padding: 12px; border-radius: 10px; font-weight: 700; cursor: pointer; transition: all 0.2s; font-family: inherit; }
         .мир-кнопка.активен-1 { background: #744210; color: #f6e05e; border-color: #d69e2e; }
         .мир-кнопка.активен-2 { background: #2a4365; color: #90cdf4; border-color: #4299e1; }
 
         .печенька-зона { display: flex; justify-content: center; margin: 20px 0; }
-        #объект-клика { font-size: 100px; cursor: pointer; user-select: none; -webkit-user-select: none; transition: transform 0.05s; text-shadow: 0 0 20px rgba(246, 224, 94, 0.4); }
-        #объект-клика:active { transform: scale(0.9); }
+        #объект-клика, #объект-клика-2 { 
+            font-size: 100px; 
+            cursor: pointer; 
+            user-select: none; 
+            -webkit-user-select: none; 
+            transition: transform 0.05s; 
+            text-shadow: 0 0 20px rgba(246, 224, 94, 0.4); 
+        }
+        #объект-клика:active, #объект-клика-2:active { transform: scale(0.9); }
 
         .статистика { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 20px; }
         .стат-блок { background: #1a202c; border: 1px solid #2d3748; padding: 12px; border-radius: 10px; text-align: center; }
@@ -38,13 +51,13 @@
 
         .кнопка-сброс { display: block; width: 100%; margin-top: 30px; background: transparent; color: #e53e3e; border: 1px solid #e53e3e; padding: 10px; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; font-family: inherit; }
         .кнопка-сброс:hover { background: #e53e3e; color: white; }
-        
-        .модалка { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 1000; justify-content: center; align-items: center; padding: 20px; }
-        .модалка.активна { display: flex; }
-        .модалка-контент { background: #1a202c; border: 2px solid #4299e1; border-radius: 12px; padding: 20px; width: 100%; max-width: 400px; text-align: center; }
-        .модалка-контент h2 { color: #90cdf4; margin-top: 0; }
-        .модалка-контент textarea { width: 100%; height: 100px; background: #0f1419; color: #e2e8f0; border: 1px solid #2d3748; border-radius: 8px; padding: 10px; font-family: monospace; font-size: 12px; resize: none; margin-bottom: 10px; }
-        
+
+        .кнопки-сохранения { display: flex; gap: 10px; margin-top: 20px; flex-wrap: wrap; }
+        .кнопка-сейва { flex: 1; min-width: 120px; padding: 12px; border-radius: 10px; border: none; font-weight: 600; cursor: pointer; font-family: inherit; font-size: 14px; transition: all 0.2s; }
+        .кнопка-сейва.сохр { background: #38a169; color: white; }
+        .кнопка-сейва.загр { background: #805ad5; color: white; }
+        .кнопка-сейва:active { transform: scale(0.98); }
+
         .уведомление { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #38a169; color: white; padding: 10px 20px; border-radius: 20px; font-weight: 600; z-index: 1000; opacity: 0; transition: opacity 0.3s; pointer-events: none; }
         .уведомление.активно { opacity: 1; }
     </style>
@@ -68,7 +81,7 @@
             <div class="стат-блок"><div class="label">Печеньки</div><div class="value" id="счёт-1">0</div></div>
             <div class="стат-блок"><div class="label">В секунду</div><div class="value" id="сек-1">0</div></div>
             <div class="стат-блок"><div class="label">За клик</div><div class="value" id="клик-1">1</div></div>
-            <div class="стат-блок"><div class="label">Множитель Кристаллов</div><div class="value" id="множитель-1">x1</div></div>
+            <div class="стат-блок"><div class="label">Множитель от Кристаллов</div><div class="value" id="множитель-1">x1</div></div>
         </div>
 
         <div class="печенька-зона"><div id="объект-клика">🍪</div></div>
@@ -90,7 +103,7 @@
             <div class="стат-блок"><div class="label">Кристаллы</div><div class="value" id="счёт-2">0</div></div>
             <div class="стат-блок"><div class="label">В секунду</div><div class="value" id="сек-2">0</div></div>
             <div class="стат-блок"><div class="label">Бонус к Печенькам</div><div class="value" id="клик-2">x1</div></div>
-            <div class="стат-блок"><div class="label">За клик</div><div class="value" id="кристалл-клик">1</div></div>
+            <div class="стат-блок"><div class="label">Кристаллов за клик</div><div class="value" id="кристалл-клик">1</div></div>
         </div>
 
         <div class="печенька-зона"><div id="объект-клика-2">💎</div></div>
@@ -106,26 +119,19 @@
         <div class="вкладка-содержимое" data-мир="2" data-вкладка="синергия" id="у-2-синергия"></div>
     </div>
 
-    <div style="display: flex; gap: 10px; margin-top: 20px;">
-        <button class="вкладка" style="background:#38a169; color:white;" id="btn-сохранить">💾 Сохранить</button>
-        <button class="вкладка" style="background:#805ad5; color:white;" id="btn-загрузить">📂 Загрузить</button>
+    <!-- Кнопки сохранения -->
+    <div class="кнопки-сохранения">
+        <button class="кнопка-сейва сохр" id="btn-сохранить">💾 Скачать сейв</button>
+        <button class="кнопка-сейва загр" id="btn-загрузить">📂 Загрузить сейв</button>
+        <input type="file" id="файл-загрузки" accept=".txt" style="display:none;">
     </div>
 
     <button class="кнопка-сброс" id="кнопкаСброса">🗑️ Сбросить всё</button>
 
-    <div class="модалка" id="модалка">
-        <div class="модалка-контент">
-            <h2 id="модалка-заголовок">Сохранение</h2>
-            <textarea id="модалка-текст" placeholder="Тут будет код..."></textarea>
-            <button class="вкладка" style="background:#4299e1; color:white; width:100%;" id="модалка-действие">Подтвердить</button>
-            <button class="вкладка" style="background:#e53e3e; color:white; width:100%; margin-top:8px;" id="модалка-закрыть">Закрыть</button>
-        </div>
-    </div>
-
     <div class="уведомление" id="уведомление"></div>
 
     <script>
-        // 1. СЕКРЕТНЫЙ КЛЮЧ
+        // 1. СЕКРЕТНЫЙ КЛЮЧ (замаскирован)
         const _k = [71, 51, 110, 48, 95, 67, 108, 49, 99, 107, 95, 87, 52, 114, 95, 50, 48, 50, 54]; 
         const СЕКРЕТ = _k.map(c => String.fromCharCode(c)).join('');
 
@@ -142,16 +148,17 @@
         let печеньки = 0, кристаллы = 0;
         let всегоКликов = 0;
         
-        // Множители
-        let множительКликМир1 = 1;
-        let множительАвтоМир1 = 1;
-        let множительКристаллДобыча = 1; // Глобальный для мира 2
-        let множительПеченькиОтКристаллов = 1; // Влияние мира 2 на мир 1
+        let множительКликМир1 = 1, множительАвтоМир1 = 1;
+        let множительКристаллДобыча = 1, множительПеченькиОтКристаллов = 1;
 
         let последнийКлик1 = 0, последнийКлик2 = 0;
         let открытМир2 = false;
 
-        // 3. УЛУЧШЕНИЯ (ОГРОМНЫЙ СПИСОК)
+        // Жёсткая защита от автокликера
+        let историяКликов = [];
+        const МАКС_КЛИКОВ_В_СЕК = 15; // Человек физически не может быстрее
+
+        // 3. УЛУЧШЕНИЯ
         const У1 = {
             ручная: [
                 { назв: 'Крепкий палец', опис: '+1', база: 15, шаг: 15, бонус: 1, куплено: 0 },
@@ -205,7 +212,6 @@
 
         function ценаУ(у) { return у.база + (у.куплено * у.шаг); }
 
-        // Стоимость клика в мире 1
         function заКлик1() {
             let б = 1;
             У1.ручная.forEach(у => б += у.бонус * у.куплено);
@@ -216,8 +222,6 @@
             У1.авто.forEach(у => б += у.бонус * у.куплено);
             return б * множительАвтоМир1 * множительПеченькиОтКристаллов;
         }
-
-        // Стоимость клика в мире 2
         function заКлик2() {
             let б = 1;
             У2.ручная.forEach(у => б += у.бонус * у.куплено);
@@ -229,7 +233,7 @@
             return б * множительКристаллДобыча;
         }
 
-        // 5. ОБНОВЛЕНИЕ ИНТЕРФЕЙСА
+        // 5. ОБНОВЛЕНИЕ
         function обновить() {
             document.getElementById('счёт-1').textContent = формат(печеньки);
             document.getElementById('сек-1').textContent = формат(вСекунду1());
@@ -244,12 +248,10 @@
             рисоватьУлучшения(1, У1.ручная, 'у-1-ручная', 'печеньки');
             рисоватьУлучшения(1, У1.авто, 'у-1-авто', 'печеньки');
             рисоватьУлучшения(1, У1.синергия, 'у-1-синергия', 'печеньки');
-
             рисоватьУлучшения(2, У2.ручная, 'у-2-ручная', 'кристаллы');
             рисоватьУлучшения(2, У2.авто, 'у-2-авто', 'кристаллы');
             рисоватьУлучшения(2, У2.синергия, 'у-2-синергия', 'кристаллы');
             
-            // Проверка на открытие портала
             if (!открытМир2 && печеньки >= 10000000) {
                 открытМир2 = true;
                 document.getElementById('btn-мир-2').disabled = false;
@@ -299,10 +301,26 @@
             обновить();
         }
 
-        // 6. КЛИКИ
+        // 6. КЛИКИ И АНТИКЛИКЕР
+        function проверитьАнтикликер(массив) {
+            const сейчас = Date.now();
+            массив.push(сейчас);
+            // Оставляем только клики за последнюю секунду
+            while (массив.length > 0 && массив[0] < сейчас - 1000) {
+                массив.shift();
+            }
+            // Если кликов больше лимита — блокируем
+            if (массив.length > МАКС_КЛИКОВ_В_СЕК) {
+                показатьУведомление('🚫 Слишком быстро! (Автокликер?)');
+                return false;
+            }
+            return true;
+        }
+
         document.getElementById('объект-клика').addEventListener('click', () => {
             const с = Date.now();
-            if (с - последнийКлик1 < 50) return;
+            if (с - последнийКлик1 < 60) return; // Минимальная задержка между кликами
+            if (!проверитьАнтикликер(историяКликов)) return;
             последнийКлик1 = с;
             печеньки += заКлик1();
             всегоКликов++;
@@ -311,7 +329,8 @@
 
         document.getElementById('объект-клика-2').addEventListener('click', () => {
             const с = Date.now();
-            if (с - последнийКлик2 < 50) return;
+            if (с - последнийКлик2 < 60) return;
+            if (!проверитьАнтикликер(историяКликов)) return;
             последнийКлик2 = с;
             кристаллы += заКлик2();
             обновить();
@@ -365,16 +384,8 @@
             тм = setTimeout(() => у.classList.remove('активно'), 2000);
         }
 
-        // 10. СОХРАНЕНИЕ
-        const модалка = document.getElementById('модалка');
-        const мТекст = document.getElementById('модалка-текст');
-        const мЗаголовок = document.getElementById('модалка-заголовок');
-        const мДействие = document.getElementById('модалка-действие');
-        let режим = 'сохр';
-
+        // 10. СОХРАНЕНИЕ (ФАЙЛОМ)
         document.getElementById('btn-сохранить').onclick = () => {
-            режим = 'сохр';
-            мЗаголовок.textContent = 'Код сохранения';
             const д = {
                 п: Math.floor(печеньки), к: Math.floor(кристаллы), вк: всегоКликов,
                 м1: множительКликМир1, м2: множительАвтоМир1,
@@ -385,28 +396,31 @@
             };
             const стр = JSON.stringify(д);
             const подп = хэш(стр + СЕКРЕТ);
-            мТекст.value = btoa(unescape(encodeURIComponent(стр))) + '.' + подп;
-            мДействие.textContent = 'Скопировать';
-            модалка.classList.add('активна');
+            const код = btoa(unescape(encodeURIComponent(стр))) + '.' + подп;
+            
+            // Скачиваем файл
+            const blob = new Blob([код], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'кликер_сейв.txt';
+            a.click();
+            URL.revokeObjectURL(url);
+            
+            показатьУведомление('Файл сохранения скачан!');
         };
 
         document.getElementById('btn-загрузить').onclick = () => {
-            режим = 'загр';
-            мЗаголовок.textContent = 'Вставь код';
-            мТекст.value = '';
-            мДействие.textContent = 'Загрузить';
-            модалка.classList.add('активна');
+            document.getElementById('файл-загрузки').click();
         };
 
-        мДействие.onclick = () => {
-            if (режим === 'сохр') {
-                мТекст.select();
-                document.execCommand('copy');
-                показатьУведомление('Скопировано!');
-                модалка.classList.remove('активна');
-            } else {
+        document.getElementById('файл-загрузки').onchange = (e) => {
+            const файл = e.target.files[0];
+            if (!файл) return;
+            const reader = new FileReader();
+            reader.onload = (ev) => {
                 try {
-                    const ч = мТекст.value.trim().split('.');
+                    const ч = ev.target.result.trim().split('.');
                     if (ч.length !== 2) throw new Error('Формат');
                     const стр = decodeURIComponent(escape(atob(ч[0])));
                     if (хэш(стр + СЕКРЕТ) !== ч[1]) throw new Error('Подпись не совпадает! Сейв взломан.');
@@ -425,15 +439,14 @@
                     д.у2.с.forEach((v,i)=>У2.синергия[i].куплено=v);
                     
                     обновить();
-                    показатьУведомление('Загружено!');
-                    модалка.classList.remove('активна');
+                    показатьУведомление('Прогресс загружен!');
                 } catch(e) { alert('❌ ' + e.message); }
-            }
+            };
+            reader.readAsText(файл);
         };
 
-        document.getElementById('модалка-закрыть').onclick = () => модалка.classList.remove('активна');
         document.getElementById('кнопкаСброса').onclick = () => {
-            if (confirm('Сбросить ВСЁ?')) location.reload();
+            if (confirm('Сбросить ВСЁ? Это удалит весь прогресс.')) location.reload();
         };
 
         обновить();
