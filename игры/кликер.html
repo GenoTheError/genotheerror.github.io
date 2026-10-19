@@ -3,555 +3,439 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Кликер</title>
+    <title>Кликер 2.0 - Два Мира</title>
     <link rel="icon" href="../ico.png">
     <link rel="stylesheet" href="../style.css">
     <style>
-        .стат {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 8px;
-            margin: 16px 0;
-        }
-        .стат-блок {
-            background: #2d3748;
-            padding: 10px 14px;
-            border-radius: 8px;
-            text-align: center;
-        }
-        .стат-блок .label {
-            color: #a0aec0;
-            font-size: 12px;
-        }
-        .стат-блок .value {
-            color: #e2e8f0;
-            font-weight: 700;
-            font-size: 20px;
-        }
+        .мир-переключатель { display: flex; gap: 8px; margin-bottom: 16px; }
+        .мир-кнопка { flex: 1; background: #1a202c; color: #718096; border: 2px solid #2d3748; padding: 12px; border-radius: 10px; font-weight: 700; cursor: pointer; transition: all 0.2s; font-family: inherit; }
+        .мир-кнопка.активен-1 { background: #744210; color: #f6e05e; border-color: #d69e2e; }
+        .мир-кнопка.активен-2 { background: #2a4365; color: #90cdf4; border-color: #4299e1; }
+
+        .печенька-зона { display: flex; justify-content: center; margin: 20px 0; }
+        #объект-клика { font-size: 100px; cursor: pointer; user-select: none; -webkit-user-select: none; transition: transform 0.05s; text-shadow: 0 0 20px rgba(246, 224, 94, 0.4); }
+        #объект-клика:active { transform: scale(0.9); }
+
+        .статистика { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 20px; }
+        .стат-блок { background: #1a202c; border: 1px solid #2d3748; padding: 12px; border-radius: 10px; text-align: center; }
+        .стат-блок .label { color: #718096; font-size: 12px; }
+        .стат-блок .value { color: #f6e05e; font-size: 20px; font-weight: 700; }
+
+        .вкладки { display: flex; gap: 6px; margin-bottom: 16px; }
+        .вкладка { flex: 1; background: #2d3748; color: #a0aec0; border: none; padding: 10px; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; font-family: inherit; transition: all 0.2s; }
+        .вкладка.активна { background: #4299e1; color: white; }
+
+        .улучшение { display: flex; justify-content: space-between; align-items: center; background: #1a202c; border: 1px solid #2d3748; padding: 12px 16px; border-radius: 10px; transition: all 0.2s; margin-bottom: 8px; }
+        .улучшение.доступно { cursor: pointer; border-color: #38a169; }
+        .улучшение.доступно:hover { background: #2d3748; }
+        .улучшение.недоступно { opacity: 0.5; cursor: not-allowed; }
+        .улучшение .назв { color: #90cdf4; font-weight: 600; font-size: 15px; }
+        .улучшение .опис { color: #718096; font-size: 12px; margin-top: 2px; }
+        .улучшение .цена { color: #f6e05e; font-weight: 700; font-size: 14px; text-align: right; }
         
-        .печенька-зона {
-            text-align: center;
-            margin: 20px 0;
-            position: relative;
-        }
-        #печенька {
-            font-size: 130px;
-            cursor: pointer;
-            user-select: none;
-            -webkit-user-select: none;
-            display: inline-block;
-            transition: transform 0.05s;
-            -webkit-tap-highlight-color: transparent;
-        }
-        #печенька:active {
-            transform: scale(0.9);
-        }
+        .вкладка-содержимое { display: none; }
+        .вкладка-содержимое.активна { display: block; }
+
+        .кнопка-сброс { display: block; width: 100%; margin-top: 30px; background: transparent; color: #e53e3e; border: 1px solid #e53e3e; padding: 10px; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; font-family: inherit; }
+        .кнопка-сброс:hover { background: #e53e3e; color: white; }
         
-        /* Летящие "+1" */
-        .плюсик {
-            position: absolute;
-            color: #f6e05e;
-            font-weight: 700;
-            font-size: 22px;
-            pointer-events: none;
-            animation: улетает 1s ease-out forwards;
-            z-index: 10;
-        }
-        @keyframes улетает {
-            0% { opacity: 1; transform: translateY(0); }
-            100% { opacity: 0; transform: translateY(-80px); }
-        }
+        .модалка { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 1000; justify-content: center; align-items: center; padding: 20px; }
+        .модалка.активна { display: flex; }
+        .модалка-контент { background: #1a202c; border: 2px solid #4299e1; border-radius: 12px; padding: 20px; width: 100%; max-width: 400px; text-align: center; }
+        .модалка-контент h2 { color: #90cdf4; margin-top: 0; }
+        .модалка-контент textarea { width: 100%; height: 100px; background: #0f1419; color: #e2e8f0; border: 1px solid #2d3748; border-radius: 8px; padding: 10px; font-family: monospace; font-size: 12px; resize: none; margin-bottom: 10px; }
         
-        /* Вкладки */
-        .вкладки {
-            display: flex;
-            gap: 6px;
-            margin: 16px 0 12px;
-        }
-        .вкладка {
-            flex: 1;
-            background: #2d3748;
-            color: #a0aec0;
-            border: none;
-            padding: 10px 8px;
-            border-radius: 10px;
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            font-family: inherit;
-            transition: all 0.2s;
-            touch-action: manipulation;
-        }
-        .вкладка.активна {
-            background: #4299e1;
-            color: white;
-        }
-        
-        /* Улучшения */
-        .улучшения {
-            display: grid;
-            gap: 8px;
-        }
-        .улучшение {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background: #1a202c;
-            border: 1px solid #2d3748;
-            border-radius: 10px;
-            padding: 12px 14px;
-            cursor: pointer;
-            transition: all 0.2s;
-            touch-action: manipulation;
-        }
-        .улучшение.доступно {
-            border-color: #38a169;
-        }
-        .улучшение.доступно:hover {
-            background: #2d3748;
-            border-color: #4299e1;
-        }
-        .улучшение.недоступно {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-        .улучшение .лево {
-            flex: 1;
-            min-width: 0;
-        }
-        .улучшение .назв {
-            font-weight: 600;
-            color: #90cdf4;
-            font-size: 15px;
-            margin-bottom: 2px;
-        }
-        .улучшение .опис {
-            font-size: 12px;
-            color: #718096;
-        }
-        .улучшение .право {
-            text-align: right;
-            flex-shrink: 0;
-            margin-left: 10px;
-        }
-        .улучшение .цена {
-            color: #f6e05e;
-            font-weight: 600;
-            font-size: 14px;
-        }
-        .улучшение .куплено {
-            color: #38a169;
-            font-size: 12px;
-            margin-top: 2px;
-        }
-        
-        /* Кнопка звука */
-        .звук-кнопка {
-            position: fixed;
-            top: 16px;
-            right: 70px;
-            background: #2d3748;
-            color: #90cdf4;
-            border: 1px solid #4299e1;
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            font-size: 18px;
-            cursor: pointer;
-            z-index: 100;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 0;
-            font-family: inherit;
-        }
-        .звук-кнопка:hover {
-            background: #4299e1;
-            color: white;
-        }
-        
-        /* Кнопка сброса */
-        .сброс-кнопка {
-            display: block;
-            width: 100%;
-            margin-top: 30px;
-            background: transparent;
-            color: #e53e3e;
-            border: 1px solid #e53e3e;
-            padding: 10px;
-            border-radius: 10px;
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            font-family: inherit;
-            touch-action: manipulation;
-            transition: all 0.2s;
-        }
-        .сброс-кнопка:hover {
-            background: #e53e3e;
-            color: white;
-        }
-        
-        .вкладка-содержимое {
-            display: none;
-        }
-        .вкладка-содержимое.активна {
-            display: grid;
-            gap: 8px;
-        }
+        .уведомление { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #38a169; color: white; padding: 10px 20px; border-radius: 20px; font-weight: 600; z-index: 1000; opacity: 0; transition: opacity 0.3s; pointer-events: none; }
+        .уведомление.активно { opacity: 1; }
     </style>
 </head>
 <body>
     <div class="header">
         <a href="../игры.html" class="back-btn">← Назад</a>
-        <span class="badge purple">🖱️ Кликер</span>
+        <span class="badge purple">🖱️ Кликер 2.0</span>
     </div>
-    
-    <button class="звук-кнопка" id="звукКнопка">🔊</button>
-    
-    <h1>🍪 Кликер</h1>
-    
-    <div class="стат">
-        <div class="стат-блок">
-            <div class="label">Печенек</div>
-            <div class="value" id="счёт">0</div>
+
+    <h1>🍪 Кликер 2.0</h1>
+
+    <div class="мир-переключатель">
+        <button class="мир-кнопка активен-1" id="btn-мир-1">🍪 Мир Печенек</button>
+        <button class="мир-кнопка" id="btn-мир-2">💎 Мир Кристаллов</button>
+    </div>
+
+    <!-- МИР 1 -->
+    <div id="мир-1" style="display:block;">
+        <div class="статистика">
+            <div class="стат-блок"><div class="label">Печеньки</div><div class="value" id="счёт-1">0</div></div>
+            <div class="стат-блок"><div class="label">В секунду</div><div class="value" id="сек-1">0</div></div>
+            <div class="стат-блок"><div class="label">За клик</div><div class="value" id="клик-1">1</div></div>
+            <div class="стат-блок"><div class="label">Множитель Кристаллов</div><div class="value" id="множитель-1">x1</div></div>
         </div>
-        <div class="стат-блок">
-            <div class="label">В секунду</div>
-            <div class="value" id="вСекунду">0</div>
+
+        <div class="печенька-зона"><div id="объект-клика">🍪</div></div>
+
+        <div class="вкладки">
+            <button class="вкладка активна" data-мир="1" data-вкладка="ручная">🖱️ Клик</button>
+            <button class="вкладка" data-мир="1" data-вкладка="авто">⚙️ Авто</button>
+            <button class="вкладка" data-мир="1" data-вкладка="синергия">✨ Синергия</button>
         </div>
-        <div class="стат-блок">
-            <div class="label">За клик</div>
-            <div class="value" id="заКлик">1</div>
+
+        <div class="вкладка-содержимое активна" data-мир="1" data-вкладка="ручная" id="у-1-ручная"></div>
+        <div class="вкладка-содержимое" data-мир="1" data-вкладка="авто" id="у-1-авто"></div>
+        <div class="вкладка-содержимое" data-мир="1" data-вкладка="синергия" id="у-1-синергия"></div>
+    </div>
+
+    <!-- МИР 2 -->
+    <div id="мир-2" style="display:none;">
+        <div class="статистика">
+            <div class="стат-блок"><div class="label">Кристаллы</div><div class="value" id="счёт-2">0</div></div>
+            <div class="стат-блок"><div class="label">В секунду</div><div class="value" id="сек-2">0</div></div>
+            <div class="стат-блок"><div class="label">Бонус к Печенькам</div><div class="value" id="клик-2">x1</div></div>
+            <div class="стат-блок"><div class="label">За клик</div><div class="value" id="кристалл-клик">1</div></div>
         </div>
-        <div class="стат-блок">
-            <div class="label">Всего</div>
-            <div class="value" id="всего">0</div>
+
+        <div class="печенька-зона"><div id="объект-клика-2">💎</div></div>
+
+        <div class="вкладки">
+            <button class="вкладка активна" data-мир="2" data-вкладка="ручная">🖱️ Клик</button>
+            <button class="вкладка" data-мир="2" data-вкладка="авто">⚙️ Авто</button>
+            <button class="вкладка" data-мир="2" data-вкладка="синергия">✨ Глобальные</button>
+        </div>
+
+        <div class="вкладка-содержимое активна" data-мир="2" data-вкладка="ручная" id="у-2-ручная"></div>
+        <div class="вкладка-содержимое" data-мир="2" data-вкладка="авто" id="у-2-авто"></div>
+        <div class="вкладка-содержимое" data-мир="2" data-вкладка="синергия" id="у-2-синергия"></div>
+    </div>
+
+    <div style="display: flex; gap: 10px; margin-top: 20px;">
+        <button class="вкладка" style="background:#38a169; color:white;" id="btn-сохранить">💾 Сохранить</button>
+        <button class="вкладка" style="background:#805ad5; color:white;" id="btn-загрузить">📂 Загрузить</button>
+    </div>
+
+    <button class="кнопка-сброс" id="кнопкаСброса">🗑️ Сбросить всё</button>
+
+    <div class="модалка" id="модалка">
+        <div class="модалка-контент">
+            <h2 id="модалка-заголовок">Сохранение</h2>
+            <textarea id="модалка-текст" placeholder="Тут будет код..."></textarea>
+            <button class="вкладка" style="background:#4299e1; color:white; width:100%;" id="модалка-действие">Подтвердить</button>
+            <button class="вкладка" style="background:#e53e3e; color:white; width:100%; margin-top:8px;" id="модалка-закрыть">Закрыть</button>
         </div>
     </div>
-    
-    <div class="печенька-зона">
-        <div id="печенька">🍪</div>
-    </div>
-    
-    <!-- ВКЛАДКИ -->
-    <div class="вкладки">
-        <button class="вкладка активна" data-вкладка="ручная">🖱️ Ручная</button>
-        <button class="вкладка" data-вкладка="авто">⚙️ Авто</button>
-        <button class="вкладка" data-вкладка="особая">✨ Особая</button>
-    </div>
-    
-    <!-- СОДЕРЖИМОЕ ВКЛАДОК -->
-    <div class="вкладка-содержимое активна" data-вкладка="ручная" id="улучшения-ручная"></div>
-    <div class="вкладка-содержимое" data-вкладка="авто" id="улучшения-авто"></div>
-    <div class="вкладка-содержимое" data-вкладка="особая" id="улучшения-особая"></div>
-    
-    <button class="сброс-кнопка" id="кнопкаСброса">🗑️ Сбросить весь прогресс</button>
-    
+
+    <div class="уведомление" id="уведомление"></div>
+
     <script>
-        // ==========================================
-        // ЗВУК
-        // ==========================================
-        let аудио = null;
-        let звукВкл = true;
-        
-        function получитьАудио() {
-            if (!аудио) {
-                const AC = window.AudioContext || window.webkitAudioContext;
-                if (AC) аудио = new AC();
+        // 1. СЕКРЕТНЫЙ КЛЮЧ
+        const _k = [71, 51, 110, 48, 95, 67, 108, 49, 99, 107, 95, 87, 52, 114, 95, 50, 48, 50, 54]; 
+        const СЕКРЕТ = _k.map(c => String.fromCharCode(c)).join('');
+
+        function хэш(строка) {
+            let h = 5381;
+            for (let i = 0; i < строка.length; i++) {
+                h = ((h << 5) + h) + строка.charCodeAt(i);
+                h = h & 0xffffffff;
             }
-            return аудио;
+            return (h >>> 0).toString(16);
         }
+
+        // 2. СОСТОЯНИЕ
+        let печеньки = 0, кристаллы = 0;
+        let всегоКликов = 0;
         
-        function игратьКлик() {
-            if (!звукВкл) return;
-            const ctx = получитьАудио();
-            if (!ctx) return;
-            if (ctx.state === 'suspended') ctx.resume();
-            
-            const сейчас = ctx.currentTime;
-            const осц = ctx.createOscillator();
-            const усил = ctx.createGain();
-            осц.type = 'sine';
-            осц.frequency.setValueAtTime(800, сейчас);
-            осц.frequency.exponentialRampToValueAtTime(400, сейчас + 0.08);
-            усил.gain.setValueAtTime(0.4, сейчас);
-            усил.gain.exponentialRampToValueAtTime(0.001, сейчас + 0.1);
-            осц.connect(усил);
-            усил.connect(ctx.destination);
-            осц.start(сейчас);
-            осц.stop(сейчас + 0.1);
-        }
-        
-        function игратьПокупку() {
-            if (!звукВкл) return;
-            const ctx = получитьАудио();
-            if (!ctx) return;
-            if (ctx.state === 'suspended') ctx.resume();
-            
-            const сейчас = ctx.currentTime;
-            // Два тона — "дилинь"
-            [523.25, 783.99].forEach((част, i) => {
-                const осц = ctx.createOscillator();
-                const усил = ctx.createGain();
-                осц.type = 'sine';
-                осц.frequency.value = част;
-                усил.gain.setValueAtTime(0, сейчас + i * 0.08);
-                усил.gain.linearRampToValueAtTime(0.4, сейчас + i * 0.08 + 0.02);
-                усил.gain.exponentialRampToValueAtTime(0.001, сейчас + i * 0.08 + 0.25);
-                осц.connect(усил);
-                усил.connect(ctx.destination);
-                осц.start(сейчас + i * 0.08);
-                осц.stop(сейчас + i * 0.08 + 0.25);
-            });
-        }
-        
-        document.getElementById('звукКнопка').addEventListener('click', function() {
-            звукВкл = !звукВкл;
-            this.textContent = звукВкл ? '🔊' : '🔇';
-        });
-        
-        // ==========================================
-        // ДАННЫЕ ИГРЫ
-        // ==========================================
-        const КЛЮЧ = 'кликер-прогресс';
-        
-        // Улучшения
-        const УЛУЧШЕНИЯ = {
+        // Множители
+        let множительКликМир1 = 1;
+        let множительАвтоМир1 = 1;
+        let множительКристаллДобыча = 1; // Глобальный для мира 2
+        let множительПеченькиОтКристаллов = 1; // Влияние мира 2 на мир 1
+
+        let последнийКлик1 = 0, последнийКлик2 = 0;
+        let открытМир2 = false;
+
+        // 3. УЛУЧШЕНИЯ (ОГРОМНЫЙ СПИСОК)
+        const У1 = {
             ручная: [
-                { id: 'палец', назв: 'Крепкий палец', опис: '+1 к клику', база: 15, бонус: 1, куплено: 0 },
-                { id: 'рука', назв: 'Ловкая рука', опис: '+2 к клику', база: 100, бонус: 2, куплено: 0 },
-                { id: 'перчатка', назв: 'Магическая перчатка', опис: '+5 к клику', база: 500, бонус: 5, куплено: 0 },
-                { id: 'мульти', назв: 'Мультипалец', опис: '+15 к клику', база: 5000, бонус: 15, куплено: 0 },
-                { id: 'бог', назв: 'Рука богов', опис: '+50 к клику', база: 50000, бонус: 50, куплено: 0 }
+                { назв: 'Крепкий палец', опис: '+1', база: 15, шаг: 15, бонус: 1, куплено: 0 },
+                { назв: 'Ловкая рука', опис: '+5', база: 100, шаг: 100, бонус: 5, куплено: 0 },
+                { назв: 'Магическая перчатка', опис: '+25', база: 500, шаг: 500, бонус: 25, куплено: 0 },
+                { назв: 'Мультипалец', опис: '+100', база: 5000, шаг: 5000, бонус: 100, куплено: 0 },
+                { назв: 'Рука богов', опис: '+500', база: 50000, шаг: 50000, бонус: 500, куплено: 0 },
+                { назв: 'Титаническая длань', опис: '+2500', база: 500000, шаг: 500000, бонус: 2500, куплено: 0 }
             ],
             авто: [
-                { id: 'бабушка', назв: 'Бабушка', опис: '+1 в секунду', база: 50, бонус: 1, куплено: 0 },
-                { id: 'пекарня', назв: 'Пекарня', опис: '+5 в секунду', база: 500, бонус: 5, куплено: 0 },
-                { id: 'фабрика', назв: 'Фабрика', опис: '+25 в секунду', база: 5000, бонус: 25, куплено: 0 },
-                { id: 'завод', назв: 'Завод', опис: '+100 в секунду', база: 50000, бонус: 100, куплено: 0 },
-                { id: 'корпорация', назв: 'Корпорация', опис: '+500 в секунду', база: 500000, бонус: 500, куплено: 0 }
+                { назв: 'Бабушка', опис: '+1', база: 50, шаг: 50, бонус: 1, куплено: 0 },
+                { назв: 'Пекарня', опис: '+5', база: 500, шаг: 500, бонус: 5, куплено: 0 },
+                { назв: 'Фабрика', опис: '+25', база: 5000, шаг: 5000, бонус: 25, куплено: 0 },
+                { назв: 'Завод', опис: '+100', база: 50000, шаг: 50000, бонус: 100, куплено: 0 },
+                { назв: 'Корпорация', опис: '+500', база: 500000, шаг: 500000, бонус: 500, куплено: 0 },
+                { назв: 'Империя', опис: '+2500', база: 5000000, шаг: 5000000, бонус: 2500, куплено: 0 }
             ],
-            особая: [
-                { id: 'золото', назв: 'Золотая печенька', опис: '×2 к клику', база: 1000, тип: 'множитель-клик', значение: 2, куплено: 0 },
-                { id: 'ускорение', назв: 'Ускорение', опис: '×2 к авто', база: 10000, тип: 'множитель-авто', значение: 2, куплено: 0 },
-                { id: 'кристалл', назв: 'Кристалл', опис: '×3 к клику', база: 100000, тип: 'множитель-клик', значение: 3, куплено: 0 },
-                { id: 'ядро', назв: 'Ядро', опис: '×3 к авто', база: 1000000, тип: 'множитель-авто', значение: 3, куплено: 0 }
+            синергия: [
+                { назв: 'Золотая печенька', опис: '×2 к клику', база: 100000, шаг: 100000, тип: 'мк', зн: 2, куплено: 0 },
+                { назв: 'Ускорение', опис: '×2 к авто', база: 1000000, шаг: 1000000, тип: 'ма', зн: 2, куплено: 0 },
+                { назв: 'Кристалл', опис: '×3 к клику', база: 10000000, шаг: 10000000, тип: 'мк', зн: 3, куплено: 0 },
+                { назв: 'Ядро', опис: '×3 к авто', база: 100000000, шаг: 100000000, тип: 'ма', зн: 3, куплено: 0 }
             ]
         };
-        
-        let печеньки = 0;
-        let всегоПеченек = 0;
-        let кликов = 0;
-        let множительКлик = 1;
-        let множительАвто = 1;
-        
-        // ==========================================
-        // СОХРАНЕНИЕ
-        // ==========================================
-        function сохранить() {
-            const данные = {
-                печеньки,
-                всегоПеченек,
-                кликов,
-                множительКлик,
-                множительАвто,
-                улучшения: {}
-            };
-            for (const кат in УЛУЧШЕНИЯ) {
-                данные.улучшения[кат] = УЛУЧШЕНИЯ[кат].map(у => у.куплено);
+
+        const У2 = {
+            ручная: [
+                { назв: 'Осколок', опис: '+1', база: 10, шаг: 10, бонус: 1, куплено: 0 },
+                { назв: 'Кристалл', опис: '+10', база: 200, шаг: 200, бонус: 10, куплено: 0 },
+                { назв: 'Друза', опис: '+50', база: 5000, шаг: 5000, бонус: 50, куплено: 0 }
+            ],
+            авто: [
+                { назв: 'Шахта', опис: '+1', база: 100, шаг: 100, бонус: 1, куплено: 0 },
+                { назв: 'Дракон', опис: '+10', база: 2000, шаг: 2000, бонус: 10, куплено: 0 }
+            ],
+            синергия: [
+                { назв: 'Связь миров', опис: '×2 к печенькам', база: 10000, шаг: 10000, тип: 'печеньки', зн: 2, куплено: 0 },
+                { назв: 'Абсолют', опис: '×5 к печенькам', база: 1000000, шаг: 1000000, тип: 'печеньки', зн: 5, куплено: 0 }
+            ]
+        };
+
+        // 4. ЛОГИКА
+        function формат(ч) {
+            if (ч < 1000) return Math.floor(ч).toString();
+            const с = [ {п:1e3,с:' тыс.'}, {п:1e6,с:' млн'}, {п:1e9,с:' млрд'}, {п:1e12,с:' трлн'}, {п:1e15,с:' квдр'} ];
+            for (let i = с.length - 1; i >= 0; i--) {
+                if (ч >= с[i].п) return (ч / с[i].п).toFixed(1) + с[i].с;
             }
-            try {
-                localStorage.setItem(КЛЮЧ, JSON.stringify(данные));
-            } catch (e) {}
+            return Math.floor(ч).toString();
         }
-        
-        function загрузить() {
-            try {
-                const сырое = localStorage.getItem(КЛЮЧ);
-                if (!сырое) return;
-                const данные = JSON.parse(сырое);
-                печеньки = данные.печеньки || 0;
-                всегоПеченек = данные.всегоПеченек || 0;
-                кликов = данные.кликов || 0;
-                множительКлик = данные.множительКлик || 1;
-                множительАвто = данные.множительАвто || 1;
-                if (данные.улучшения) {
-                    for (const кат in данные.улучшения) {
-                        if (УЛУЧШЕНИЯ[кат]) {
-                            данные.улучшения[кат].forEach((кол, i) => {
-                                if (УЛУЧШЕНИЯ[кат][i]) УЛУЧШЕНИЯ[кат][i].куплено = кол;
-                            });
-                        }
-                    }
-                }
-            } catch (e) {}
+
+        function ценаУ(у) { return у.база + (у.куплено * у.шаг); }
+
+        // Стоимость клика в мире 1
+        function заКлик1() {
+            let б = 1;
+            У1.ручная.forEach(у => б += у.бонус * у.куплено);
+            return б * множительКликМир1 * множительПеченькиОтКристаллов;
         }
-        
-        // ==========================================
-        // РАСЧЁТЫ
-        // ==========================================
-        function ценаУлучшения(у) {
-            return Math.floor(у.база * Math.pow(1.15, у.куплено));
+        function вСекунду1() {
+            let б = 0;
+            У1.авто.forEach(у => б += у.бонус * у.куплено);
+            return б * множительАвтоМир1 * множительПеченькиОтКристаллов;
         }
-        
-        function заКлик() {
-            let база = 1;
-            УЛУЧШЕНИЯ.ручная.forEach(у => база += у.бонус * у.куплено);
-            return база * множительКлик;
+
+        // Стоимость клика в мире 2
+        function заКлик2() {
+            let б = 1;
+            У2.ручная.forEach(у => б += у.бонус * у.куплено);
+            return б * множительКристаллДобыча;
         }
-        
-        function вСекунду() {
-            let база = 0;
-            УЛУЧШЕНИЯ.авто.forEach(у => база += у.бонус * у.куплено);
-            return база * множительАвто;
+        function вСекунду2() {
+            let б = 0;
+            У2.авто.forEach(у => б += у.бонус * у.куплено);
+            return б * множительКристаллДобыча;
         }
-        
-        // ==========================================
-        // ФОРМАТИРОВАНИЕ ЧИСЕЛ
-        // ==========================================
-        function формат(число) {
-            число = Math.floor(число);
-            if (число < 1000) return число.toString();
-            if (число < 1000000) return (число / 1000).toFixed(1) + 'К';
-            if (число < 1000000000) return (число / 1000000).toFixed(1) + 'М';
-            if (число < 1000000000000) return (число / 1000000000).toFixed(1) + 'Б';
-            return (число / 1000000000000).toFixed(1) + 'Т';
-        }
-        
-        // ==========================================
-        // ОТРИСОВКА
-        // ==========================================
+
+        // 5. ОБНОВЛЕНИЕ ИНТЕРФЕЙСА
         function обновить() {
-            document.getElementById('счёт').textContent = формат(печеньки);
-            document.getElementById('вСекунду').textContent = формат(вСекунду());
-            document.getElementById('заКлик').textContent = формат(заКлик());
-            document.getElementById('всего').textContent = формат(всегоПеченек);
+            document.getElementById('счёт-1').textContent = формат(печеньки);
+            document.getElementById('сек-1').textContent = формат(вСекунду1());
+            document.getElementById('клик-1').textContent = формат(заКлик1());
+            document.getElementById('множитель-1').textContent = 'x' + множительПеченькиОтКристаллов;
+
+            document.getElementById('счёт-2').textContent = формат(кристаллы);
+            document.getElementById('сек-2').textContent = формат(вСекунду2());
+            document.getElementById('клик-2').textContent = 'x' + множительПеченькиОтКристаллов;
+            document.getElementById('кристалл-клик').textContent = формат(заКлик2());
+
+            рисоватьУлучшения(1, У1.ручная, 'у-1-ручная', 'печеньки');
+            рисоватьУлучшения(1, У1.авто, 'у-1-авто', 'печеньки');
+            рисоватьУлучшения(1, У1.синергия, 'у-1-синергия', 'печеньки');
+
+            рисоватьУлучшения(2, У2.ручная, 'у-2-ручная', 'кристаллы');
+            рисоватьУлучшения(2, У2.авто, 'у-2-авто', 'кристаллы');
+            рисоватьУлучшения(2, У2.синергия, 'у-2-синергия', 'кристаллы');
             
-            for (const кат in УЛУЧШЕНИЯ) {
-                const конт = document.getElementById('улучшения-' + кат);
-                конт.innerHTML = '';
-                
-                УЛУЧШЕНИЯ[кат].forEach(у => {
-                    const цена = ценаУлучшения(у);
-                    const доступно = печеньки >= цена;
-                    
-                    const div = document.createElement('div');
-                    div.className = 'улучшение ' + (доступно ? 'доступно' : 'недоступно');
-                    div.innerHTML = `
-                        <div class="лево">
-                            <div class="назв">${у.назв}</div>
-                            <div class="опис">${у.опис}</div>
-                        </div>
-                        <div class="право">
-                            <div class="цена">🍪 ${формат(цена)}</div>
-                            <div class="куплено">Куплено: ${у.куплено}</div>
-                        </div>
-                    `;
-                    
-                    if (доступно) {
-                        div.addEventListener('click', function() {
-                            купить(кат, у);
-                        });
-                    }
-                    
-                    конт.appendChild(div);
-                });
+            // Проверка на открытие портала
+            if (!открытМир2 && печеньки >= 10000000) {
+                открытМир2 = true;
+                document.getElementById('btn-мир-2').disabled = false;
+                document.getElementById('btn-мир-2').style.opacity = '1';
+                показатьУведомление('Портал открыт!');
+            }
+            if (!открытМир2) {
+                document.getElementById('btn-мир-2').disabled = true;
+                document.getElementById('btn-мир-2').style.opacity = '0.5';
+                document.getElementById('btn-мир-2').textContent = '🔒 Портал (10 млн)';
             }
         }
-        
-        function купить(кат, у) {
-            const цена = ценаУлучшения(у);
-            if (печеньки < цена) return;
+
+        function рисоватьУлучшения(мир, список, ид, валюта) {
+            const конт = document.getElementById(ид);
+            if (!конт) return;
+            конт.innerHTML = '';
+            const баланс = валюта === 'печеньки' ? печеньки : кристаллы;
             
-            печеньки -= цена;
-            у.куплено++;
-            
-            if (у.тип === 'множитель-клик') множительКлик *= у.значение;
-            if (у.тип === 'множитель-авто') множительАвто *= у.значение;
-            
-            игратьПокупку();
-            обновить();
-            сохранить();
-        }
-        
-        // ==========================================
-        // КЛИК ПО ПЕЧЕНЬКЕ
-        // ==========================================
-        const печенька = document.getElementById('печенька');
-        const зона = document.querySelector('.печенька-зона');
-        
-        function добавитьПлюсик(x, y) {
-            const плюс = document.createElement('div');
-            плюс.className = 'плюсик';
-            плюс.textContent = '+' + формат(заКлик());
-            плюс.style.left = x + 'px';
-            плюс.style.top = y + 'px';
-            зона.appendChild(плюс);
-            setTimeout(() => плюс.remove(), 1000);
-        }
-        
-        печенька.addEventListener('click', function(e) {
-            const прибавка = заКлик();
-            печеньки += прибавка;
-            всегоПеченек += прибавка;
-            кликов++;
-            игратьКлик();
-            
-            // Плюсик у места клика
-            const rect = зона.getBoundingClientRect();
-            добавитьПлюсик(e.clientX - rect.left - 15, e.clientY - rect.top - 15);
-            
-            обновить();
-        });
-        
-        // ==========================================
-        // ВКЛАДКИ
-        // ==========================================
-        document.querySelectorAll('.вкладка').forEach(вкл => {
-            вкл.addEventListener('click', function() {
-                const кат = this.dataset.вкладка;
-                document.querySelectorAll('.вкладка').forEach(в => в.classList.remove('активна'));
-                document.querySelectorAll('.вкладка-содержимое').forEach(с => с.classList.remove('активна'));
-                this.classList.add('активна');
-                document.querySelector(`.вкладка-содержимое[data-вкладка="${кат}"]`).classList.add('активна');
+            список.forEach(у => {
+                const ц = ценаУ(у);
+                const дост = баланс >= ц;
+                const div = document.createElement('div');
+                div.className = 'улучшение ' + (дост ? 'доступно' : 'недоступно');
+                div.innerHTML = `<div><div class="назв">${у.назв}</div><div class="опис">${у.опис}</div></div>
+                                 <div class="цена">${валюта==='печеньки'?'🍪':'💎'} ${формат(ц)}<br><span style="font-size:10px;color:#718096;">Куплено: ${у.куплено}</span></div>`;
+                if (дост) div.onclick = () => купить(мир, у);
+                конт.appendChild(div);
             });
+        }
+
+        function купить(мир, у) {
+            const ц = ценаУ(у);
+            if (мир === 1) {
+                if (печеньки < ц) return;
+                печеньки -= ц;
+                у.куплено++;
+                if (у.тип === 'мк') множительКликМир1 *= у.зн;
+                if (у.тип === 'ма') множительАвтоМир1 *= у.зн;
+            } else {
+                if (кристаллы < ц) return;
+                кристаллы -= ц;
+                у.куплено++;
+                if (у.тип === 'печеньки') множительПеченькиОтКристаллов *= у.зн;
+            }
+            показатьУведомление(`Куплено: ${у.назв}`);
+            обновить();
+        }
+
+        // 6. КЛИКИ
+        document.getElementById('объект-клика').addEventListener('click', () => {
+            const с = Date.now();
+            if (с - последнийКлик1 < 50) return;
+            последнийКлик1 = с;
+            печеньки += заКлик1();
+            всегоКликов++;
+            обновить();
         });
-        
-        // ==========================================
-        // СБРОС ПРОГРЕССА (2 предупреждения)
-        // ==========================================
-        document.getElementById('кнопкаСброса').addEventListener('click', function() {
-            if (!confirm('⚠️ Первое предупреждение!\n\nТы уверен, что хочешь сбросить ВЕСЬ прогресс?')) return;
-            if (!confirm('⚠️⚠️ ВТОРОЕ предупреждение!\n\nЭто действие НЕЛЬЗЯ отменить. Всё будет потеряно. Точно сбросить?')) return;
-            
-            localStorage.removeItem(КЛЮЧ);
-            location.reload();
+
+        document.getElementById('объект-клика-2').addEventListener('click', () => {
+            const с = Date.now();
+            if (с - последнийКлик2 < 50) return;
+            последнийКлик2 = с;
+            кристаллы += заКлик2();
+            обновить();
         });
-        
-        // ==========================================
-        // АВТОСОХРАНЕНИЕ
-        // ==========================================
-        setInterval(сохранить, 3000);
-        window.addEventListener('beforeunload', сохранить);
-        
-        // ==========================================
-        // АВТОДОХОД
-        // ==========================================
-        let накопление = 0;
-        setInterval(function() {
-            const прибавка = вСекунду();
-            if (прибавка > 0) {
-                печеньки += прибавка / 10;
-                всегоПеченек += прибавка / 10;
+
+        // 7. АВТОДОХОД
+        setInterval(() => {
+            const п1 = вСекунду1();
+            const п2 = вСекунду2();
+            if (п1 > 0 || п2 > 0) {
+                печеньки += п1;
+                кристаллы += п2;
                 обновить();
             }
-        }, 100);
-        
-        // ==========================================
-        // СТАРТ
-        // ==========================================
-        загрузить();
+        }, 1000);
+
+        // 8. ИНТЕРФЕЙС
+        document.getElementById('btn-мир-1').onclick = () => {
+            document.getElementById('мир-1').style.display = 'block';
+            document.getElementById('мир-2').style.display = 'none';
+            document.getElementById('btn-мир-1').className = 'мир-кнопка активен-1';
+            document.getElementById('btn-мир-2').className = 'мир-кнопка';
+        };
+
+        document.getElementById('btn-мир-2').onclick = () => {
+            if (!открытМир2) return;
+            document.getElementById('мир-1').style.display = 'none';
+            document.getElementById('мир-2').style.display = 'block';
+            document.getElementById('btn-мир-1').className = 'мир-кнопка';
+            document.getElementById('btn-мир-2').className = 'мир-кнопка активен-2';
+        };
+
+        document.querySelectorAll('.вкладка[data-мир]').forEach(вкл => {
+            вкл.addEventListener('click', function() {
+                const м = this.dataset.мир;
+                const к = this.dataset.вкладка;
+                document.querySelectorAll(`.вкладка[data-мир="${м}"]`).forEach(в => в.classList.remove('активна'));
+                document.querySelectorAll(`.вкладка-содержимое[data-мир="${м}"]`).forEach(с => с.classList.remove('активна'));
+                this.classList.add('активна');
+                document.querySelector(`.вкладка-содержимое[data-мир="${м}"][data-вкладка="${к}"]`).classList.add('активна');
+            });
+        });
+
+        // 9. УВЕДОМЛЕНИЯ
+        let тм;
+        function показатьУведомление(т) {
+            const у = document.getElementById('уведомление');
+            у.textContent = т;
+            у.classList.add('активно');
+            clearTimeout(тм);
+            тм = setTimeout(() => у.classList.remove('активно'), 2000);
+        }
+
+        // 10. СОХРАНЕНИЕ
+        const модалка = document.getElementById('модалка');
+        const мТекст = document.getElementById('модалка-текст');
+        const мЗаголовок = document.getElementById('модалка-заголовок');
+        const мДействие = document.getElementById('модалка-действие');
+        let режим = 'сохр';
+
+        document.getElementById('btn-сохранить').onclick = () => {
+            режим = 'сохр';
+            мЗаголовок.textContent = 'Код сохранения';
+            const д = {
+                п: Math.floor(печеньки), к: Math.floor(кристаллы), вк: всегоКликов,
+                м1: множительКликМир1, м2: множительАвтоМир1,
+                м3: множительКристаллДобыча, м4: множительПеченькиОтКристаллов,
+                о: открытМир2 ? 1 : 0,
+                у1: { р: У1.ручная.map(x=>x.куплено), а: У1.авто.map(x=>x.куплено), с: У1.синергия.map(x=>x.куплено) },
+                у2: { р: У2.ручная.map(x=>x.куплено), а: У2.авто.map(x=>x.куплено), с: У2.синергия.map(x=>x.куплено) }
+            };
+            const стр = JSON.stringify(д);
+            const подп = хэш(стр + СЕКРЕТ);
+            мТекст.value = btoa(unescape(encodeURIComponent(стр))) + '.' + подп;
+            мДействие.textContent = 'Скопировать';
+            модалка.classList.add('активна');
+        };
+
+        document.getElementById('btn-загрузить').onclick = () => {
+            режим = 'загр';
+            мЗаголовок.textContent = 'Вставь код';
+            мТекст.value = '';
+            мДействие.textContent = 'Загрузить';
+            модалка.classList.add('активна');
+        };
+
+        мДействие.onclick = () => {
+            if (режим === 'сохр') {
+                мТекст.select();
+                document.execCommand('copy');
+                показатьУведомление('Скопировано!');
+                модалка.classList.remove('активна');
+            } else {
+                try {
+                    const ч = мТекст.value.trim().split('.');
+                    if (ч.length !== 2) throw new Error('Формат');
+                    const стр = decodeURIComponent(escape(atob(ч[0])));
+                    if (хэш(стр + СЕКРЕТ) !== ч[1]) throw new Error('Подпись не совпадает! Сейв взломан.');
+                    const д = JSON.parse(стр);
+                    
+                    печеньки = д.п; кристаллы = д.к; всегоКликов = д.вк;
+                    множительКликМир1 = д.м1; множительАвтоМир1 = д.м2;
+                    множительКристаллДобыча = д.м3; множительПеченькиОтКристаллов = д.м4;
+                    открытМир2 = д.о === 1;
+                    
+                    д.у1.р.forEach((v,i)=>У1.ручная[i].куплено=v);
+                    д.у1.а.forEach((v,i)=>У1.авто[i].куплено=v);
+                    д.у1.с.forEach((v,i)=>У1.синергия[i].куплено=v);
+                    д.у2.р.forEach((v,i)=>У2.ручная[i].куплено=v);
+                    д.у2.а.forEach((v,i)=>У2.авто[i].куплено=v);
+                    д.у2.с.forEach((v,i)=>У2.синергия[i].куплено=v);
+                    
+                    обновить();
+                    показатьУведомление('Загружено!');
+                    модалка.classList.remove('активна');
+                } catch(e) { alert('❌ ' + e.message); }
+            }
+        };
+
+        document.getElementById('модалка-закрыть').onclick = () => модалка.classList.remove('активна');
+        document.getElementById('кнопкаСброса').onclick = () => {
+            if (confirm('Сбросить ВСЁ?')) location.reload();
+        };
+
         обновить();
     </script>
 </body>
