@@ -60,23 +60,25 @@
         .уведомление { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #38a169; color: white; padding: 10px 20px; border-radius: 20px; font-weight: 600; z-index: 1000; opacity: 0; transition: opacity 0.3s; pointer-events: none; }
         .уведомление.активно { opacity: 1; }
 
-        /* Стили для Капчи */
+        /* КАПЧА */
         .капча-фон {
-            position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 2000;
-            display: none; justify-content: center; align-items: center;
+            position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 2000;
+            display: none; justify-content: center; align-items: center; flex-direction: column;
         }
         .капча-фон.активна { display: flex; }
-        .капча-окно {
-            background: #1a202c; border: 2px solid #e53e3e; border-radius: 12px;
-            padding: 20px; text-align: center; max-width: 300px; width: 90%;
+        
+        .капча-вопрос {
+            color: white; font-size: 32px; font-weight: 700; margin-bottom: 20px; text-align: center;
+            background: #1a202c; padding: 20px 40px; border-radius: 12px; border: 2px solid #e53e3e;
         }
-        .капча-окно h2 { color: #e53e3e; margin-bottom: 10px; border: none; padding: 0; font-size: 20px; }
-        .капча-окно p { color: #a0aec0; font-size: 14px; margin-bottom: 20px; }
-        .капча-кнопка {
-            background: #38a169; color: white; border: none; padding: 12px 24px;
-            border-radius: 8px; font-size: 16px; font-weight: 700; cursor: pointer; width: 100%;
+        
+        .капча-ответ {
+            position: fixed; padding: 15px 30px; font-size: 24px; font-weight: 700;
+            background: #38a169; color: white; border: none; border-radius: 12px;
+            cursor: pointer; transition: all 0.2s; z-index: 2001;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.5);
         }
-        .капча-кнопка:hover { background: #2f855a; }
+        .капча-ответ:hover { background: #2f855a; }
     </style>
 </head>
 <body>
@@ -172,16 +174,12 @@
 
     <!-- Окно Капчи -->
     <div class="капча-фон" id="капча-фон">
-        <div class="капча-окно">
-            <h2>🤖 Обнаружен бот!</h2>
-            <p>Слишком много кликов. Докажи, что ты человек.</p>
-            <button class="капча-кнопка" id="капча-кнопка">Я человек!</button>
-        </div>
+        <div class="капча-вопрос" id="капча-вопрос">2 + 2 = ?</div>
     </div>
 
     <script>
-        // 1. СЕКРЕТНЫЙ КЛЮЧ (ИЗМЕНЁН, ЧТОБЫ СТАРЫЕ СЕЙВЫ НЕ РАБОТАЛИ)
-        const _k = [71, 51, 110, 48, 95, 67, 108, 49, 99, 107, 95, 87, 52, 114, 95, 50, 48, 50, 54, 95, 53, 48]; // ..._50
+        // 1. СЕКРЕТНЫЙ КЛЮЧ
+        const _k = [71, 51, 110, 48, 95, 67, 108, 49, 99, 107, 95, 87, 52, 114, 95, 50, 48, 50, 54, 95, 53, 48];
         const СЕКРЕТ = _k.map(c => String.fromCharCode(c)).join('');
 
         function хэш(строка) {
@@ -197,7 +195,6 @@
         let печеньки = 0;
         let всегоКликов = 0;
         
-        // Защита от кликеров
         let историяКликов = [];
         let подозрительныеКлики = 0;
         let заблокирован = false;
@@ -208,7 +205,7 @@
         let курс_1_к_2 = 1000; 
         let курс_2_к_3 = 1000000;
 
-        // 4. УЛУЧШЕНИЯ
+        // 4. УЛУЧШЕНИЯ (без изменений)
         const У1 = {
             ручная: [
                 { назв: 'Крепкий палец', опис: '+1', база: 15, шаг: 15, бонус: 1, куплено: 0 },
@@ -271,7 +268,6 @@
         let бонус1 = 1; 
         let бонус2 = 1; 
 
-        // 5. ЛОГИКА
         function формат(ч) {
             if (!isFinite(ч)) return 'БЕСКОНЕЧНОСТЬ НЕ ПРЕДЕЛ!!!';
             if (ч < 1000) {
@@ -286,7 +282,6 @@
         }
 
         function ценаУ(у) { return у.база + (у.куплено * у.шаг); }
-
         function заКлик1() {
             let б = 1;
             У1.ручная.forEach(у => б += у.бонус * у.куплено);
@@ -298,7 +293,6 @@
             return б * множительАвтоМир1 * бонус1;
         }
 
-        // 6. ОБНОВЛЕНИЕ
         function обновить() {
             document.getElementById('счёт-1').textContent = формат(печеньки);
             document.getElementById('сек-1').textContent = формат(вСекунду1());
@@ -348,7 +342,6 @@
                 
                 const div = document.createElement('div');
                 div.className = 'улучшение ' + (дост ? 'доступно' : 'недоступно');
-                
                 const иконка = валюта === 'печеньки' ? '🍪' : (валюта === 'кристаллы' ? '💎' : '🥟');
                 
                 div.innerHTML = `<div><div class="назв">${у.назв}</div><div class="опис">${у.опис}</div></div>
@@ -379,7 +372,7 @@
             сохранитьВПамять();
         }
 
-        // 7. ЖЁСТКИЙ АНТИКЛИКЕР
+        // 7. АНТИКЛИКЕР И НОВАЯ КАПЧА
         function создатьЦифру(x, y, текст) {
             const div = document.createElement('div');
             div.className = 'вылетающая-цифра';
@@ -391,52 +384,35 @@
         }
 
         document.getElementById('объект-клика').addEventListener('click', (e) => {
-            // 1. Проверка на isTrusted (если клик сгенерирован кодом — отмена)
-            if (!e.isTrusted) {
-                показатьУведомление('🚫 Фальшивый клик!');
-                return;
-            }
-
-            if (заблокирован) return; // Если капча висит — блокируем
+            if (!e.isTrusted) return;
+            if (заблокирован) return;
 
             const сейчас = Date.now();
             
-            // 2. Слишком быстро (быстрее 50 мс между кликами)
             if (сейчас - последнийКлик < 50) {
                 подозрительныеКлики++;
-                if (подозрительныеКлики > 10) {
-                    показатьКапчу();
-                }
+                if (подозрительныеКлики > 10) показатьКапчу();
                 return;
             }
             последнийКлик = сейчас;
 
-            // 3. Проверка на идеально ровный интервал (боты кликают через равные промежутки)
             историяКликов.push(сейчас);
             if (историяКликов.length > 1) {
                 const разница = сейчас - историяКликов[историяКликов.length - 2];
-                if (разница === 50 || разница === 100 || разница === 10) {
-                    подозрительныеКлики += 2;
-                }
+                if (разница === 50 || разница === 100 || разница === 10) подозрительныеКлики += 2;
             }
 
-            // 4. Очистка старой истории
             while (историяКликов.length > 0 && историяКликов[0] < сейчас - 1000) {
                 историяКликов.shift();
             }
 
-            // 5. Если больше 15 кликов в секунду
-            if (историяКликов.length > 15) {
-                подозрительныеКлики++;
-            }
+            if (историяКликов.length > 15) подозрительныеКлики++;
 
-            // 6. Если накопилось много подозрений — показываем капчу
             if (подозрительныеКлики >= 15) {
                 показатьКапчу();
                 return;
             }
 
-            // Если всё ок — засчитываем клик
             const прибавка = заКлик1();
             печеньки += прибавка;
             всегоКликов++;
@@ -447,19 +423,99 @@
             обновить();
         });
 
-        // Капча
+        // СЛОЖНАЯ КАПЧА (3 вопроса, прыгающие кнопки)
+        let текущийВопрос = 0;
+        let правильныеОтветы = [];
+        
         function показатьКапчу() {
             заблокирован = true;
             подозрительныеКлики = 0;
+            историяКликов = [];
+            текущийВопрос = 0;
+            правильныеОтветы = [];
+            
             document.getElementById('капча-фон').classList.add('активна');
+            сгенерироватьВопрос();
         }
 
-        document.getElementById('капча-кнопка').onclick = () => {
-            заблокирован = false;
-            историяКликов = [];
-            document.getElementById('капча-фон').classList.remove('активна');
-            показатьУведомление('Проверка пройдена!');
-        };
+        function сгенерироватьВопрос() {
+            if (текущийВопрос >= 3) {
+                // Все 3 вопроса пройдены
+                заблокирован = false;
+                document.getElementById('капча-фон').classList.remove('активна');
+                // Удаляем все кнопки
+                document.querySelectorAll('.капча-ответ').forEach(b => b.remove());
+                показатьУведомление('Проверка пройдена! Ты человек.');
+                return;
+            }
+
+            // Удаляем старые кнопки
+            document.querySelectorAll('.капча-ответ').forEach(b => b.remove());
+
+            const a = Math.floor(Math.random() * 10) + 1;
+            const b = Math.floor(Math.random() * 10) + 1;
+            const isPlus = Math.random() > 0.5;
+            
+            let вопрос, ответ;
+            if (isPlus) {
+                вопрос = `${a} + ${b} = ?`;
+                ответ = a + b;
+            } else {
+                if (a < b) { вопрос = `${b} - ${a} = ?`; ответ = b - a; }
+                else { вопрос = `${a} - ${b} = ?`; ответ = a - b; }
+            }
+
+            document.getElementById('капча-вопрос').textContent = `Вопрос ${текущийВопрос + 1} из 3: ${вопрос}`;
+
+            // Создаём 3 кнопки (1 правильная, 2 неправильные)
+            const варианты = [ответ];
+            while (варианты.length < 3) {
+                const ложь = ответ + Math.floor(Math.random() * 10) - 5;
+                if (ложь !== ответ && ложь >= 0 && !варианты.includes(ложь)) {
+                    варианты.push(ложь);
+                }
+            }
+            варианты.sort(() => Math.random() - 0.5);
+
+            варианты.forEach(число => {
+                const btn = document.createElement('button');
+                btn.className = 'капча-ответ';
+                btn.textContent = число;
+                
+                // Случайная позиция на экране
+                переместитьКнопку(btn);
+
+                // При клике — проверка
+                btn.onclick = (e) => {
+                    if (!e.isTrusted) return; // Защита от ботов
+                    if (число === ответ) {
+                        текущийВопрос++;
+                        сгенерироватьВопрос();
+                    } else {
+                        // Неправильно — обнуляем прогресс и меняем вопрос
+                        показатьУведомление('❌ Неправильно! Начинаем заново.');
+                        текущийВопрос = 0;
+                        сгенерироватьВопрос();
+                    }
+                };
+
+                // При наведении мыши (или тапе) — кнопка убегает
+                btn.addEventListener('mouseenter', () => {
+                    переместитьКнопку(btn);
+                });
+
+                document.body.appendChild(btn);
+            });
+        }
+
+        function переместитьКнопку(btn) {
+            const maxX = window.innerWidth - 120;
+            const maxY = window.innerHeight - 80;
+            const x = Math.max(10, Math.random() * maxX);
+            const y = Math.max(10, Math.random() * maxY);
+            btn.style.left = x + 'px';
+            btn.style.top = y + 'px';
+        }
 
         // 8. АВТОДОХОД
         setInterval(() => {
@@ -510,7 +566,6 @@
             });
         });
 
-        // 10. УВЕДОМЛЕНИЯ
         let тм;
         function показатьУведомление(т) {
             const у = document.getElementById('уведомление');
@@ -520,8 +575,8 @@
             тм = setTimeout(() => у.classList.remove('активно'), 2000);
         }
 
-        // 11. СОХРАНЕНИЕ (НОВЫЙ ФОРМАТ)
-        const КЛЮЧ_СЕЙВА = 'кликер_5_0_сейв'; // Изменён ключ!
+        // 11. СОХРАНЕНИЕ
+        const КЛЮЧ_СЕЙВА = 'кликер_5_0_сейв';
 
         function собратьДанные() {
             return {
@@ -588,7 +643,6 @@
             const reader = new FileReader();
             reader.onload = (ev) => {
                 try {
-                    // Очищаем от невидимых символов
                     const очищенный = ev.target.result.replace(/[^\x20-\x7E]/g, '').trim();
                     const ч = очищенный.split('.');
                     
