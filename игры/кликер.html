@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Кликер 4.0 - Три Мира</title>
+    <title>Кликер 5.0 - Античит</title>
     <link rel="icon" href="../ico.png">
     <link rel="stylesheet" href="../style.css">
     <style>
@@ -59,15 +59,33 @@
 
         .уведомление { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #38a169; color: white; padding: 10px 20px; border-radius: 20px; font-weight: 600; z-index: 1000; opacity: 0; transition: opacity 0.3s; pointer-events: none; }
         .уведомление.активно { opacity: 1; }
+
+        /* Стили для Капчи */
+        .капча-фон {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 2000;
+            display: none; justify-content: center; align-items: center;
+        }
+        .капча-фон.активна { display: flex; }
+        .капча-окно {
+            background: #1a202c; border: 2px solid #e53e3e; border-radius: 12px;
+            padding: 20px; text-align: center; max-width: 300px; width: 90%;
+        }
+        .капча-окно h2 { color: #e53e3e; margin-bottom: 10px; border: none; padding: 0; font-size: 20px; }
+        .капча-окно p { color: #a0aec0; font-size: 14px; margin-bottom: 20px; }
+        .капча-кнопка {
+            background: #38a169; color: white; border: none; padding: 12px 24px;
+            border-radius: 8px; font-size: 16px; font-weight: 700; cursor: pointer; width: 100%;
+        }
+        .капча-кнопка:hover { background: #2f855a; }
     </style>
 </head>
 <body>
     <div class="header">
         <a href="../игры.html" class="back-btn">← Назад</a>
-        <span class="badge purple">🖱️ Кликер 4.0</span>
+        <span class="badge purple">🖱️ Кликер 5.0</span>
     </div>
 
-    <h1>🍪 Кликер 4.0</h1>
+    <h1>🍪 Кликер 5.0 (Античит)</h1>
 
     <div class="мир-переключатель">
         <button class="мир-кнопка активен-1" id="btn-мир-1">🍪 Мир 1</button>
@@ -152,9 +170,18 @@
     <button class="кнопка-сброс" id="кнопкаСброса">🗑️ Полный сброс</button>
     <div class="уведомление" id="уведомление"></div>
 
+    <!-- Окно Капчи -->
+    <div class="капча-фон" id="капча-фон">
+        <div class="капча-окно">
+            <h2>🤖 Обнаружен бот!</h2>
+            <p>Слишком много кликов. Докажи, что ты человек.</p>
+            <button class="капча-кнопка" id="капча-кнопка">Я человек!</button>
+        </div>
+    </div>
+
     <script>
-        // 1. СЕКРЕТНЫЙ КЛЮЧ
-        const _k = [71, 51, 110, 48, 95, 67, 108, 49, 99, 107, 95, 87, 52, 114, 95, 50, 48, 50, 54]; 
+        // 1. СЕКРЕТНЫЙ КЛЮЧ (ИЗМЕНЁН, ЧТОБЫ СТАРЫЕ СЕЙВЫ НЕ РАБОТАЛИ)
+        const _k = [71, 51, 110, 48, 95, 67, 108, 49, 99, 107, 95, 87, 52, 114, 95, 50, 48, 50, 54, 95, 53, 48]; // ..._50
         const СЕКРЕТ = _k.map(c => String.fromCharCode(c)).join('');
 
         function хэш(строка) {
@@ -169,17 +196,19 @@
         // 2. СОСТОЯНИЕ
         let печеньки = 0;
         let всегоКликов = 0;
-        let последнийКлик = 0;
+        
+        // Защита от кликеров
         let историяКликов = [];
-        const МАКС_КЛИКОВ_В_СЕК = 15;
+        let подозрительныеКлики = 0;
+        let заблокирован = false;
+        let последнийКлик = 0;
 
         let множительКликМир1 = 1;
         let множительАвтоМир1 = 1;
-        
         let курс_1_к_2 = 1000; 
         let курс_2_к_3 = 1000000;
 
-        // 4. УЛУЧШЕНИЯ (ЦЕНЫ В ПЕЧЕНЬКАХ)
+        // 4. УЛУЧШЕНИЯ
         const У1 = {
             ручная: [
                 { назв: 'Крепкий палец', опис: '+1', база: 15, шаг: 15, бонус: 1, куплено: 0 },
@@ -235,7 +264,7 @@
             синергия: [
                 { назв: 'Пищевая цепочка', опис: '×2 к 💎', база: 5000000000, шаг: 0, тип: 'бонус2', зн: 2, куплено: 0, макс: 1 },
                 { назв: 'Космический обед', опис: '×5 к 💎', база: 500000000000, шаг: 0, тип: 'бонус2', зн: 5, куплено: 0, макс: 1 },
-                { назв: 'Творец Вселенной', опис: '×2 ко всему (Мир 1)', база: 10000000000000, шаг: 0, тип: 'бонус1', зн: 2, куплено: 0, макс: 1 }
+                { назв: 'Творец Вселенной', опис: '×2 ко всему', база: 10000000000000, шаг: 0, тип: 'бонус1', зн: 2, куплено: 0, макс: 1 }
             ]
         };
 
@@ -298,20 +327,8 @@
             рисоватьУлучшения(3, У3.авто, 'у-3-авто', 'пельмени');
             рисоватьУлучшения(3, У3.синергия, 'у-3-синергия', 'пельмени');
 
-            if (печеньки >= 1000000) {
-                document.getElementById('btn-мир-2').disabled = false;
-                document.getElementById('btn-мир-2').style.opacity = '1';
-            } else {
-                document.getElementById('btn-мир-2').disabled = true;
-                document.getElementById('btn-мир-2').style.opacity = '0.5';
-            }
-            if (печеньки >= 1000000000) {
-                document.getElementById('btn-мир-3').disabled = false;
-                document.getElementById('btn-мир-3').style.opacity = '1';
-            } else {
-                document.getElementById('btn-мир-3').disabled = true;
-                document.getElementById('btn-мир-3').style.opacity = '0.5';
-            }
+            if (печеньки >= 1000000) document.getElementById('btn-мир-2').disabled = false;
+            if (печеньки >= 1000000000) document.getElementById('btn-мир-3').disabled = false;
         }
 
         function рисоватьУлучшения(мир, список, ид, валюта) {
@@ -323,7 +340,6 @@
                 if (у.макс && у.куплено >= у.макс) return;
                 
                 const ценаВПеченьках = ценаУ(у);
-                
                 let отображаемаяЦена = ценаВПеченьках;
                 if (валюта === 'кристаллы') отображаемаяЦена = ценаВПеченьках / курс_1_к_2;
                 if (валюта === 'пельмени') отображаемаяЦена = ценаВПеченьках / (курс_1_к_2 * курс_2_к_3);
@@ -341,18 +357,14 @@
                 if (дост) div.onclick = () => купить(мир, у);
                 конт.appendChild(div);
             });
-            if (конт.innerHTML === '') конт.innerHTML = '<div style="text-align:center;color:#718096;padding:20px;">Все улучшения куплены!</div>';
+            if (конт.innerHTML === '') конт.innerHTML = '<div style="text-align:center;color:#718096;padding:20px;">Все куплено!</div>';
         }
 
         function купить(мир, у) {
-            const ценаВПеченьках = ценаУ(у);
+            const цена = ценаУ(у);
+            if (печеньки < цена) return;
             
-            if (печеньки < ценаВПеченьках) {
-                показатьУведомление('Не хватает печенек!');
-                return;
-            }
-            
-            печеньки -= ценаВПеченьках;
+            печеньки -= цена;
             у.куплено++;
             
             if (у.тип === 'мк') множительКликМир1 *= у.зн;
@@ -367,20 +379,7 @@
             сохранитьВПамять();
         }
 
-        // 7. КЛИКИ
-        function проверитьАнтикликер() {
-            const сейчас = Date.now();
-            историяКликов.push(сейчас);
-            while (историяКликов.length > 0 && историяКликов[0] < сейчас - 1000) {
-                историяКликов.shift();
-            }
-            if (историяКликов.length > МАКС_КЛИКОВ_В_СЕК) {
-                показатьУведомление('🚫 Слишком быстро! (Автокликер?)');
-                return false;
-            }
-            return true;
-        }
-
+        // 7. ЖЁСТКИЙ АНТИКЛИКЕР
         function создатьЦифру(x, y, текст) {
             const div = document.createElement('div');
             div.className = 'вылетающая-цифра';
@@ -388,28 +387,79 @@
             div.style.left = x + 'px';
             div.style.top = y + 'px';
             document.getElementById('зона-клика').appendChild(div);
-            
             setTimeout(() => div.remove(), 800);
         }
 
         document.getElementById('объект-клика').addEventListener('click', (e) => {
-            const с = Date.now();
-            if (с - последнийКлик < 60) return;
-            if (!проверитьАнтикликер()) return;
-            последнийКлик = с;
+            // 1. Проверка на isTrusted (если клик сгенерирован кодом — отмена)
+            if (!e.isTrusted) {
+                показатьУведомление('🚫 Фальшивый клик!');
+                return;
+            }
+
+            if (заблокирован) return; // Если капча висит — блокируем
+
+            const сейчас = Date.now();
             
+            // 2. Слишком быстро (быстрее 50 мс между кликами)
+            if (сейчас - последнийКлик < 50) {
+                подозрительныеКлики++;
+                if (подозрительныеКлики > 10) {
+                    показатьКапчу();
+                }
+                return;
+            }
+            последнийКлик = сейчас;
+
+            // 3. Проверка на идеально ровный интервал (боты кликают через равные промежутки)
+            историяКликов.push(сейчас);
+            if (историяКликов.length > 1) {
+                const разница = сейчас - историяКликов[историяКликов.length - 2];
+                if (разница === 50 || разница === 100 || разница === 10) {
+                    подозрительныеКлики += 2;
+                }
+            }
+
+            // 4. Очистка старой истории
+            while (историяКликов.length > 0 && историяКликов[0] < сейчас - 1000) {
+                историяКликов.shift();
+            }
+
+            // 5. Если больше 15 кликов в секунду
+            if (историяКликов.length > 15) {
+                подозрительныеКлики++;
+            }
+
+            // 6. Если накопилось много подозрений — показываем капчу
+            if (подозрительныеКлики >= 15) {
+                показатьКапчу();
+                return;
+            }
+
+            // Если всё ок — засчитываем клик
             const прибавка = заКлик1();
             печеньки += прибавка;
             всегоКликов++;
 
             const rect = document.getElementById('зона-клика').getBoundingClientRect();
-            const x = e.clientX - rect.left;
-            const y = e.clientY - rect.top;
-            
-            создатьЦифру(x - 20, y - 20, формат(прибавка));
+            создатьЦифру(e.clientX - rect.left - 20, e.clientY - rect.top - 20, формат(прибавка));
 
             обновить();
         });
+
+        // Капча
+        function показатьКапчу() {
+            заблокирован = true;
+            подозрительныеКлики = 0;
+            document.getElementById('капча-фон').classList.add('активна');
+        }
+
+        document.getElementById('капча-кнопка').onclick = () => {
+            заблокирован = false;
+            историяКликов = [];
+            document.getElementById('капча-фон').classList.remove('активна');
+            показатьУведомление('Проверка пройдена!');
+        };
 
         // 8. АВТОДОХОД
         setInterval(() => {
@@ -470,7 +520,9 @@
             тм = setTimeout(() => у.classList.remove('активно'), 2000);
         }
 
-        // 11. СОХРАНЕНИЕ
+        // 11. СОХРАНЕНИЕ (НОВЫЙ ФОРМАТ)
+        const КЛЮЧ_СЕЙВА = 'кликер_5_0_сейв'; // Изменён ключ!
+
         function собратьДанные() {
             return {
                 п: печеньки, вк: всегоКликов,
@@ -487,7 +539,7 @@
             const д = собратьДанные();
             const стр = JSON.stringify(д);
             const подп = хэш(стр + СЕКРЕТ);
-            localStorage.setItem('кликер_4_0_сейв', btoa(unescape(encodeURIComponent(стр))) + '.' + подп);
+            localStorage.setItem(КЛЮЧ_СЕЙВА, btoa(unescape(encodeURIComponent(стр))) + '.' + подп);
         }
 
         function применитьДанные(д) {
@@ -525,7 +577,7 @@
             a.download = 'кликер_сейв.txt';
             a.click();
             URL.revokeObjectURL(url);
-            показатьУведомление('Файл сохранения скачан!');
+            показатьУведомление('Файл скачан!');
         };
 
         document.getElementById('btn-загрузить').onclick = () => document.getElementById('файл-загрузки').click();
@@ -536,13 +588,13 @@
             const reader = new FileReader();
             reader.onload = (ev) => {
                 try {
-                    // Очищаем от невидимых символов (BOM, переносы строк и т.д.)
+                    // Очищаем от невидимых символов
                     const очищенный = ev.target.result.replace(/[^\x20-\x7E]/g, '').trim();
                     const ч = очищенный.split('.');
                     
                     if (ч.length !== 2) throw new Error('Формат файла неверный');
                     const стр = decodeURIComponent(escape(atob(ч[0])));
-                    if (хэш(стр + СЕКРЕТ) !== ч[1]) throw new Error('Подпись не совпадает! Сейв взломан.');
+                    if (хэш(стр + СЕКРЕТ) !== ч[1]) throw new Error('Подпись не совпадает! (Возможно, сейв от старой версии)');
                     применитьДанные(JSON.parse(стр));
                     показатьУведомление('Прогресс загружен!');
                 } catch(e) { alert('❌ ' + e.message); }
@@ -552,14 +604,14 @@
 
         document.getElementById('кнопкаСброса').onclick = () => {
             if (confirm('Полный сброс?')) {
-                localStorage.removeItem('кликер_4_0_сейв');
+                localStorage.removeItem(КЛЮЧ_СЕЙВА);
                 location.reload();
             }
         };
 
         // СТАРТ
         (function() {
-            const сейв = localStorage.getItem('кликер_4_0_сейв');
+            const сейв = localStorage.getItem(КЛЮЧ_СЕЙВА);
             if (сейв) {
                 try {
                     const ч = сейв.split('.');
