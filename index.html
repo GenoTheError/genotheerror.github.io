@@ -69,6 +69,7 @@
                 <a href="графит.html" class="article-card" data-name="графит"><span class="name">Графит</span><span class="подпись">💎 Минерал · Углерод</span></a>
                 <a href="железо.html" class="article-card" data-name="железо"><span class="name">Железо</span><span class="подпись">⚙️ Металл · Основа стали</span></a>
                 <a href="каменный-уголь.html" class="article-card" data-name="каменный уголь"><span class="name">Каменный уголь</span><span class="подпись">🛢️ Горючее · Ископаемое</span></a>
+<a href="сталь.html" class="article-card" data-name="сталь"><span class="name">Сталь</span><span class="подпись">⚙️ Сплав · Железо+углерод</span></a>
             </div>
         </div>
 
@@ -91,6 +92,7 @@
     <span class="name">Шоколадные холмы</span>
     <span class="подпись">🍫 Филиппины</span>
 </a>
+<a href="плато-путорана.html" class="article-card" data-name="плато путорана"><span class="name">Плато Путорана</span><span class="подпись">🏔️ Горы · Водопады · Сибирь</span></a>
             </div>
         </div>
         
@@ -380,32 +382,49 @@
     </div>
 
     <script>
-        // Скролл
-        document.querySelectorAll('.article-card').forEach(function(card) {
-            card.addEventListener('click', function() {
-                sessionStorage.setItem('scrollPosition', window.scrollY);
-            });
-        });
-        window.addEventListener('beforeunload', function() {
+    // ==========================================
+    // ОТКЛЮЧАЕМ ВСТРОЕННОЕ ВОССТАНОВЛЕНИЕ СКРОЛЛА
+    // ==========================================
+    if ('scrollRestoration' in history) {
+        history.scrollRestoration = 'manual';
+    }
+    
+    // ==========================================
+    // ВОССТАНОВЛЕНИЕ ПОЗИЦИИ (как можно раньше)
+    // ==========================================
+    document.addEventListener('DOMContentLoaded', function() {
+        const savedScroll = sessionStorage.getItem('scrollPosition');
+        if (savedScroll) {
+            window.scrollTo(0, parseInt(savedScroll));
+            sessionStorage.removeItem('scrollPosition');
+        }
+    });
+    
+    // ==========================================
+    // ЗАПОМИНАЕМ ПОЗИЦИЮ ПРИ КЛИКЕ ПО КАРТОЧКЕ
+    // ==========================================
+    document.querySelectorAll('.article-card').forEach(function(card) {
+        card.addEventListener('click', function() {
             sessionStorage.setItem('scrollPosition', window.scrollY);
         });
-        window.addEventListener('load', function() {
-            const savedScroll = sessionStorage.getItem('scrollPosition');
-            if (savedScroll) {
-                setTimeout(function() {
-                    window.scrollTo(0, parseInt(savedScroll));
-                    sessionStorage.removeItem('scrollPosition');
-                }, 100);
-            }
-        });
-        
-        // Счётчик
-        function updateCount() {
-            const count = document.querySelectorAll('.article-card').length;
-            const el = document.getElementById('totalCount');
-            if (el) el.textContent = count;
-        }
-        updateCount();
-    </script>
+    });
+    
+    // ==========================================
+    // ЗАПОМИНАЕМ ПОЗИЦИЮ ПРИ УХОДЕ (мобильные)
+    // ==========================================
+    window.addEventListener('pagehide', function() {
+        sessionStorage.setItem('scrollPosition', window.scrollY);
+    });
+    
+    // ==========================================
+    // СЧЁТЧИК СТАТЕЙ
+    // ==========================================
+    function updateCount() {
+        const count = document.querySelectorAll('.article-card').length;
+        const el = document.getElementById('totalCount');
+        if (el) el.textContent = count;
+    }
+    updateCount();
+</script>
 </body>
 </html>

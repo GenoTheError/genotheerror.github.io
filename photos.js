@@ -6,7 +6,7 @@
 // 1. ИКОНКИ НА ГЛАВНОЙ
 // ==========================================
 (function() {
-    const ИКОНКИ_ФОРМАТЫ = ['jpeg', 'jpg', 'png', 'webp', 'gif'];
+    const ИКОНКИ_ФОРМАТЫ = ['jpg'];
     const ИКОНКИ_ПАПКА = 'иконки/';
     
     const ЭМОДЗИ_КАТЕГОРИЙ = {
@@ -59,6 +59,20 @@
     function обработатьКарточки() {
         const карточки = document.querySelectorAll('.article-card');
         
+        const observer = new IntersectionObserver(function(entries) {
+            entries.forEach(function(entry) {
+                if (!entry.isIntersecting) return;
+                const карточка = entry.target;
+                observer.unobserve(карточка);
+                
+                const box = карточка.querySelector('.card-icon');
+                if (!box) return;
+                const имя = получитьИмяИзHref(карточка.getAttribute('href'));
+                const эмодзи = box.textContent;
+                попробоватьИконку(имя, box, 0, эмодзи);
+            });
+        }, { rootMargin: '200px' });
+        
         карточки.forEach(function(карточка) {
             if (карточка.querySelector('.card-icon')) return;
             
@@ -94,7 +108,7 @@
             карточка.appendChild(box);
             карточка.appendChild(textBox);
             
-            попробоватьИконку(имя, box, 0, эмодзи);
+            observer.observe(карточка);
         });
     }
     
