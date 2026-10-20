@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Geometry Dash</title>
+    <link rel="icon" href="../ico.png">
+    <link rel="stylesheet" href="../style.css">
+    <style>
+        * { -webkit-tap-highlight-color: transparent; outline: none; user-select: none; }
+        
+        #игра {
+            position: relative;
+            width: 100%;
+            height: 60vh;
+            max-height: 500px;
+            background: linear-gradient(180deg, #1a202c 0%, #0f1419 100%);
+            border: 2px solid #4299e1;
+            border-radius: 12px;
+            overflow: hidden;
+            margin: 16px 0;
+            touch-action: none;
+        }
+        
+        #куб {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            background: #f6e05e;
+            border: 3px solid #d69e2e;
+            border-radius: 4px;
+            bottom: 40px;
+            left: 100px;
+            z-index: 10;
+        }
+        
+        .шип {
+            position: absolute;
+            width: 30px;
+            height: 40px;
+            background: #e53e3e;
+            clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
+            bottom: 40px;
+            z-index: 5;
+        }
+        
+        #земля {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 40px;
+            background: #2d3748;
+            border-top: 3px solid #4299e1;
+        }
+        
+        #счёт {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            color: #f6e05e;
+            font-size: 24px;
+            font-weight: 700;
+            z-index: 20;
+            text-shadow: 0 0 10px rgba(246, 224, 94, 0.5);
+        }
+        
+        #рекорд {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            color: #a0aec0;
+            font-size: 16px;
+            font-weight: 600;
+            z-index: 20;
+        }
+        
+        #сообщение {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: rgba(15, 20, 25, 0.9);
+            z-index: 30;
+            text-align: center;
+            padding: 20px;
+        }
+        #сообщение.скрыто { display: none; }
+        #сообщение h2 { color: #e53e3e; margin-bottom: 10px; border: none; }
+        #сообщение p { color: #a0aec0; margin-bottom: 20px; }
+        #сообщение button {
+            background: #4299e1;
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 20px;
+            font-size: 18px;
+            font-weight: 700;
+            cursor: pointer;
+            font-family: inherit;
+        }
+        #сообщение button:hover { background: #3182ce; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <a href="../игры.html" class="back-btn">← Назад</a>
+        <span class="badge purple">🎮 Аркада</span>
+    </div>
+    
+    <h1>🟨 Geometry Dash</h1>
+    
+    <div id="игра">
+        <div id="счёт">0</div>
+        <div id="рекорд">🏆 0</div>
+        <div id="земля"></div>
+        <div id="куб"></div>
+        <div id="сообщение" class="скрыто">
+            <h2>💥 Игра окончена</h2>
+            <p id="итог">Счёт: 0</p>
+            <button id="кнопкаСтарт">🔄 Заново</button>
+        </div>
+    </div>
+    
+    <p style="color: #718096; text-align: center; font-size: 14px; margin-top: 10px;">
+        Тапай / жми пробел, чтобы прыгнуть
+    </p>
+    
+    <script>
+        const игра = document.getElementById('игра');
+        const куб = document.getElementById('куб');
+        const счётЭл = document.getElementById('счёт');
+        const рекордЭл = document.getElementById('рекорд');
+        const сообщение = document.getElementById('сообщение');
+        const итог = document.getElementById('итог');
+        
+        let играИдёт = false;
+        let счёт = 0;
+        let рекорд = parseInt(localStorage.getItem('gd-рекорд') || '0');
+        let позицияY = 0; // 0 = на земле, отрицательные = в воздухе
+        let скоростьY = 0;
+        let шипы = [];
+        let кадры = 0;
+        let анимация;
+        
+        const ГРАВИТАЦИЯ = 0.9;
+        const СИЛА_ПРЫЖКА = -15;
+        const ЗЕМЛЯ_ВЫСОТА = 40;
+        const КУБ_РАЗМЕР = 40;
+        const КУБ_X = 100;
+        const СКОРОСТЬ_ИГРЫ = 6;
+        
+        рекордЭл.textContent = '🏆 ' + рекорд;
+        
+        function старт() {
+            играИдёт = true;
+            счёт = 0;
+            кадры = 0;
+            позицияY = 0;
+            скоростьY = 0;
+            шипы.forEach(ш => ш.element.remove());
+            шипы = [];
+            счётЭл.textContent = '0';
+            сообщение.classList.add('скрыто');
+            куб.style.bottom = ЗЕМЛЯ_ВЫСОТА + 'px';
+            
+            cancelAnimationFrame(анимация);
+            цикл();
+        }
+        
+        function прыгнуть() {
+            if (!играИдёт) return;
+            if (позицияY >= 0) {
+                скоростьY = СИЛА_ПРЫЖКА;
+            }
+        }
+        
+        игра.addEventListener('click', прыгнуть);
+        игра.addEventListener('touchstart', (e) => { e.preventDefault(); прыгнуть(); }, { passive: false });
+        document.addEventListener('keydown', (e) => {
+            if (e.code === 'Space') { e.preventDefault(); прыгнуть(); }
+        });
+        
+        document.getElementById('кнопкаСтарт').addEventListener('click', (e) => {
+            e.stopPropagation();
+            старт();
+        });
+        
+        function цикл() {
+            if (!играИдёт) return;
+            
+            // Физика
+            скоростьY += ГРАВИТАЦИЯ;
+            позицияY += скоростьY;
+            
+            if (позицияY > 0) {
+                позицияY = 0;
+                скоростьY = 0;
+            }
+            
+            куб.style.bottom = (ЗЕМЛЯ_ВЫСОТА - позицияY) + 'px';
+            
+            // Генерация шипов
+            кадры++;
+            if (кадры % 90 === 0) {
+                const шип = document.createElement('div');
+                шип.className = 'шип';
+                шип.style.left = игра.offsetWidth + 'px';
+                игра.appendChild(шип);
+                шипы.push({ x: игра.offsetWidth, element: шип, засчитан: false });
+            }
+            
+            // Движение шипов
+            шипы.forEach(ш => {
+                ш.x -= СКОРОСТЬ_ИГРЫ;
+                ш.element.style.left = ш.x + 'px';
+                
+                // Проверка столкновения
+                if (ш.x < КУБ_X + КУБ_РАЗМЕР && ш.x + 30 > КУБ_X) {
+                    if (позицияY > -30) {
+                        умереть();
+                    }
+                }
+                
+                // Счёт
+                if (!ш.засчитан && ш.x + 30 < КУБ_X) {
+                    ш.засчитан = true;
+                    счёт++;
+                    счётЭл.textContent = счёт;
+                }
+            });
+            
+            // Удаление ушедших
+            шипы = шипы.filter(ш => {
+                if (ш.x < -100) {
+                    ш.element.remove();
+                    return false;
+                }
+                return true;
+            });
+            
+            анимация = requestAnimationFrame(цикл);
+        }
+        
+        function умереть() {
+            играИдёт = false;
+            if (счёт > рекорд) {
+                рекорд = счёт;
+                localStorage.setItem('gd-рекорд', рекорд);
+                рекордЭл.textContent = '🏆 ' + рекорд;
+            }
+            итог.textContent = 'Счёт: ' + счёт + (счёт >= рекорд ? ' 🏆 Новый рекорд!' : '');
+            сообщение.classList.remove('скрыто');
+        }
+        
+        // Автостарт
+        setTimeout(старт, 100);
+    </script>
+</body>
+</html>
