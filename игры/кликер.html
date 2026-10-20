@@ -63,20 +63,56 @@
         /* КАПЧА */
         .капча-фон {
             position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 2000;
-            display: none; justify-content: center; align-items: center; flex-direction: column;
+            display: none; flex-direction: column;
         }
         .капча-фон.активна { display: flex; }
         
+        .капча-топ {
+            height: 25vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 10px;
+            pointer-events: none;
+        }
+
         .капча-вопрос {
-            color: white; font-size: 32px; font-weight: 700; margin-bottom: 20px; text-align: center;
-            background: #1a202c; padding: 20px 40px; border-radius: 12px; border: 2px solid #e53e3e;
+            color: white; 
+            font-size: 22px;
+            font-weight: 700; 
+            text-align: center;
+            background: #1a202c; 
+            padding: 15px 20px; 
+            border-radius: 12px; 
+            border: 2px solid #e53e3e;
+            white-space: nowrap;
+            max-width: 95vw;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
         
+        .капча-низ {
+            flex-grow: 1;
+            position: relative;
+            pointer-events: auto;
+            /* Отступ снизу, чтобы кнопки не липли к краю экрана */
+            margin-bottom: 50px; 
+        }
+
         .капча-ответ {
-            position: fixed; padding: 15px 30px; font-size: 24px; font-weight: 700;
-            background: #38a169; color: white; border: none; border-radius: 12px;
-            cursor: pointer; transition: all 0.2s; z-index: 2001;
+            position: absolute; 
+            padding: 15px 25px; 
+            font-size: 22px; 
+            font-weight: 700;
+            background: #38a169; 
+            color: white; 
+            border: none; 
+            border-radius: 12px;
+            cursor: pointer; 
+            transition: all 0.2s; 
             box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+            min-width: 70px;
+            text-align: center;
         }
         .капча-ответ:hover { background: #2f855a; }
     </style>
@@ -174,7 +210,10 @@
 
     <!-- Окно Капчи -->
     <div class="капча-фон" id="капча-фон">
-        <div class="капча-вопрос" id="капча-вопрос">2 + 2 = ?</div>
+        <div class="капча-топ">
+            <div class="капча-вопрос" id="капча-вопрос">2 + 2 = ?</div>
+        </div>
+        <div class="капча-низ" id="капча-низ"></div>
     </div>
 
     <script>
@@ -205,7 +244,7 @@
         let курс_1_к_2 = 1000; 
         let курс_2_к_3 = 1000000;
 
-        // 4. УЛУЧШЕНИЯ (без изменений)
+        // 4. УЛУЧШЕНИЯ
         const У1 = {
             ручная: [
                 { назв: 'Крепкий палец', опис: '+1', база: 15, шаг: 15, бонус: 1, куплено: 0 },
@@ -372,7 +411,7 @@
             сохранитьВПамять();
         }
 
-        // 7. АНТИКЛИКЕР И НОВАЯ КАПЧА
+        // 7. АНТИКЛИКЕР
         function создатьЦифру(x, y, текст) {
             const div = document.createElement('div');
             div.className = 'вылетающая-цифра';
@@ -423,16 +462,14 @@
             обновить();
         });
 
-        // СЛОЖНАЯ КАПЧА (3 вопроса, прыгающие кнопки)
+        // 8. КАПЧА
         let текущийВопрос = 0;
-        let правильныеОтветы = [];
-        
+
         function показатьКапчу() {
             заблокирован = true;
             подозрительныеКлики = 0;
             историяКликов = [];
             текущийВопрос = 0;
-            правильныеОтветы = [];
             
             document.getElementById('капча-фон').classList.add('активна');
             сгенерироватьВопрос();
@@ -440,16 +477,13 @@
 
         function сгенерироватьВопрос() {
             if (текущийВопрос >= 3) {
-                // Все 3 вопроса пройдены
                 заблокирован = false;
                 document.getElementById('капча-фон').classList.remove('активна');
-                // Удаляем все кнопки
                 document.querySelectorAll('.капча-ответ').forEach(b => b.remove());
                 показатьУведомление('Проверка пройдена! Ты человек.');
                 return;
             }
 
-            // Удаляем старые кнопки
             document.querySelectorAll('.капча-ответ').forEach(b => b.remove());
 
             const a = Math.floor(Math.random() * 10) + 1;
@@ -458,16 +492,15 @@
             
             let вопрос, ответ;
             if (isPlus) {
-                вопрос = `${a} + ${b} = ?`;
+                вопрос = `${a} + ${b}`;
                 ответ = a + b;
             } else {
-                if (a < b) { вопрос = `${b} - ${a} = ?`; ответ = b - a; }
-                else { вопрос = `${a} - ${b} = ?`; ответ = a - b; }
+                if (a < b) { вопрос = `${b} - ${a}`; ответ = b - a; }
+                else { вопрос = `${a} - ${b}`; ответ = a - b; }
             }
 
-            document.getElementById('капча-вопрос').textContent = `Вопрос ${текущийВопрос + 1} из 3: ${вопрос}`;
+            document.getElementById('капча-вопрос').textContent = `Вопрос ${текущийВопрос + 1}/3: ${вопрос} = ?`;
 
-            // Создаём 3 кнопки (1 правильная, 2 неправильные)
             const варианты = [ответ];
             while (варианты.length < 3) {
                 const ложь = ответ + Math.floor(Math.random() * 10) - 5;
@@ -477,47 +510,49 @@
             }
             варианты.sort(() => Math.random() - 0.5);
 
+            const контейнер = document.getElementById('капча-низ');
+
             варианты.forEach(число => {
                 const btn = document.createElement('button');
                 btn.className = 'капча-ответ';
                 btn.textContent = число;
                 
-                // Случайная позиция на экране
-                переместитьКнопку(btn);
+                переместитьКнопку(btn, контейнер);
 
-                // При клике — проверка
                 btn.onclick = (e) => {
-                    if (!e.isTrusted) return; // Защита от ботов
+                    if (!e.isTrusted) return;
                     if (число === ответ) {
                         текущийВопрос++;
                         сгенерироватьВопрос();
                     } else {
-                        // Неправильно — обнуляем прогресс и меняем вопрос
                         показатьУведомление('❌ Неправильно! Начинаем заново.');
                         текущийВопрос = 0;
                         сгенерироватьВопрос();
                     }
                 };
 
-                // При наведении мыши (или тапе) — кнопка убегает
                 btn.addEventListener('mouseenter', () => {
-                    переместитьКнопку(btn);
+                    переместитьКнопку(btn, контейнер);
                 });
 
-                document.body.appendChild(btn);
+                контейнер.appendChild(btn);
             });
         }
 
-        function переместитьКнопку(btn) {
-            const maxX = window.innerWidth - 120;
-            const maxY = window.innerHeight - 80;
+        function переместитьКнопку(btn, контейнер) {
+            const rect = контейнер.getBoundingClientRect();
+            // Чтобы кнопка не вылезала за пределы
+            const maxX = rect.width - 100;
+            const maxY = rect.height - 60;
+            
             const x = Math.max(10, Math.random() * maxX);
             const y = Math.max(10, Math.random() * maxY);
+            
             btn.style.left = x + 'px';
             btn.style.top = y + 'px';
         }
 
-        // 8. АВТОДОХОД
+        // 9. АВТОДОХОД
         setInterval(() => {
             печеньки += вСекунду1();
             обновить();
@@ -525,7 +560,7 @@
 
         setInterval(сохранитьВПамять, 10000);
 
-        // 9. ИНТЕРФЕЙС
+        // 10. ИНТЕРФЕЙС
         document.getElementById('btn-мир-1').onclick = () => {
             document.getElementById('мир-1').style.display = 'block';
             document.getElementById('мир-2').style.display = 'none';
