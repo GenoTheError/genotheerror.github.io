@@ -9,7 +9,7 @@
     <style>
         .счёт-зона {
             display: grid;
-            grid-template-columns: 1fr 1fr;
+            grid-template-columns: 1fr 1fr 1fr;
             gap: 8px;
             margin: 12px 0;
         }
@@ -44,12 +44,13 @@
             -webkit-tap-highlight-color: transparent;
         }
         
-        /* Облака на фоне */
+        /* Облака */
         .облако {
             position: absolute;
             background: rgba(255, 255, 255, 0.05);
             border-radius: 50%;
             pointer-events: none;
+            will-change: left;
         }
         
         /* Земля */
@@ -75,13 +76,87 @@
             will-change: bottom;
         }
         
-        /* Препятствие */
+        /* Щит вокруг шарика */
+        .щит-кольцо {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 44px;
+            height: 44px;
+            margin-left: -22px;
+            margin-top: -22px;
+            border-radius: 50%;
+            border: 2px solid rgba(246, 224, 94, 0.9);
+            background: rgba(246, 224, 94, 0.15);
+            box-shadow: 0 0 20px rgba(246, 224, 94, 0.8), inset 0 0 12px rgba(246, 224, 94, 0.4);
+            pointer-events: none;
+            z-index: 12;
+            animation: пульс-щита 0.8s infinite alternate;
+        }
+        @keyframes пульс-щита {
+            from { box-shadow: 0 0 15px rgba(246, 224, 94, 0.6), inset 0 0 8px rgba(246, 224, 94, 0.3); }
+            to { box-shadow: 0 0 30px rgba(246, 224, 94, 1), inset 0 0 16px rgba(246, 224, 94, 0.6); }
+        }
+        
+        /* Препятствия */
         .препятствие {
             position: absolute;
-            background: linear-gradient(180deg, #e53e3e 0%, #c53030 100%);
             border-radius: 6px 6px 0 0;
             bottom: 40px;
             will-change: left;
+        }
+        .препятствие.обычное {
+            background: linear-gradient(180deg, #e53e3e 0%, #c53030 100%);
+        }
+        .препятствие.высокое {
+            background: linear-gradient(180deg, #d69e2e 0%, #975a16 100%);
+        }
+        .препятствие.широкое {
+            background: linear-gradient(180deg, #805ad5 0%, #553c9a 100%);
+        }
+        .препятствие.низкое {
+            background: linear-gradient(180deg, #dd6b20 0%, #9c4221 100%);
+            border-radius: 0;
+        }
+        
+        /* Кнопка супер-прыжка (на полу) */
+        .кнопка-супер {
+            position: absolute;
+            bottom: 40px;
+            width: 50px;
+            height: 12px;
+            background: linear-gradient(180deg, #48bb78 0%, #2f855a 100%);
+            border-radius: 6px 6px 0 0;
+            will-change: left;
+            box-shadow: 0 0 15px rgba(72, 187, 120, 0.8);
+            animation: пульс-кнопки 0.8s infinite alternate;
+        }
+        @keyframes пульс-кнопки {
+            from { box-shadow: 0 0 10px rgba(72, 187, 120, 0.5); }
+            to { box-shadow: 0 0 25px rgba(72, 187, 120, 1); }
+        }
+        .кнопка-супер.нажата {
+            background: linear-gradient(180deg, #9ae6b4 0%, #48bb78 100%);
+            transform: scaleY(0.3);
+            transform-origin: bottom;
+            animation: none;
+        }
+        
+        /* Бонус-звезда (парит в воздухе) */
+        .звезда {
+            position: absolute;
+            width: 24px;
+            height: 24px;
+            background: radial-gradient(circle, #f6e05e, #d69e2e);
+            border-radius: 50%;
+            box-shadow: 0 0 20px rgba(246, 224, 94, 0.9);
+            will-change: left, bottom;
+            z-index: 8;
+            animation: вращение-звезды 1s linear infinite;
+        }
+        @keyframes вращение-звезды {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
         }
         
         /* Частицы */
@@ -94,6 +169,9 @@
             pointer-events: none;
             z-index: 20;
         }
+        .частица.зелёная { background: #48bb78; }
+        .частица.жёлтая { background: #f6e05e; }
+        .частица.оранжевая { background: #ed8936; }
         
         /* Тряска */
         @keyframes тряска {
@@ -124,7 +202,7 @@
             animation: вспышка 0.3s;
         }
         
-        /* Кнопка старта / сообщение */
+        /* Сообщение */
         #сообщение {
             position: absolute;
             inset: 0;
@@ -200,6 +278,26 @@
             font-size: 13px;
             margin: 8px 0;
         }
+        
+        .легенда {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+            margin: 10px 0;
+            font-size: 12px;
+            color: #a0aec0;
+        }
+        .легенда span {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .легенда .цвет {
+            width: 12px;
+            height: 12px;
+            border-radius: 3px;
+        }
     </style>
 </head>
 <body>
@@ -221,6 +319,10 @@
             <div class="label">Рекорд</div>
             <div class="value" id="рекорд">0</div>
         </div>
+        <div class="счёт-блок">
+            <div class="label">Монеты</div>
+            <div class="value" id="монеты">0</div>
+        </div>
     </div>
     
     <div id="обёртка">
@@ -229,9 +331,18 @@
         <div id="шарик"></div>
         <div id="сообщение">
             <h2>⚪ Прыгающий шарик</h2>
-            <p>Тапай / жми пробел, чтобы прыгнуть<br>Уклоняйся от красных препятствий</p>
+            <p>Тапай / жми пробел, чтобы прыгнуть<br>Уклоняйся от препятствий, собирай звёзды<br>Зелёная кнопка подкинет тебя автоматически</p>
             <button class="старт-кнопка" id="кнопкаСтарт">▶️ Начать</button>
         </div>
+    </div>
+    
+    <div class="легенда">
+        <span><span class="цвет" style="background:#e53e3e"></span>Обычное</span>
+        <span><span class="цвет" style="background:#d69e2e"></span>Высокое</span>
+        <span><span class="цвет" style="background:#805ad5"></span>Широкое</span>
+        <span><span class="цвет" style="background:#dd6b20"></span>Низкое</span>
+        <span><span class="цвет" style="background:#48bb78"></span>Кнопка супер-прыжка</span>
+        <span><span class="цвет" style="background:#f6e05e"></span>Звезда (щит)</span>
     </div>
     
     <div class="подсказка">Управление: тап, клик, пробел или ↑</div>
@@ -251,12 +362,30 @@
             return аудио;
         }
         
-        function игратьПрыжок() {
+        function игратьТон(частота, длительность, тип, громкость) {
             if (!звукВкл) return;
             const ctx = получитьАудио();
             if (!ctx) return;
             if (ctx.state === 'suspended') ctx.resume();
             
+            const сейчас = ctx.currentTime;
+            const осц = ctx.createOscillator();
+            const усил = ctx.createGain();
+            осц.type = тип || 'sine';
+            осц.frequency.setValueAtTime(частота, сейчас);
+            усил.gain.setValueAtTime(громкость || 0.2, сейчас);
+            усил.gain.exponentialRampToValueAtTime(0.001, сейчас + длительность);
+            осц.connect(усил);
+            усил.connect(ctx.destination);
+            осц.start(сейчас);
+            осц.stop(сейчас + длительность);
+        }
+        
+        function игратьПрыжок() {
+            if (!звукВкл) return;
+            const ctx = получитьАудио();
+            if (!ctx) return;
+            if (ctx.state === 'suspended') ctx.resume();
             const сейчас = ctx.currentTime;
             const осц = ctx.createOscillator();
             const усил = ctx.createGain();
@@ -271,43 +400,54 @@
             осц.stop(сейчас + 0.15);
         }
         
-        function игратьСмерть() {
+        function игратьСуперПрыжок() {
             if (!звукВкл) return;
             const ctx = получитьАудио();
             if (!ctx) return;
             if (ctx.state === 'suspended') ctx.resume();
-            
             const сейчас = ctx.currentTime;
-            const осц = ctx.createOscillator();
-            const усил = ctx.createGain();
-            осц.type = 'sawtooth';
-            осц.frequency.setValueAtTime(300, сейчас);
-            осц.frequency.exponentialRampToValueAtTime(60, сейчас + 0.5);
-            усил.gain.setValueAtTime(0.3, сейчас);
-            усил.gain.exponentialRampToValueAtTime(0.001, сейчас + 0.5);
-            осц.connect(усил);
-            усил.connect(ctx.destination);
-            осц.start(сейчас);
-            осц.stop(сейчас + 0.5);
+            [400, 600, 900].forEach((ч, i) => {
+                const осц = ctx.createOscillator();
+                const усил = ctx.createGain();
+                осц.type = 'sine';
+                осц.frequency.setValueAtTime(ч, сейчас + i * 0.05);
+                осц.frequency.exponentialRampToValueAtTime(ч * 1.5, сейчас + i * 0.05 + 0.1);
+                усил.gain.setValueAtTime(0.2, сейчас + i * 0.05);
+                усил.gain.exponentialRampToValueAtTime(0.001, сейчас + i * 0.05 + 0.15);
+                осц.connect(усил);
+                усил.connect(ctx.destination);
+                осц.start(сейчас + i * 0.05);
+                осц.stop(сейчас + i * 0.05 + 0.15);
+            });
+        }
+        
+        function игратьСмерть() {
+            игратьТон(300, 0.5, 'sawtooth', 0.3);
+            setTimeout(() => игратьТон(60, 0.5, 'sawtooth', 0.2), 100);
         }
         
         function игратьОчко() {
+            игратьТон(1000, 0.15, 'sine', 0.15);
+        }
+        
+        function игратьЗвезду() {
             if (!звукВкл) return;
             const ctx = получитьАудио();
             if (!ctx) return;
             if (ctx.state === 'suspended') ctx.resume();
-            
             const сейчас = ctx.currentTime;
-            const осц = ctx.createOscillator();
-            const усил = ctx.createGain();
-            осц.type = 'sine';
-            осц.frequency.value = 1000;
-            усил.gain.setValueAtTime(0.15, сейчас);
-            усил.gain.exponentialRampToValueAtTime(0.001, сейчас + 0.15);
-            осц.connect(усил);
-            усил.connect(ctx.destination);
-            осц.start(сейчас);
-            осц.stop(сейчас + 0.15);
+            [523, 784, 1046].forEach((ч, i) => {
+                const осц = ctx.createOscillator();
+                const усил = ctx.createGain();
+                осц.type = 'sine';
+                осц.frequency.value = ч;
+                усил.gain.setValueAtTime(0.15, сейчас + i * 0.06);
+                усил.gain.exponentialRampToValueAtTime(0.001, сейчас + i * 0.06 + 0.12);
+                осц.connect(усил);
+                усил.connect(ctx.destination);
+                осц.start(сейчас + i * 0.06);
+                осц.stop(сейчас + i * 0.06 + 0.12);
+            });
         }
         
         document.getElementById('звукКнопка').addEventListener('click', function() {
@@ -325,6 +465,7 @@
         const сообщение = document.getElementById('сообщение');
         const счётЭл = document.getElementById('счёт');
         const рекордЭл = document.getElementById('рекорд');
+        const монетыЭл = document.getElementById('монеты');
         
         // ==========================================
         // КОНСТАНТЫ
@@ -335,48 +476,87 @@
         const ШАРИК_X = 60;
         const ГРАВИТАЦИЯ = 0.6;
         const СИЛА_ПРЫЖКА = -11;
+        const СИЛА_СУПЕР_ПРЫЖКА = -18;
         const МАКС_СКОРОСТЬ_ПАДЕНИЯ = 16;
         
         // ==========================================
         // СОСТОЯНИЕ
         // ==========================================
-        let позиция = 0; // 0 = на земле, отрицательные — вверх
+        let позиция = 0;
         let скорость = 0;
-        let прыжок = false;
         let препятствия = [];
+        let кнопки = [];
+        let звёзды = [];
+        let облака = [];
         let счёт = 0;
+        let монеты = 0;
         let рекорд = parseInt(localStorage.getItem('шарик-рекорд') || '0');
         let играИдёт = false;
         let кадры = 0;
         let скоростьМира = 4;
         let анимация = null;
-        let последнееОчко = 0;
+        let щитАктивен = false;
+        let времяЩита = 0;
+        let следующаяКнопкаПосле = 5;
         
         рекордЭл.textContent = рекорд;
         
         // ==========================================
-        // ОБЛАКА (фон)
+        // ЩИТ
+        // ==========================================
+        function надетьЩит() {
+            if (шарик.querySelector('.щит-кольцо')) return;
+            const кольцо = document.createElement('div');
+            кольцо.className = 'щит-кольцо';
+            шарик.appendChild(кольцо);
+            шарик.classList.add('неуязвим');
+        }
+        
+        function снятьЩит() {
+            const кольцо = шарик.querySelector('.щит-кольцо');
+            if (кольцо) кольцо.remove();
+            шарик.classList.remove('неуязвим');
+        }
+        
+        // ==========================================
+        // ОБЛАКА
         // ==========================================
         function создатьОблака() {
-            for (let i = 0; i < 5; i++) {
+            for (let i = 0; i < 6; i++) {
                 const обл = document.createElement('div');
                 обл.className = 'облако';
                 const ш = 60 + Math.random() * 100;
                 обл.style.width = ш + 'px';
                 обл.style.height = (ш * 0.5) + 'px';
-                обл.style.left = Math.random() * 100 + '%';
                 обл.style.top = (10 + Math.random() * 50) + '%';
+                обл.dataset.x = Math.random() * обёртка.offsetWidth;
+                обл.dataset.скорость = 0.2 + Math.random() * 0.5;
+                обл.style.left = обл.dataset.x + 'px';
                 обёртка.insertBefore(обл, шарик);
+                облака.push(обл);
             }
+        }
+        
+        function двигатьОблака() {
+            облака.forEach(обл => {
+                let x = parseFloat(обл.dataset.x);
+                x -= parseFloat(обл.dataset.скорость);
+                if (x < -150) {
+                    x = обёртка.offsetWidth + 50;
+                    обл.dataset.скорость = 0.2 + Math.random() * 0.5;
+                }
+                обл.dataset.x = x;
+                обл.style.left = x + 'px';
+            });
         }
         
         // ==========================================
         // ЧАСТИЦЫ
         // ==========================================
-        function создатьЧастицы(x, y, количество) {
+        function создатьЧастицы(x, y, количество, цвет) {
             for (let i = 0; i < количество; i++) {
                 const ч = document.createElement('div');
-                ч.className = 'частица';
+                ч.className = 'частица' + (цвет ? ' ' + цвет : '');
                 ч.style.left = x + 'px';
                 ч.style.top = y + 'px';
                 обёртка.appendChild(ч);
@@ -412,15 +592,23 @@
             скорость = 0;
             препятствия.forEach(p => p.element.remove());
             препятствия = [];
+            кнопки.forEach(k => k.element.remove());
+            кнопки = [];
+            звёзды.forEach(s => s.element.remove());
+            звёзды = [];
             счёт = 0;
+            монеты = 0;
             кадры = 0;
             скоростьМира = 4;
-            последнееОчко = 0;
+            щитАктивен = false;
+            времяЩита = 0;
+            следующаяКнопкаПосле = 5;
             играИдёт = true;
             счётЭл.textContent = '0';
+            монетыЭл.textContent = '0';
+            снятьЩит();
             сообщение.classList.add('скрыто');
             
-            // Сброс позиции шарика
             шарик.style.bottom = ЗЕМЛЯ_ВЫСОТА + 'px';
             
             cancelAnimationFrame(анимация);
@@ -432,14 +620,37 @@
             if (позиция >= 0) {
                 скорость = СИЛА_ПРЫЖКА;
                 игратьПрыжок();
-                // Частицы под шариком
                 const x = ШАРИК_X + ШАРИК_РАДИУС;
                 const y = обёртка.offsetHeight - ЗЕМЛЯ_ВЫСОТА - 5;
-                создатьЧастицы(x, y, 6);
+                создатьЧастицы(x, y, 6, '');
             }
         }
         
+        function суперПрыжок() {
+            скорость = СИЛА_СУПЕР_ПРЫЖКА;
+            игратьСуперПрыжок();
+            const x = ШАРИК_X + ШАРИК_РАДИУС;
+            const y = обёртка.offsetHeight - ЗЕМЛЯ_ВЫСОТА - 5;
+            создатьЧастицы(x, y, 12, 'зелёная');
+        }
+        
         function умереть() {
+            if (щитАктивен) {
+                щитАктивен = false;
+                времяЩита = 0;
+                снятьЩит();
+                создатьЧастицы(ШАРИК_X + ШАРИК_РАДИУС, обёртка.offsetHeight - ЗЕМЛЯ_ВЫСОТА - 20, 15, 'жёлтая');
+                игратьЗвезду();
+                препятствия.forEach(p => {
+                    if (p.x < ШАРИК_X + 50 && p.x + p.ширина > ШАРИК_X - 10) {
+                        p.element.remove();
+                        p.удалено = true;
+                    }
+                });
+                препятствия = препятствия.filter(p => !p.удалено);
+                return;
+            }
+            
             играИдёт = false;
             игратьСмерть();
             вспышка.classList.add('активна');
@@ -458,14 +669,15 @@
             
             сообщение.classList.remove('скрыто');
             сообщение.querySelector('h2').textContent = '💥 Игра окончена';
-            сообщение.querySelector('p').innerHTML = `Счёт: <strong>${счёт}</strong>${счёт >= рекорд ? ' 🏆 Новый рекорд!' : ''}<br>Рекорд: ${рекорд}`;
+            сообщение.querySelector('p').innerHTML = `Счёт: <strong>${счёт}</strong> | Монеты: <strong>${монеты}</strong>${счёт >= рекорд ? ' 🏆 Новый рекорд!' : ''}<br>Рекорд: ${рекорд}`;
             сообщение.querySelector('.старт-кнопка').textContent = '🔄 Заново';
         }
         
         function цикл() {
             if (!играИдёт) return;
             
-            // === ФИЗИКА ===
+            двигатьОблака();
+            
             скорость += ГРАВИТАЦИЯ;
             if (скорость > МАКС_СКОРОСТЬ_ПАДЕНИЯ) скорость = МАКС_СКОРОСТЬ_ПАДЕНИЯ;
             позиция += скорость;
@@ -475,67 +687,133 @@
                 скорость = 0;
             }
             
-            // Позиция шарика (bottom относительно земли)
             шарик.style.bottom = (ЗЕМЛЯ_ВЫСОТА - позиция) + 'px';
             шарик.style.left = ШАРИК_X + 'px';
             
-            // === ПРЕПЯТСТВИЯ ===
-            кадры++;
-            const частота = Math.max(40, 80 - Math.floor(счёт / 5) * 3);
-            if (кадры % частота === 0) {
-                создатьПрепятствие();
+            if (щитАктивен) {
+                времяЩита--;
+                if (времяЩита <= 0) {
+                    щитАктивен = false;
+                    снятьЩит();
+                }
             }
             
-            // === РАСЧЁТ ХИТБОКСА ШАРИКА ===
-            // Центр шарика
+            кадры++;
+            const частота = Math.max(45, 90 - Math.floor(счёт / 5) * 4);
+            if (кадры % частота === 0) {
+                if (счёт >= следующаяКнопкаПосле) {
+                    создатьКнопкуИВысокое();
+                } else {
+                    создатьПрепятствие();
+                }
+            }
+            
+            if (кадры % 180 === 0 && Math.random() < 0.5) {
+                создатьЗвезду();
+            }
+            
             const шЦентрX = ШАРИК_X + ШАРИК_РАДИУС;
             const шЦентрY = обёртка.offsetHeight - ЗЕМЛЯ_ВЫСОТА + позиция - ШАРИК_РАДИУС;
-            // Хитбокс уменьшен на 30% — честнее
             const шРадиус = ШАРИК_РАДИУС * 0.7;
             
             препятствия.forEach(p => {
                 p.x -= скоростьМира;
                 p.element.style.left = p.x + 'px';
                 
-                // === ХИТБОКС ПРЕПЯТСТВИЯ ===
-                // Прямоугольник: p.x ... p.x+p.ширина; снизу вверх
-                const пЛево = p.x + 3; // уменьшенный хитбокс
+                const пЛево = p.x + 3;
                 const пПраво = p.x + p.ширина - 3;
                 const пВерх = обёртка.offsetHeight - ЗЕМЛЯ_ВЫСОТА - p.высота + 3;
                 const пНиз = обёртка.offsetHeight - ЗЕМЛЯ_ВЫСОТА;
                 
-                // Проверка: круг vs прямоугольник
-                const ближайшийX = Math.max(пЛево, Math.min(шЦентрX, пПраво));
-                const ближайшийY = Math.max(пВерх, Math.min(шЦентрY, пНиз));
-                const dx = шЦентрX - ближайшийX;
-                const dy = шЦентрY - ближайшийY;
-                const расстояние = Math.sqrt(dx * dx + dy * dy);
+                const бX = Math.max(пЛево, Math.min(шЦентрX, пПраво));
+                const бY = Math.max(пВерх, Math.min(шЦентрY, пНиз));
+                const dx = шЦентрX - бX;
+                const dy = шЦентрY - бY;
                 
-                if (расстояние < шРадиус) {
+                if (Math.sqrt(dx * dx + dy * dy) < шРадиус) {
                     умереть();
                 }
             });
             
-            // Удаление ушедших
-            препятствия = препятствия.filter(p => {
-                if (p.x < -150) {
-                    p.element.remove();
-                    return false;
+            кнопки.forEach(k => {
+                k.x -= скоростьМира;
+                k.element.style.left = k.x + 'px';
+                
+                const кЛево = k.x + 5;
+                const кПраво = k.x + k.ширина - 5;
+                const кВерх = обёртка.offsetHeight - ЗЕМЛЯ_ВЫСОТА - 12;
+                const кНиз = обёртка.offsetHeight - ЗЕМЛЯ_ВЫСОТА;
+                
+                const бX = Math.max(кЛево, Math.min(шЦентрX, кПраво));
+                const бY = Math.max(кВерх, Math.min(шЦентрY, кНиз));
+                const ddx = шЦентрX - бX;
+                const ddy = шЦентрY - бY;
+                
+                if (Math.sqrt(ddx * ddx + ddy * ddy) < шРадиус && !k.использована && позиция >= -5) {
+                    k.использована = true;
+                    k.element.classList.add('нажата');
+                    суперПрыжок();
+                    setTimeout(() => k.element.remove(), 300);
                 }
+            });
+            
+            звёзды.forEach(s => {
+                s.x -= скоростьМира;
+                s.element.style.left = s.x + 'px';
+                s.element.style.bottom = (ЗЕМЛЯ_ВЫСОТА + s.высота) + 'px';
+                
+                const sЛево = s.x;
+                const sПраво = s.x + 24;
+                const sВерх = обёртка.offsetHeight - ЗЕМЛЯ_ВЫСОТА - s.высота - 24;
+                const sНиз = обёртка.offsetHeight - ЗЕМЛЯ_ВЫСОТА - s.высота;
+                
+                const бX = Math.max(sЛево, Math.min(шЦентрX, sПраво));
+                const бY = Math.max(sВерх, Math.min(шЦентрY, sНиз));
+                const dx = шЦентрX - бX;
+                const dy = шЦентрY - бY;
+                
+                if (Math.sqrt(dx * dx + dy * dy) < шРадиус + 5 && !s.собрана) {
+                    s.собрана = true;
+                    s.element.remove();
+                    монеты++;
+                    монетыЭл.textContent = монеты;
+                    игратьЗвезду();
+                    создатьЧастицы(шЦентрX, шЦентрY, 10, 'жёлтая');
+                    
+                    щитАктивен = true;
+                    времяЩита = 300;
+                    надетьЩит();
+                }
+            });
+            
+            препятствия = препятствия.filter(p => {
+                if (p.x < -150) { p.element.remove(); return false; }
+                return true;
+            });
+            кнопки = кнопки.filter(k => {
+                if (k.x < -150) { k.element.remove(); return false; }
+                return true;
+            });
+            звёзды = звёзды.filter(s => {
+                if (s.x < -150) { s.element.remove(); return false; }
                 return true;
             });
             
-            // === СЧЁТ ===
-            // Очко за каждое пройденное препятствие
             препятствия.forEach(p => {
                 if (!p.засчитано && p.x + p.ширина < ШАРИК_X) {
                     p.засчитано = true;
                     счёт++;
                     счётЭл.textContent = счёт;
                     игратьОчко();
-                    
-                    // Постепенное ускорение
                     скоростьМира = 4 + Math.floor(счёт / 5) * 0.3;
+                }
+            });
+            кнопки.forEach(k => {
+                if (!k.засчитана && k.x + k.ширина < ШАРИК_X) {
+                    k.засчитана = true;
+                    счёт++;
+                    счётЭл.textContent = счёт;
+                    игратьОчко();
                 }
             });
             
@@ -543,10 +821,29 @@
         }
         
         function создатьПрепятствие() {
-            const высота = 25 + Math.random() * 55;
-            const ширина = 22 + Math.random() * 20;
+            const тип = Math.random();
+            let высота, ширина, класс;
+            
+            if (тип < 0.4) {
+                высота = 25 + Math.random() * 30;
+                ширина = 22 + Math.random() * 15;
+                класс = 'обычное';
+            } else if (тип < 0.7) {
+                высота = 30 + Math.random() * 20;
+                ширина = 20 + Math.random() * 10;
+                класс = 'высокое';
+            } else if (тип < 0.9) {
+                высота = 20 + Math.random() * 20;
+                ширина = 50 + Math.random() * 30;
+                класс = 'широкое';
+            } else {
+                высота = 15 + Math.random() * 10;
+                ширина = 25 + Math.random() * 15;
+                класс = 'низкое';
+            }
+            
             const element = document.createElement('div');
-            element.className = 'препятствие';
+            element.className = 'препятствие ' + класс;
             element.style.width = ширина + 'px';
             element.style.height = высота + 'px';
             element.style.left = обёртка.offsetWidth + 'px';
@@ -558,6 +855,58 @@
                 высота,
                 element,
                 засчитано: false
+            });
+        }
+        
+        function создатьКнопкуИВысокое() {
+            const ширинаК = 50;
+            const elementК = document.createElement('div');
+            elementК.className = 'кнопка-супер';
+            elementК.style.width = ширинаК + 'px';
+            elementК.style.left = обёртка.offsetWidth + 'px';
+            обёртка.appendChild(elementК);
+            
+            кнопки.push({
+                x: обёртка.offsetWidth,
+                ширина: ширинаК,
+                element: elementК,
+                использована: false,
+                засчитана: false
+            });
+            
+            const высотаП = 70 + Math.random() * 20;
+            const ширинаП = 25 + Math.random() * 10;
+            const элементП = document.createElement('div');
+            элементП.className = 'препятствие высокое';
+            элементП.style.width = ширинаП + 'px';
+            элементП.style.height = высотаП + 'px';
+            элементП.style.left = (обёртка.offsetWidth + ширинаК + 80) + 'px';
+            обёртка.appendChild(элементП);
+            
+            препятствия.push({
+                x: обёртка.offsetWidth + ширинаК + 80,
+                ширина: ширинаП,
+                высота: высотаП,
+                element: элементП,
+                засчитано: false
+            });
+            
+            следующаяКнопкаПосле = счёт + 5 + Math.floor(Math.random() * 4);
+        }
+        
+        function создатьЗвезду() {
+            const высота = 60 + Math.random() * 80;
+            const element = document.createElement('div');
+            element.className = 'звезда';
+            element.style.left = обёртка.offsetWidth + 'px';
+            element.style.bottom = (ЗЕМЛЯ_ВЫСОТА + высота) + 'px';
+            обёртка.appendChild(element);
+            
+            звёзды.push({
+                x: обёртка.offsetWidth,
+                высота,
+                element,
+                собрана: false
             });
         }
         

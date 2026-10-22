@@ -30,11 +30,17 @@
             box-shadow: 0 0 15px rgba(66, 153, 225, 0.6);
             z-index: 10;
         }
+        #игрок.ракета {
+            box-shadow: 0 0 25px rgba(237, 137, 54, 0.9);
+            background: radial-gradient(circle at 35% 35%, #fbd38d, #dd6b20);
+        }
         .платформа {
             position: absolute;
             height: 14px;
-            background: linear-gradient(180deg, #38a169 0%, #22543d 100%);
             border-radius: 7px;
+        }
+        .платформа.обычная {
+            background: linear-gradient(180deg, #38a169 0%, #22543d 100%);
             box-shadow: 0 3px 0 #1a3a28;
         }
         .платформа.движущаяся {
@@ -45,8 +51,33 @@
             background: linear-gradient(180deg, #a0aec0 0%, #4a5568 100%);
             box-shadow: 0 3px 0 #2d3748;
         }
+        .платформа.пружинная {
+            background: linear-gradient(180deg, #4299e1 0%, #2c5282 100%);
+            box-shadow: 0 3px 0 #1a365d;
+        }
+        .платформа.исчезающая {
+            background: linear-gradient(180deg, #9f7aea 0%, #553c9a 100%);
+            box-shadow: 0 3px 0 #3c1361;
+        }
+        .платформа.исчезающая.скрыта {
+            opacity: 0.15;
+        }
         .платформа.сломанная {
             opacity: 0.2;
+        }
+        .монета {
+            position: absolute;
+            width: 24px;
+            height: 24px;
+            background: radial-gradient(circle, #f6e05e, #d69e2e);
+            border-radius: 50%;
+            box-shadow: 0 0 12px rgba(246, 224, 94, 0.8);
+            z-index: 5;
+            animation: вращение-монеты 1s linear infinite;
+        }
+        @keyframes вращение-монеты {
+            from { transform: rotateY(0deg); }
+            to { transform: rotateY(360deg); }
         }
         #счёт {
             position: absolute;
@@ -64,6 +95,18 @@
             position: absolute;
             top: 10px;
             right: 10px;
+            background: rgba(0,0,0,0.5);
+            color: #f6e05e;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-weight: 700;
+            font-size: 14px;
+            z-index: 20;
+        }
+        #монеты-счёт {
+            position: absolute;
+            top: 50px;
+            left: 10px;
             background: rgba(0,0,0,0.5);
             color: #f6e05e;
             padding: 6px 14px;
@@ -91,33 +134,37 @@
     <div id="игра">
         <div id="счёт">0</div>
         <div id="рекорд">🏆 0</div>
+        <div id="монеты-счёт">🪙 0</div>
         <div id="игрок"></div>
     </div>
     
-    <div class="подсказка">Стрелки ← → / A D на компе · Свайп на телефоне. Прыгает сам!</div>
+    <div class="подсказка">← → / A D на компе · Тап слева/справа на телефоне</div>
     
     <script>
         const игра = document.getElementById('игра');
         const игрок = document.getElementById('игрок');
         const счётЭл = document.getElementById('счёт');
         const рекордЭл = document.getElementById('рекорд');
+        const монетыЭл = document.getElementById('монеты-счёт');
         
         let позицияX = 0;
         let позицияY = 0;
         let скоростьY = 0;
-        let скоростьX = 0;
         let платформы = [];
+        let монеты = [];
         let счёт = 0;
+        let монетыСобрано = 0;
         let рекорд = parseInt(localStorage.getItem('дудл-рекорд') || '0');
         let играИдёт = true;
         let последняяY = 0;
         let анимация;
         let клавиши = {};
-        let свайпX = 0;
-        let тачИд = null;
+        let ракетаТаймер = 0;
+        let тачСторона = 0;
         
         const ГРАВИТАЦИЯ = 0.5;
         const СИЛА_ПРЫЖКА = -13;
+        const СИЛА_ПРУЖИНЫ = -19;
         const ШИРИНА_ИГРОКА = 44;
         const ВЫСОТА_ИГРОКА = 44;
         const СКОРОСТЬ_Х = 6;
@@ -127,22 +174,23 @@
         function старт() {
             играИдёт = true;
             счёт = 0;
+            монетыСобрано = 0;
+            ракетаТаймер = 0;
             позицияX = игра.offsetWidth / 2 - ШИРИНА_ИГРОКА / 2;
             позицияY = игра.offsetHeight - 200;
             скоростьY = СИЛА_ПРЫЖКА;
-            скоростьX = 0;
             платформы.forEach(p => p.element.remove());
             платформы = [];
+            монеты.forEach(m => m.element.remove());
+            монеты = [];
+            игрок.classList.remove('ракета');
             
-            добавитьПлатформу(позицияX - 50, позицияY + ВЫСОТА_ИГРОКА, 'обычная');
+            добавитьПлатформу(позицияX - 20, позицияY + ВЫСОТА_ИГРОКА, 'обычная');
             
-            for (let i = 1; i < 10; i++) {
-                const y = позицияY - i * 90;
-                const x = Math.random() * (игра.offsetWidth - 100);
-                добавитьПлатформу(x, y, 'обычная');
-            }
+            последняяY = позицияY + ВЫСОТА_ИГРОКА;
             
-            последняяY = платформы.reduce((min, p) => Math.min(min, p.y), 0);
+            счётЭл.textContent = '0';
+            монетыЭл.textContent = '🪙 0';
             
             cancelAnimationFrame(анимация);
             цикл();
@@ -151,7 +199,7 @@
         function добавитьПлатформу(x, y, тип) {
             const ширина = 70;
             const element = document.createElement('div');
-            element.className = 'платформа' + (тип !== 'обычная' ? ' ' + тип : '');
+            element.className = 'платформа ' + тип;
             element.style.width = ширина + 'px';
             element.style.left = x + 'px';
             element.style.top = y + 'px';
@@ -161,71 +209,102 @@
                 x, y, ширина, тип,
                 element,
                 сломана: false,
-                направление: Math.random() > 0.5 ? 1 : -1
+                скрыта: false,
+                направление: Math.random() > 0.5 ? 1 : -1,
+                таймер: 0
             });
         }
         
-        // Управление
-        document.addEventListener('keydown', e => {
-            клавиши[e.code] = true;
-        });
-        document.addEventListener('keyup', e => {
-            клавиши[e.code] = false;
-        });
+        function сгенерироватьСледующую() {
+            const верхняя = платформы.length ? Math.min(...платформы.map(p => p.y)) : последняяY;
+            const шаг = 100 + Math.random() * 15;
+            const новыйY = верхняя - шаг;
+            
+            const rand = Math.random();
+            let тип = 'обычная';
+            if (счёт > 200 && rand > 0.85) тип = 'исчезающая';
+            else if (счёт > 150 && rand > 0.75) тип = 'пружинная';
+            else if (счёт > 100 && rand > 0.6) тип = 'ломающаяся';
+            else if (счёт > 50 && rand > 0.4) тип = 'движущаяся';
+            
+            const ширина = 70;
+            let новыйX = 0;
+            let попыток = 0;
+            
+            do {
+                новыйX = 10 + Math.random() * (игра.offsetWidth - ширина - 20);
+                попыток++;
+                const пересекается = платформы.some(p => 
+                    Math.abs(p.y - новыйY) < 30 && 
+                    новыйX < p.x + p.ширина + 20 && 
+                    новыйX + ширина + 20 > p.x
+                );
+                if (!пересекается) break;
+            } while (попыток < 20);
+            
+            добавитьПлатформу(новыйX, новыйY, тип);
+            последняяY = новыйY;
+            
+            if (Math.random() < 0.3) {
+                const монетаX = новыйX + 23;
+                const монетаY = новыйY - 40;
+                const элемент = document.createElement('div');
+                элемент.className = 'монета';
+                элемент.style.left = монетаX + 'px';
+                элемент.style.top = монетаY + 'px';
+                игра.appendChild(элемент);
+                монеты.push({ x: монетаX, y: монетаY, element: элемент, собрана: false });
+            }
+        }
         
-        // Свайп на телефоне
+        document.addEventListener('keydown', e => { клавиши[e.code] = true; });
+        document.addEventListener('keyup', e => { клавиши[e.code] = false; });
+        
         игра.addEventListener('touchstart', e => {
             e.preventDefault();
-            тачИд = e.touches[0].identifier;
-            свайпX = e.touches[0].clientX;
+            const touch = e.touches[0];
+            const rect = игра.getBoundingClientRect();
+            тачСторона = (touch.clientX - rect.left) < rect.width / 2 ? -1 : 1;
         }, { passive: false });
         
         игра.addEventListener('touchmove', e => {
             e.preventDefault();
-            for (let i = 0; i < e.touches.length; i++) {
-                if (e.touches[i].identifier === тачИд) {
-                    свайпX = e.touches[i].clientX;
-                }
-            }
+            const touch = e.touches[0];
+            const rect = игра.getBoundingClientRect();
+            тачСторона = (touch.clientX - rect.left) < rect.width / 2 ? -1 : 1;
         }, { passive: false });
         
         игра.addEventListener('touchend', e => {
             e.preventDefault();
-            тачИд = null;
-            свайпX = 0;
+            тачСторона = 0;
         }, { passive: false });
         
-        // Для телефона — наклон по позиции пальца
-        function получитьНаклонТача() {
-            if (тачИд === null || свайпX === 0) return 0;
-            const центр = игра.offsetWidth / 2;
-            const разница = (свайпX - центр) / центр;
-            return Math.max(-1, Math.min(1, разница));
-        }
+        игра.addEventListener('touchcancel', e => {
+            тачСторона = 0;
+        });
         
         function цикл() {
             if (!играИдёт) return;
             
-            // Управление по X
             let dx = 0;
             if (клавиши['ArrowLeft'] || клавиши['KeyA']) dx -= 1;
             if (клавиши['ArrowRight'] || клавиши['KeyD']) dx += 1;
-            
-            // Телефон
-            const наклон = получитьНаклонТача();
-            if (наклон !== 0) dx = наклон;
+            if (тачСторона !== 0) dx = тачСторона;
             
             позицияX += dx * СКОРОСТЬ_Х;
             
-            // Границы экрана — телепорт на другую сторону
             if (позицияX + ШИРИНА_ИГРОКА < 0) позицияX = игра.offsetWidth;
             if (позицияX > игра.offsetWidth) позицияX = -ШИРИНА_ИГРОКА;
             
-            // Физика
-            скоростьY += ГРАВИТАЦИЯ;
+            if (ракетаТаймер > 0) {
+                ракетаТаймер--;
+                скоростьY = -8;
+                if (ракетаТаймер === 0) игрок.classList.remove('ракета');
+            } else {
+                скоростьY += ГРАВИТАЦИЯ;
+            }
             позицияY += скоростьY;
             
-            // Камера следует за игроком вверх
             const экранY = игра.offsetHeight / 2;
             if (позицияY < экранY) {
                 const сдвиг = экранY - позицияY;
@@ -234,26 +313,35 @@
                     p.y += сдвиг;
                     p.element.style.top = p.y + 'px';
                 });
+                монеты.forEach(m => {
+                    m.y += сдвиг;
+                    m.element.style.top = m.y + 'px';
+                });
                 последняяY += сдвиг;
-                счёт += сдвиг * 0.1;
-                счётЭл.textContent = Math.floor(счёт);
+                if (ракетаТаймер === 0) {
+                    счёт += сдвиг * 0.1;
+                    счётЭл.textContent = Math.floor(счёт);
+                }
             }
             
-            // Упал вниз
             if (позицияY > игра.offsetHeight + 50) {
                 умереть();
                 return;
             }
             
-            // Столкновение с платформой (только когда падаем)
             if (скоростьY > 0) {
-                платформы.forEach(p => {
-                    if (p.сломана) return;
-                    if (позицияX + ШИРИНА_ИГРОКА > p.x && 
-                        позицияX < p.x + p.ширина &&
-                        позицияY + ВЫСОТА_ИГРОКА > p.y &&
-                        позицияY + ВЫСОТА_ИГРОКА < p.y + 20) {
-                        скоростьY = СИЛА_ПРЫЖКА;
+                for (const p of платформы) {
+                    if (p.сломана || p.скрыта) continue;
+                    const центрИгрока = позицияX + ШИРИНА_ИГРОКА / 2;
+                    const ногиИгрока = позицияY + ВЫСОТА_ИГРОКА;
+                    if (центрИгрока > p.x && центрИгрока < p.x + p.ширина &&
+                        ногиИгрока > p.y && ногиИгрока < p.y + 20) {
+                        
+                        if (p.тип === 'пружинная') {
+                            скоростьY = СИЛА_ПРУЖИНЫ;
+                        } else {
+                            скоростьY = СИЛА_ПРЫЖКА;
+                        }
                         
                         if (p.тип === 'ломающаяся') {
                             p.сломана = true;
@@ -263,42 +351,66 @@
                                 платформы = платформы.filter(pp => pp !== p);
                             }, 300);
                         }
+                        break;
                     }
-                });
+                }
             }
             
-            // Движущиеся платформы
             платформы.forEach(p => {
                 if (p.тип === 'движущаяся') {
                     p.x += p.направление * 1.5;
-                    if (p.x < 0 || p.x + p.ширина > игра.offsetWidth) {
-                        p.направление *= -1;
-                    }
+                    if (p.x < 0 || p.x + p.ширина > игра.offsetWidth) p.направление *= -1;
                     p.element.style.left = p.x + 'px';
+                }
+                if (p.тип === 'исчезающая') {
+                    p.таймер++;
+                    if (p.таймер % 120 < 30) {
+                        p.скрыта = true;
+                        p.element.classList.add('скрыта');
+                    } else {
+                        p.скрыта = false;
+                        p.element.classList.remove('скрыта');
+                    }
                 }
             });
             
-            // Генерация новых платформ сверху
-            while (последняяY > -100) {
-                последняяY -= 90;
-                const x = Math.random() * (игра.offsetWidth - 100);
-                const rand = Math.random();
-                let тип = 'обычная';
-                if (счёт > 100 && rand > 0.85) тип = 'ломающаяся';
-                else if (счёт > 50 && rand > 0.7) тип = 'движущаяся';
-                добавитьПлатформу(x, последняяY, тип);
+            const центрИгрока = позицияX + ШИРИНА_ИГРОКА / 2;
+            const центрИгрокаY = позицияY + ВЫСОТА_ИГРОКА / 2;
+            монеты.forEach(m => {
+                if (m.собрана) return;
+                const dx = центрИгрока - (m.x + 12);
+                const dy = центрИгрокаY - (m.y + 12);
+                if (Math.sqrt(dx * dx + dy * dy) < 30) {
+                    m.собрана = true;
+                    m.element.remove();
+                    монетыСобрано++;
+                    счёт += 5;
+                    монетыЭл.textContent = '🪙 ' + монетыСобрано;
+                    счётЭл.textContent = Math.floor(счёт);
+                    if (монетыСобрано % 5 === 0) {
+                        ракетаТаймер = 120;
+                        игрок.classList.add('ракета');
+                    }
+                }
+            });
+            
+            let верхняяY = платформы.length ? Math.min(...платформы.map(p => p.y)) : 0;
+            let защита = 0;
+            while (верхняяY > -200 && защита < 50) {
+                сгенерироватьСледующую();
+                верхняяY = Math.min(...платформы.map(p => p.y));
+                защита++;
             }
             
-            // Удаляем платформы внизу
             платформы = платформы.filter(p => {
-                if (p.y > игра.offsetHeight + 50) {
-                    p.element.remove();
-                    return false;
-                }
+                if (p.y > игра.offsetHeight + 50) { p.element.remove(); return false; }
+                return true;
+            });
+            монеты = монеты.filter(m => {
+                if (m.собрана || m.y > игра.offsetHeight + 50) { m.element.remove(); return false; }
                 return true;
             });
             
-            // Рисуем игрока
             игрок.style.left = позицияX + 'px';
             игрок.style.top = позицияY + 'px';
             
@@ -307,14 +419,15 @@
         
         function умереть() {
             играИдёт = false;
-            if (Math.floor(счёт) > рекорд) {
-                рекорд = Math.floor(счёт);
+            const итог = Math.floor(счёт);
+            if (итог > рекорд) {
+                рекорд = итог;
                 localStorage.setItem('дудл-рекорд', рекорд);
                 рекордЭл.textContent = '🏆 ' + рекорд;
             }
             
             setTimeout(() => {
-                if (confirm('💀 Игра окончена!\nСчёт: ' + Math.floor(счёт) + '\n\nИграть заново?')) {
+                if (confirm('💀 Игра окончена!\nСчёт: ' + итог + '\nМонет: ' + монетыСобрано + '\n\nИграть заново?')) {
                     старт();
                 }
             }, 100);
