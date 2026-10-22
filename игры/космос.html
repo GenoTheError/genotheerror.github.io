@@ -8,38 +8,28 @@
     <link rel="stylesheet" href="../style.css">
     <style>
         * { -webkit-tap-highlight-color: transparent; outline: none; user-select: none; -webkit-user-select: none; box-sizing: border-box; }
-        body { background: #050508; color: #e2e8f0; font-family: 'Inter', sans-serif; padding: 20px; padding-bottom: 80px; }
+        body { background: #050508; color: #e2e8f0; font-family: 'Inter', sans-serif; padding: 20px; padding-bottom: 80px; overflow: hidden; }
+        
+        /* ЭКРАН ЗАГРУЗКИ */
+        #экран-загрузки {
+            position: fixed; inset: 0; background: #050508; z-index: 9999;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            transition: opacity 0.5s;
+        }
+        #экран-загрузки.скрыт { opacity: 0; pointer-events: none; }
+        .загрузка-текст { font-size: 20px; color: #90cdf4; margin-bottom: 20px; font-weight: 600; }
+        .загрузка-бар { width: 200px; height: 6px; background: #2d3748; border-radius: 3px; overflow: hidden; }
+        .загрузка-прогресс { height: 100%; width: 0%; background: #4299e1; transition: width 0.1s; }
         
         .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
         .header h1 { color: #fff; font-size: 24px; margin: 0; text-shadow: 0 0 15px rgba(144, 205, 244, 0.5); flex: 1; text-align: center; }
         .header .btn-звезда { width: 44px; height: 44px; background: #1a202c; border: 2px solid #2d3748; border-radius: 10px; color: #f6e05e; font-size: 22px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
         .header .btn-звезда:hover { border-color: #f6e05e; box-shadow: 0 0 15px rgba(246, 224, 94, 0.4); }
         
-        .тулбар { 
-    display: flex; 
-    gap: 6px; 
-    width: 100%; 
-    max-width: 400px; 
-    margin: 0 auto 15px auto; 
-    padding: 0 10px; 
-}
-        .тулбар-кнопка { 
-    width: 40px; 
-    height: 40px; 
-    flex-shrink: 0;
-    background: #1a202c; 
-    border: 2px solid #2d3748; 
-    border-radius: 10px; 
-    color: #a0aec0; 
-    font-size: 18px; 
-    cursor: pointer; 
-    display: flex; 
-    align-items: center; 
-    justify-content: center; 
-    transition: all 0.2s; 
-}
+        .тулбар { display: flex; gap: 8px; width: 100%; max-width: 400px; margin: 0 auto 15px auto; padding: 0 10px; }
+        .тулбар-кнопка { width: 46px; height: 46px; flex-shrink: 0; background: #1a202c; border: 2px solid #2d3748; border-radius: 10px; color: #a0aec0; font-size: 20px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
         .тулбар-кнопка:hover { border-color: #4299e1; color: #fff; }
-        .тулбар-поиск { flex: 1; min-width: 0; background: #1a202c; border: 2px solid #2d3748; border-radius: 10px; padding: 0 15px; color: #fff; font-size: 15px; font-family: inherit; transition: all 0.2s; }
+        .тулбар-поиск { flex: 1; min-width: 0; background: #1a202c; border: 2px solid #2d3748; border-radius: 10px; padding: 0 12px; color: #fff; font-size: 14px; font-family: inherit; transition: all 0.2s; }
         .тулбар-поиск:focus { border-color: #4299e1; }
 
         .btn-скан { display: block; width: 100%; max-width: 400px; margin: 0 auto 20px auto; background: linear-gradient(135deg, #2b6cb0, #4299e1); color: white; border: 2px solid #63b3ed; border-radius: 16px; padding: 18px; font-size: 20px; font-weight: 800; cursor: pointer; font-family: inherit; transition: all 0.1s; box-shadow: 0 0 20px rgba(66, 153, 225, 0.4); text-transform: uppercase; letter-spacing: 2px; }
@@ -136,7 +126,6 @@
         .уведомление { position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%); background: #38a169; color: white; padding: 10px 20px; border-radius: 20px; font-weight: 600; z-index: 1000; opacity: 0; transition: opacity 0.3s; pointer-events: none; text-align: center; }
         .уведомление.активно { opacity: 1; }
 
-        /* СЛОТ-МАШИНА */
         .слот-фон { position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 2000; display: none; align-items: center; justify-content: center; flex-direction: column; }
         .слот-фон.активна { display: flex; }
         .слот-окно { background: #1a202c; border: 4px solid #d69e2e; border-radius: 20px; padding: 30px; text-align: center; max-width: 350px; width: 90%; }
@@ -156,6 +145,12 @@
     </style>
 </head>
 <body>
+    <!-- ЭКРАН ЗАГРУЗКИ -->
+    <div id="экран-загрузки">
+        <div class="загрузка-текст">🌌 Загрузка вселенной...</div>
+        <div class="загрузка-бар"><div class="загрузка-прогресс" id="загрузка-прогресс"></div></div>
+    </div>
+
     <div class="header">
         <a href="../игры.html" class="back-btn" style="background:#1a202c; padding: 8px 12px; border-radius: 8px; color: #a0aec0; text-decoration: none; font-size: 14px;">← Назад</a>
         <h1>🌌 Космос</h1>
@@ -200,6 +195,7 @@
         <input type="file" id="файл-загрузки" accept=".json" style="display:none;">
     </div>
 
+    <!-- МОДАЛКИ -->
     <div class="модалка-фон" id="модалка-сорт">
         <div class="модалка">
             <div class="модалка-шапка"><h2>↕️ Сортировка</h2><button class="модалка-закрыть" data-закрыть="сорт">✕</button></div>
@@ -257,8 +253,45 @@
 
     <script>
         'use strict';
+        
         // ==========================================
-        // 1. МЕГА-БАЗА ЗНАНИЙ
+        // 0. ПРЕДЗАГРУЗКА ИКОНОК
+        // ==========================================
+        const ИКОНКИ = {};
+        const ФАЙЛЫ_ИКОНОК = [
+            'космос-пицца', 'космос-печенька', 'космос-богатство', 'космос-кот', 'космос-носок',
+            'космос-закулисье', 'космос-мем', 'космос-кофе', 'космос-игра', 'космос-интернет',
+            'космос-музыка', 'космос-алмаз', 'космос-смех', 'космос-сон', 'космос-дыра',
+            'космос-лего', 'космос-призрак', 'космос-книги', 'космос-краски', 'космос-пузыри',
+            'космос-время', 'космос-хлеб', 'космос-пингвин', 'космос-акула', 'космос-конфета',
+            'космос-земля', 'космос-марс', 'космос-юпитер', 'космос-сатурн', 'космос-млечныйпуть',
+            'космос-ton618', 'космос-солнце', 'космос-андромеда', 'космос-проксима', 'космос-trappist'
+        ];
+        let загруженоИконок = 0;
+        const ВСЕГО_ИКОНОК = ФАЙЛЫ_ИКОНОК.length;
+
+        function обновитьПрогрессЗагрузки() {
+            загруженоИконок++;
+            const процент = Math.round((загруженоИконок / ВСЕГО_ИКОНОК) * 100);
+            document.getElementById('загрузка-прогресс').style.width = процент + '%';
+            if (загруженоИконок >= ВСЕГО_ИКОНОК) {
+                setTimeout(() => {
+                    document.getElementById('экран-загрузки').classList.add('скрыт');
+                    document.body.style.overflow = 'auto';
+                }, 300);
+            }
+        }
+
+        ФАЙЛЫ_ИКОНОК.forEach(имя => {
+            const img = new Image();
+            img.src = '../иконки/' + имя + '.png';
+            ИКОНКИ[имя] = img;
+            img.onload = обновитьПрогрессЗагрузки;
+            img.onerror = обновитьПрогрессЗагрузки; // даже если ошибка, идём дальше
+        });
+
+        // ==========================================
+        // 1. БАЗА ЗНАНИЙ
         // ==========================================
         const ПОДТИПЫ = {
             'ST_O': { имя: 'Голубая звезда (O)', иконка: '🔵', база: 'ST' },
@@ -424,7 +457,7 @@
         let текущийСорт = 'новые';
         let текущийПоиск = '';
         let достижения = {};
-        let счетчикУдалений = 0; // Для достижения "Мусорщик"
+        let счетчикУдалений = 0;
         
         let ежедневныеЗадания = [];
         let датаЗаданий = '';
@@ -553,14 +586,13 @@
             const инфо = ПОДТИПЫ[подтип];
             база = инфо.база;
 
-            // ИСПРАВЛЕНО: нормальные названия для аномалий и реальных
             const сектор = String.fromCharCode(65 + случайноеЧисло(0, 25));
             const класс = String.fromCharCode(65 + случайноеЧисло(0, 25));
             const вес = String(случайноеЧисло(1, 99)).padStart(2, '0');
             const время = String(случайноеЧисло(1, 99)).padStart(2, '0');
             let название;
             if (база === 'RE' || база === 'AN') {
-                название = инфо.имя; // Планета Пиццы, Земля и т.д.
+                название = инфо.имя;
             } else {
                 название = `${сектор}-${подтип}-${вес}-${время}`;
             }
@@ -581,13 +613,13 @@
                 название, подтип, имяПодтипа: инфо.имя, иконка: инфо.иконка, база,
                 редкость: редкость.id, имяРедкости: редкость.имя,
                 масса, радиус, температура, атмосфера, жизнь, факт, цвет,
-                файл: инфо.файл, // <--- ВОТ ЭТА СТРОКА
+                файл: инфо.файл,
                 вес: parseInt(вес), время: parseInt(время)
             };
         }
 
         // ==========================================
-        // 5. ГРАФИКА (универсальная функция)
+        // 5. ГРАФИКА
         // ==========================================
         function нарисоватьОбъектВКонтексте(ctx, obj, cx, cy, R) {
             const sub = obj.подтип;
@@ -675,29 +707,9 @@
                 grad.addColorStop(0, '#fff'); grad.addColorStop(1, '#a0aec0');
                 ctx.fillStyle = grad; ctx.beginPath(); ctx.arc(cx, cy, R*0.5, 0, Math.PI*2); ctx.fill();
             } else if (base === 'AN' || base === 'RE') {
-                // Используем локальные PNG-иконки
-                if (obj.файл) {
-                    const img = new Image();
-                    img.src = '../иконки/' + obj.файл + '.png';
-                    img.onload = () => {
-                        // Рисуем картинку (с сохранением пропорций)
-                        const размер = R * 2;
-                        ctx.drawImage(img, cx - R, cy - R, размер, размер);
-                    };
-                    img.onerror = () => {
-                        // Fallback: если картинки нет — рисуем цветной круг с буквой
-                        ctx.fillStyle = obj.цвет;
-                        ctx.beginPath();
-                        ctx.arc(cx, cy, R, 0, Math.PI * 2);
-                        ctx.fill();
-                        ctx.fillStyle = '#fff';
-                        ctx.font = `bold ${R}px Arial`;
-                        ctx.textAlign = 'center';
-                        ctx.textBaseline = 'middle';
-                        ctx.fillText(obj.имяПодтипа.charAt(0), cx, cy);
-                    };
+                if (obj.файл && ИКОНКИ[obj.файл] && ИКОНКИ[obj.файл].complete && ИКОНКИ[obj.файл].naturalWidth > 0) {
+                    ctx.drawImage(ИКОНКИ[obj.файл], cx - R, cy - R, R * 2, R * 2);
                 } else {
-                    // Fallback, если файла нет в данных
                     ctx.fillStyle = obj.цвет;
                     ctx.beginPath();
                     ctx.arc(cx, cy, R, 0, Math.PI * 2);
@@ -708,8 +720,6 @@
                     ctx.textBaseline = 'middle';
                     ctx.fillText(obj.имяПодтипа.charAt(0), cx, cy);
                 }
-                
-                // Аура вокруг иконки
                 ctx.strokeStyle = obj.цвет;
                 ctx.lineWidth = 2;
                 ctx.beginPath(); ctx.arc(cx, cy, R * 1.1, 0, Math.PI * 2); ctx.stroke();
@@ -748,7 +758,6 @@
             canvas.width = rect.width * dpr;
             canvas.height = rect.height * dpr;
             
-            // ИСПРАВЛЕНО: сбрасываем трансформацию
             ctx.setTransform(1, 0, 0, 1, 0, 0);
             ctx.scale(dpr, dpr);
             
@@ -767,7 +776,23 @@
         }
 
         // ==========================================
-        // 6. ОТРИСОВКА ГАЛЕРЕИ
+        // 6. ЛЕНИВАЯ ЗАГРУЗКА
+        // ==========================================
+        const наблюдательCanvas = new IntersectionObserver((entries, observer) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    const canvas = entry.target;
+                    const obj = canvas._obj;
+                    if (obj) {
+                        нарисоватьОбъект(canvas, obj);
+                        observer.unobserve(canvas);
+                    }
+                }
+            });
+        }, { rootMargin: '200px' });
+
+        // ==========================================
+        // 7. ОТРИСОВКА ГАЛЕРЕИ
         // ==========================================
         const галерея = document.getElementById('галерея');
 
@@ -856,11 +881,8 @@
             });
 
             контейнер.appendChild(div);
-
-// Привязываем объект к canvas для наблюдателя
-canvas._obj = obj;
-// Подписываемся на появление на экране
-наблюдательCanvas.observe(canvas);
+            canvas._obj = obj;
+            наблюдательCanvas.observe(canvas);
         }
 
         function скачатьКарточку(obj) {
@@ -879,7 +901,6 @@ canvas._obj = obj;
                 ctx.fill();
             }
 
-            // Используем общую функцию рисования
             нарисоватьОбъектВКонтексте(ctx, obj, 200, 125, 70);
 
             ctx.fillStyle = '#fff';
@@ -923,22 +944,8 @@ canvas._obj = obj;
             показатьУведомление('Карточка сохранена!');
         }
 
-// Ленивая загрузка для canvas
-const наблюдательCanvas = new IntersectionObserver((entries, observer) => {
-    entries.forEach(entry => {
-        if (entry.isIntersecting) {
-            const canvas = entry.target;
-            const obj = canvas._obj; // Данные карточки
-            if (obj) {
-                нарисоватьОбъект(canvas, obj);
-                observer.unobserve(canvas); // Перестаём следить после отрисовки
-            }
-        }
-    });
-}, { rootMargin: '200px' }); // Начинаем рисовать за 200px до появления
-      
         // ==========================================
-        // 7. УДАЛЕНИЕ И КОРЗИНА
+        // 8. УДАЛЕНИЕ И КОРЗИНА
         // ==========================================
         function удалитьКарточку(id) {
             const индекс = коллекция.findIndex(o => o.id === id);
@@ -948,7 +955,7 @@ const наблюдательCanvas = new IntersectionObserver((entries, observer
             корзина.push(obj);
             if (корзина.length > 10) корзина.shift();
             
-            счетчикУдалений++; // Считаем общее количество удалений
+            счетчикУдалений++;
             
             сохранитьЛокально();
             отрисоватьГалерею();
@@ -1006,7 +1013,7 @@ const наблюдательCanvas = new IntersectionObserver((entries, observer
         }
 
         // ==========================================
-        // 8. СТАТИСТИКА
+        // 9. СТАТИСТИКА
         // ==========================================
         function обновитьСтатистику() {
             const конт = document.getElementById('стат-контент');
@@ -1044,7 +1051,7 @@ const наблюдательCanvas = new IntersectionObserver((entries, observer
         }
 
         // ==========================================
-        // 9. ЕЖЕДНЕВНЫЕ ЗАДАНИЯ (СЛОТ)
+        // 10. ЗАДАНИЯ И СЛОТ
         // ==========================================
         function обновитьПрогрессЗаданий(тип, значение = 1) {
             let изменено = false;
@@ -1133,7 +1140,7 @@ const наблюдательCanvas = new IntersectionObserver((entries, observer
         }
 
         // ==========================================
-        // 10. СОБЫТИЯ И UI
+        // 11. СОБЫТИЯ И UI
         // ==========================================
         function показатьУведомление(т) {
             const у = document.getElementById('уведомление');
@@ -1204,49 +1211,29 @@ const наблюдательCanvas = new IntersectionObserver((entries, observer
             показатьУведомление('Файл скачан!');
         };
 
-// Валидация загружаемых карточек
-function валиднаяКарточка(o) {
-    return o &&
-        typeof o.id === 'string' &&
-        typeof o.название === 'string' &&
-        typeof o.подтип === 'string' &&
-        typeof o.база === 'string' &&
-        typeof o.редкость === 'string' &&
-        typeof o.имяРедкости === 'string' &&
-        typeof o.имяПодтипа === 'string' &&
-        typeof o.масса === 'string' &&
-        typeof o.радиус === 'string' &&
-        typeof o.температура === 'string' &&
-        typeof o.атмосфера === 'string' &&
-        typeof o.жизнь === 'string' &&
-        typeof o.факт === 'string';
-}
-      
         document.getElementById('btn-загр').onclick = () => document.getElementById('файл-загрузки').click();
         document.getElementById('файл-загрузки').onchange = (e) => {
-    const файл = e.target.files[0];
-    if (!файл) return;
-    const reader = new FileReader();
-    reader.onload = (ev) => {
-        try {
-            const данные = JSON.parse(ev.target.result);
-            if (Array.isArray(данные)) {
-                const валидные = данные.filter(валиднаяКарточка);
-                if (валидные.length === 0) {
-                    throw new Error('В файле нет валидных карточек');
-                }
-                коллекция = валидные;
-                сохранитьЛокально();
-                отрисоватьГалерею();
-                показатьУведомление(`Загружено ${валидные.length} карточек!`);
-                if (валидные.length < данные.length) {
-                    показатьУведомление(`Пропущено ${данные.length - валидные.length} битых карточек`);
-                }
-            } else throw new Error('Неверный формат файла');
-        } catch(e) { alert('❌ Ошибка: ' + e.message); }
-    };
-    reader.readAsText(файл);
-};
+            const файл = e.target.files[0];
+            if (!файл) return;
+            const reader = new FileReader();
+            reader.onload = (ev) => {
+                try {
+                    const данные = JSON.parse(ev.target.result);
+                    if (Array.isArray(данные)) {
+                        const валидные = данные.filter(валиднаяКарточка);
+                        if (валидные.length === 0) throw new Error('В файле нет валидных карточек');
+                        коллекция = валидные;
+                        сохранитьЛокально();
+                        отрисоватьГалерею();
+                        показатьУведомление(`Загружено ${валидные.length} карточек!`);
+                        if (валидные.length < данные.length) {
+                            показатьУведомление(`Пропущено ${данные.length - валидные.length} битых карточек`);
+                        }
+                    } else throw new Error('Неверный формат файла');
+                } catch(e) { alert('❌ Ошибка: ' + e.message); }
+            };
+            reader.readAsText(файл);
+        };
 
         document.getElementById('справка-кнопка').addEventListener('click', () => {
             document.getElementById('справка-кнопка').classList.toggle('активна');
@@ -1275,8 +1262,25 @@ function валиднаяКарточка(o) {
             }
         }
 
+        function валиднаяКарточка(o) {
+            return o &&
+                typeof o.id === 'string' &&
+                typeof o.название === 'string' &&
+                typeof o.подтип === 'string' &&
+                typeof o.база === 'string' &&
+                typeof o.редкость === 'string' &&
+                typeof o.имяРедкости === 'string' &&
+                typeof o.имяПодтипа === 'string' &&
+                typeof o.масса === 'string' &&
+                typeof o.радиус === 'string' &&
+                typeof o.температура === 'string' &&
+                typeof o.атмосфера === 'string' &&
+                typeof o.жизнь === 'string' &&
+                typeof o.факт === 'string';
+        }
+
         // ==========================================
-        // 11. ЗАПУСК
+        // 12. ЗАПУСК
         // ==========================================
         проверитьОбновлениеЗаданий();
         загрузитьЛокально();
