@@ -1,0 +1,1287 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Космос — Генератор Вселенной</title>
+    <link rel="icon" href="../ico.png">
+    <link rel="stylesheet" href="../style.css">
+    <style>
+        * { -webkit-tap-highlight-color: transparent; outline: none; user-select: none; -webkit-user-select: none; box-sizing: border-box; }
+        body { background: #050508; color: #e2e8f0; font-family: 'Inter', sans-serif; padding: 20px; padding-bottom: 80px; }
+        
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .header h1 { color: #fff; font-size: 24px; margin: 0; text-shadow: 0 0 15px rgba(144, 205, 244, 0.5); flex: 1; text-align: center; }
+        .header .btn-звезда { width: 44px; height: 44px; background: #1a202c; border: 2px solid #2d3748; border-radius: 10px; color: #f6e05e; font-size: 22px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
+        .header .btn-звезда:hover { border-color: #f6e05e; box-shadow: 0 0 15px rgba(246, 224, 94, 0.4); }
+        
+        .тулбар { 
+    display: flex; 
+    gap: 6px; 
+    width: 100%; 
+    max-width: 400px; 
+    margin: 0 auto 15px auto; 
+    padding: 0 10px; 
+}
+        .тулбар-кнопка { 
+    width: 40px; 
+    height: 40px; 
+    flex-shrink: 0;
+    background: #1a202c; 
+    border: 2px solid #2d3748; 
+    border-radius: 10px; 
+    color: #a0aec0; 
+    font-size: 18px; 
+    cursor: pointer; 
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+    transition: all 0.2s; 
+}
+        .тулбар-кнопка:hover { border-color: #4299e1; color: #fff; }
+        .тулбар-поиск { flex: 1; min-width: 0; background: #1a202c; border: 2px solid #2d3748; border-radius: 10px; padding: 0 15px; color: #fff; font-size: 15px; font-family: inherit; transition: all 0.2s; }
+        .тулбар-поиск:focus { border-color: #4299e1; }
+
+        .btn-скан { display: block; width: 100%; max-width: 400px; margin: 0 auto 20px auto; background: linear-gradient(135deg, #2b6cb0, #4299e1); color: white; border: 2px solid #63b3ed; border-radius: 16px; padding: 18px; font-size: 20px; font-weight: 800; cursor: pointer; font-family: inherit; transition: all 0.1s; box-shadow: 0 0 20px rgba(66, 153, 225, 0.4); text-transform: uppercase; letter-spacing: 2px; }
+        .btn-скан:active { transform: scale(0.96); box-shadow: 0 0 30px rgba(66, 153, 225, 0.8); }
+
+        .справка-контейнер { max-width: 400px; margin: 0 auto 30px auto; }
+        .справка-кнопка { width: 100%; background: #1a202c; color: #a0aec0; border: 1px solid #2d3748; padding: 12px; border-radius: 10px; font-family: inherit; font-size: 14px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; transition: all 0.2s; }
+        .справка-кнопка:hover { background: #2d3748; color: #fff; }
+        .справка-кнопка .стрелка { transition: transform 0.3s; }
+        .справка-кнопка.активна .стрелка { transform: rotate(180deg); }
+        .справка-содержимое { max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out; background: #0f1419; border-radius: 0 0 10px 10px; margin-top: -5px; border: 1px solid #2d3748; border-top: none; }
+        .справка-содержимое.открыто { max-height: 3000px; transition: max-height 0.5s ease-in; }
+        .справка-текст { padding: 15px; font-size: 13px; line-height: 1.6; color: #cbd5e0; }
+        .справка-текст h3 { color: #90cdf4; font-size: 14px; margin: 15px 0 5px 0; border-bottom: 1px solid #2d3748; padding-bottom: 5px; }
+        .справка-текст h3:first-child { margin-top: 0; }
+        .справка-текст p { margin: 0 0 10px 0; }
+        .справка-текст .выделение { color: #f6e05e; font-weight: 600; }
+
+        #галерея { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 12px; max-width: 1000px; margin: 0 auto; }
+
+        .карточка { background: #0f1419; border: 2px solid #2d3748; border-radius: 12px; overflow: hidden; cursor: pointer; transition: all 0.2s; position: relative; display: flex; flex-direction: column; }
+        .карточка:hover { border-color: #4299e1; transform: translateY(-2px); }
+        
+        .карточка.обычная { border-color: #4a5568; }
+        .карточка.необычная { border-color: #38a169; box-shadow: 0 0 10px rgba(56, 161, 105, 0.3); }
+        .карточка.редкая { border-color: #3182ce; box-shadow: 0 0 15px rgba(49, 130, 206, 0.4); }
+        .карточка.эпическая { border-color: #805ad5; box-shadow: 0 0 20px rgba(128, 90, 213, 0.5); }
+        .карточка.легендарная { border-color: #d69e2e; box-shadow: 0 0 25px rgba(214, 158, 46, 0.6); }
+        .карточка.мифическая { border-color: #e53e3e; box-shadow: 0 0 30px rgba(229, 62, 62, 0.7); animation: пульс-миф 2s infinite alternate; }
+        .карточка.аномальная { border-color: #f6e05e; box-shadow: 0 0 30px rgba(246, 224, 94, 0.8); animation: пульс-аном 2s infinite alternate; }
+        .карточка.реальная { border-color: #ffffff; box-shadow: 0 0 30px rgba(255, 255, 255, 0.9); animation: пульс-реал 2s infinite alternate; }
+        @keyframes пульс-миф { from { box-shadow: 0 0 20px rgba(229, 62, 62, 0.5); } to { box-shadow: 0 0 40px rgba(229, 62, 62, 1); } }
+        @keyframes пульс-аном { from { box-shadow: 0 0 20px rgba(246, 224, 94, 0.5); } to { box-shadow: 0 0 40px rgba(246, 224, 94, 1); } }
+        @keyframes пульс-реал { from { box-shadow: 0 0 20px rgba(255, 255, 255, 0.5); } to { box-shadow: 0 0 40px rgba(255, 255, 255, 1); } }
+
+        .карточка canvas { width: 100%; height: 130px; display: block; background: #000; }
+        .карточка .название { padding: 10px; font-size: 13px; font-weight: 700; color: #e2e8f0; text-align: center; border-top: 1px solid #1a202c; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .карточка .редкость-метка { position: absolute; top: 6px; right: 6px; font-size: 10px; font-weight: 800; padding: 2px 6px; border-radius: 4px; text-transform: uppercase; }
+        .обычная .редкость-метка { background: #4a5568; color: #fff; }
+        .необычная .редкость-метка { background: #38a169; color: #fff; }
+        .редкая .редкость-метка { background: #3182ce; color: #fff; }
+        .эпическая .редкость-метка { background: #805ad5; color: #fff; }
+        .легендарная .редкость-метка { background: #d69e2e; color: #fff; }
+        .мифическая .редкость-метка { background: #e53e3e; color: #fff; }
+        .аномальная .редкость-метка { background: #f6e05e; color: #000; }
+        .реальная .редкость-метка { background: #fff; color: #000; }
+
+        .карточка.раскрыта { grid-column: 1 / -1; border-width: 3px; background: #1a202c; cursor: default; }
+        .карточка.раскрыта canvas { height: 250px; }
+        .карточка.раскрыта .название { font-size: 20px; padding: 15px; border-top: none; border-bottom: 1px solid #2d3748; }
+        .детали { display: none; padding: 20px; }
+        .карточка.раскрыта .детали { display: block; animation: появление 0.3s ease; }
+        @keyframes появление { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .детали .строка { display: flex; justify-content: space-between; margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px solid #2d3748; font-size: 14px; }
+        .детали .строка:last-child { border-bottom: none; }
+        .детали .лейбл { color: #718096; }
+        .детали .значение { color: #90cdf4; font-weight: 600; text-align: right; }
+        .факт-блок { background: #0f1419; border-left: 4px solid #4299e1; padding: 15px; border-radius: 0 8px 8px 0; margin-top: 15px; font-size: 14px; line-height: 1.5; color: #cbd5e0; font-style: italic; }
+        
+        .удалить-кнопка, .скачать-кнопка { position: absolute; top: 6px; border: none; width: 28px; height: 28px; border-radius: 6px; font-size: 14px; cursor: pointer; display: none; z-index: 5; align-items: center; justify-content: center; }
+        .удалить-кнопка { left: 6px; background: rgba(229, 62, 62, 0.8); color: white; }
+        .скачать-кнопка { left: 40px; background: rgba(214, 158, 46, 0.9); color: #000; }
+        .карточка.раскрыта .удалить-кнопка, .карточка.раскрыта .скачать-кнопка { display: flex; }
+
+        .модалка-фон { position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 1000; display: none; align-items: center; justify-content: center; padding: 20px; }
+        .модалка-фон.активна { display: flex; }
+        .модалка { background: #1a202c; border: 2px solid #2d3748; border-radius: 16px; width: 100%; max-width: 400px; max-height: 80vh; display: flex; flex-direction: column; overflow: hidden; }
+        .модалка-шапка { padding: 15px 20px; border-bottom: 1px solid #2d3748; display: flex; justify-content: space-between; align-items: center; background: #0f1419; }
+        .модалка-шапка h2 { margin: 0; font-size: 18px; color: #fff; }
+        .модалка-закрыть { background: transparent; border: none; color: #718096; font-size: 20px; cursor: pointer; }
+        .модалка-контент { padding: 20px; overflow-y: auto; }
+
+        .сорт-кнопка { display: block; width: 100%; background: #2d3748; color: #e2e8f0; border: none; padding: 12px; border-radius: 8px; margin-bottom: 8px; font-size: 14px; font-family: inherit; cursor: pointer; text-align: left; transition: all 0.2s; }
+        .сорт-кнопка:hover { background: #4299e1; color: white; }
+        .сорт-кнопка.активна { background: #3182ce; color: white; }
+
+        .стат-строка { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #2d3748; font-size: 14px; }
+        .стат-строка:last-child { border-bottom: none; }
+        .стат-лейбл { color: #a0aec0; }
+        .стат-значение { color: #f6e05e; font-weight: 700; }
+
+        #корзина-кнопка { position: fixed; bottom: 20px; left: 20px; width: 56px; height: 56px; background: rgba(229, 62, 62, 0.9); border: 2px solid #e53e3e; border-radius: 50%; color: white; font-size: 24px; cursor: pointer; z-index: 100; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 15px rgba(229, 62, 62, 0.5); transition: transform 0.2s; }
+        #корзина-кнопка:active { transform: scale(0.9); }
+        .корзина-бейдж { position: absolute; top: -5px; right: -5px; background: #fff; color: #e53e3e; font-size: 12px; font-weight: 800; width: 20px; height: 20px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+        .корзина-элемент { display: flex; justify-content: space-between; align-items: center; padding: 10px; background: #2d3748; border-radius: 8px; margin-bottom: 8px; }
+        .корзина-элемент .инфо { font-size: 13px; }
+        .корзина-кнопка-вернуть { background: #38a169; color: white; border: none; padding: 5px 10px; border-radius: 6px; cursor: pointer; font-size: 12px; }
+
+        .сохранение { display: flex; gap: 10px; max-width: 400px; margin: 30px auto 0 auto; }
+        .сохранение button { flex: 1; padding: 14px; border-radius: 12px; border: none; font-weight: 700; cursor: pointer; font-family: inherit; font-size: 14px; }
+        .btn-сохр { background: #38a169; color: white; }
+        .btn-загр { background: #805ad5; color: white; }
+        
+        .уведомление { position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%); background: #38a169; color: white; padding: 10px 20px; border-radius: 20px; font-weight: 600; z-index: 1000; opacity: 0; transition: opacity 0.3s; pointer-events: none; text-align: center; }
+        .уведомление.активно { opacity: 1; }
+
+        /* СЛОТ-МАШИНА */
+        .слот-фон { position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 2000; display: none; align-items: center; justify-content: center; flex-direction: column; }
+        .слот-фон.активна { display: flex; }
+        .слот-окно { background: #1a202c; border: 4px solid #d69e2e; border-radius: 20px; padding: 30px; text-align: center; max-width: 350px; width: 90%; }
+        .слот-барабан { display: flex; gap: 10px; justify-content: center; margin: 20px 0; }
+        .слот-ячейка { width: 80px; height: 100px; background: #0f1419; border: 2px solid #4a5568; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 40px; transition: all 0.1s; }
+        .слот-ячейка.крутится { animation: тряска-слота 0.1s infinite; }
+        @keyframes тряска-слота { 0% { transform: translateY(0); } 50% { transform: translateY(-5px); } 100% { transform: translateY(0); } }
+        .слот-кнопка { background: #d69e2e; color: #000; border: none; padding: 15px 40px; border-radius: 12px; font-size: 18px; font-weight: 800; cursor: pointer; margin-top: 15px; font-family: inherit; }
+        .слот-кнопка:active { transform: scale(0.95); }
+
+        .достижение { display: flex; align-items: center; gap: 15px; padding: 12px; background: #0f1419; border-radius: 10px; margin-bottom: 10px; border: 1px solid #2d3748; }
+        .достижение.получено { border-color: #38a169; background: rgba(56, 161, 105, 0.1); }
+        .достижение .иконка { font-size: 30px; }
+        .достижение .текст .название { color: #e2e8f0; font-weight: 700; font-size: 14px; }
+        .достижение .текст .описание { color: #718096; font-size: 12px; margin-top: 2px; }
+        .достижение.получено .текст .название { color: #38a169; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <a href="../игры.html" class="back-btn" style="background:#1a202c; padding: 8px 12px; border-radius: 8px; color: #a0aec0; text-decoration: none; font-size: 14px;">← Назад</a>
+        <h1>🌌 Космос</h1>
+        <button class="btn-звезда" id="btn-достижения">⭐</button>
+    </div>
+
+    <div class="тулбар">
+        <button class="тулбар-кнопка" id="кнопка-стат" title="Статистика">📊</button>
+        <button class="тулбар-кнопка" id="кнопка-задания" title="Ежедневные задания">📋</button>
+        <input type="text" class="тулбар-поиск" id="поиск-ввод" placeholder="Поиск...">
+        <button class="тулбар-кнопка" id="кнопка-сорт" title="Сортировка">↕️</button>
+    </div>
+
+    <button class="btn-скан" id="btn-скан">ЖМИ! (Сканировать)</button>
+
+    <div class="справка-контейнер">
+        <button class="справка-кнопка" id="справка-кнопка">
+            <span>📖 Что значит? (Справка)</span>
+            <span class="стрелка">▼</span>
+        </button>
+        <div class="справка-содержимое" id="справка-содержимое">
+            <div class="справка-текст">
+                <h3>⭐ Звёзды</h3>
+                <p><span class="выделение">O, B, A, F, G, K, M</span> — классы по температуре. Светимости: Ia — сверхгигант, V — карлик.</p>
+                <h3>🌌 Галактики</h3>
+                <p><span class="выделение">Спиральная (S)</span>, <span class="выделение">С перемычкой (SB)</span>, <span class="выделение">Эллиптическая (E)</span>, <span class="выделение">Линзовидная (S0)</span>.</p>
+                <h3>🍕 Аномалии</h3>
+                <p>Объекты, нарушающие законы физики. Выпадают с шансом 0.1%.</p>
+                <h3>🌍 Реальные объекты</h3>
+                <p>Настоящие космические тела (Земля, TON-618). Выпадают с шансом 0.05%.</p>
+            </div>
+        </div>
+    </div>
+
+    <div id="галерея"></div>
+
+    <button id="корзина-кнопка">🗑️<span class="корзина-бейдж" id="корзина-бейдж" style="display:none;">0</span></button>
+
+    <div class="сохранение">
+        <button class="btn-сохр" id="btn-сохр">💾 Скачать файл</button>
+        <button class="btn-загр" id="btn-загр">📂 Загрузить файл</button>
+        <input type="file" id="файл-загрузки" accept=".json" style="display:none;">
+    </div>
+
+    <div class="модалка-фон" id="модалка-сорт">
+        <div class="модалка">
+            <div class="модалка-шапка"><h2>↕️ Сортировка</h2><button class="модалка-закрыть" data-закрыть="сорт">✕</button></div>
+            <div class="модалка-контент" id="сорт-список">
+                <button class="сорт-кнопка активна" data-сорт="новые">Сначала новые</button>
+                <button class="сорт-кнопка" data-сорт="старые">Сначала старые</button>
+                <button class="сорт-кнопка" data-сорт="редкие">По редкости (Топ вверху)</button>
+                <button class="сорт-кнопка" data-сорт="обычные">По редкости (Обычные вверху)</button>
+                <button class="сорт-кнопка" data-сорт="тип">По типу объекта (А-Я)</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="модалка-фон" id="модалка-стат">
+        <div class="модалка">
+            <div class="модалка-шапка"><h2>📊 Статистика</h2><button class="модалка-закрыть" data-закрыть="стат">✕</button></div>
+            <div class="модалка-контент" id="стат-контент"></div>
+        </div>
+    </div>
+
+    <div class="модалка-фон" id="модалка-корзина">
+        <div class="модалка">
+            <div class="модалка-шапка"><h2>🗑️ Корзина (последние 10)</h2><button class="модалка-закрыть" data-закрыть="корзина">✕</button></div>
+            <div class="модалка-контент" id="корзина-контент"></div>
+        </div>
+    </div>
+
+    <div class="модалка-фон" id="модалка-достижения">
+        <div class="модалка">
+            <div class="модалка-шапка"><h2>🏆 Достижения</h2><button class="модалка-закрыть" data-закрыть="достижения">✕</button></div>
+            <div class="модалка-контент" id="достижения-контент"></div>
+        </div>
+    </div>
+
+    <div class="модалка-фон" id="модалка-задания">
+        <div class="модалка">
+            <div class="модалка-шапка"><h2>📋 Ежедневные задания</h2><button class="модалка-закрыть" data-закрыть="задания">✕</button></div>
+            <div class="модалка-контент" id="задания-контент"></div>
+        </div>
+    </div>
+
+    <div class="слот-фон" id="слот-фон">
+        <div class="слот-окно">
+            <h2 style="color:#f6e05e; margin:0;">🎰 Задание выполнено!</h2>
+            <div class="слот-барабан">
+                <div class="слот-ячейка" id="слот-1">❓</div>
+                <div class="слот-ячейка" id="слот-2">❓</div>
+                <div class="слот-ячейка" id="слот-3">❓</div>
+            </div>
+            <button class="слот-кнопка" id="слот-кнопка">Крутить!</button>
+        </div>
+    </div>
+
+    <div class="уведомление" id="уведомление"></div>
+
+    <script>
+        'use strict';
+        // ==========================================
+        // 1. МЕГА-БАЗА ЗНАНИЙ
+        // ==========================================
+        const ПОДТИПЫ = {
+            'ST_O': { имя: 'Голубая звезда (O)', иконка: '🔵', база: 'ST' },
+            'ST_B': { имя: 'Бело-голубая звезда (B)', иконка: '⚪', база: 'ST' },
+            'ST_A': { имя: 'Белая звезда (A)', иконка: '⚪', база: 'ST' },
+            'ST_F': { имя: 'Желто-белая звезда (F)', иконка: '🟡', база: 'ST' },
+            'ST_G': { имя: 'Жёлтая звезда (G)', иконка: '🟡', база: 'ST' },
+            'ST_K': { имя: 'Оранжевая звезда (K)', иконка: '🟠', база: 'ST' },
+            'ST_M': { имя: 'Красная звезда (M)', иконка: '🔴', база: 'ST' },
+            'ST_SG': { имя: 'Сверхгигант (Ia)', иконка: '💥', база: 'ST' },
+            'ST_GG': { имя: 'Гигант (III)', иконка: '🔆', база: 'ST' },
+            'GA_S': { имя: 'Спиральная галактика (S)', иконка: '🌀', база: 'GA' },
+            'GA_SB': { имя: 'Спиральная с перемычкой (SB)', иконка: '🌌', база: 'GA' },
+            'GA_E': { имя: 'Эллиптическая галактика (E)', иконка: '⚪', база: 'GA' },
+            'GA_S0': { имя: 'Линзовидная галактика (S0)', иконка: '💿', база: 'GA' },
+            'GA_IRR': { имя: 'Неправильная галактика (Irr)', иконка: '💫', база: 'GA' },
+            'NB_EM': { имя: 'Эмиссионная туманность', иконка: '🔴', база: 'NB' },
+            'NB_REF': { имя: 'Отражательная туманность', иконка: '🔵', база: 'NB' },
+            'NB_PL': { имя: 'Планетарная туманность', иконка: '💍', база: 'NB' },
+            'NB_SNR': { имя: 'Остаток сверхновой', иконка: '💥', база: 'NB' },
+            'NB_DARK': { имя: 'Тёмная туманность', иконка: '⚫', база: 'NB' },
+            'SC_OPEN': { имя: 'Рассеянное скопление', иконка: '✨', база: 'SC' },
+            'SC_GLOB': { имя: 'Шаровое скопление', иконка: '🔮', база: 'SC' },
+            'PL_HJ': { имя: 'Горячий Юпитер', иконка: '🔥', база: 'PL' },
+            'PL_SE': { имя: 'Суперземля', иконка: '🌍', база: 'PL' },
+            'PL_OC': { имя: 'Океанический мир', иконка: '🌊', база: 'PL' },
+            'PL_IC': { имя: 'Ледяной мир', иконка: '❄️', база: 'PL' },
+            'PL_ROCK': { имя: 'Каменистая планета', иконка: '🪨', база: 'PL' },
+            'BH': { имя: 'Чёрная дыра', иконка: '⚫', база: 'BH' },
+            'WH': { имя: 'Белая дыра', иконка: '⚪', база: 'WH' },
+            'NS': { имя: 'Нейтронная звезда', иконка: '💫', база: 'NS' },
+            'NS_PSR': { имя: 'Пульсар', иконка: '📡', база: 'NS' },
+            'AS': { имя: 'Астероид', иконка: '🪨', база: 'AS' },
+            'CM': { имя: 'Комета', иконка: '☄️', база: 'CM' },
+            'QS': { имя: 'Квазар', иконка: '🔆', база: 'QS' },
+            'WD': { имя: 'Белый карлик', иконка: '⚪', база: 'WD' },
+            'MN': { имя: 'Спутник', иконка: '🌙', база: 'MN' },
+            'PG': { имя: 'Газовый гигант', иконка: '🔵', база: 'PG' },
+            
+            // --- АНОМАЛИИ ---
+            'AN_PIZZA': { имя: 'Планета Пиццы', иконка: '🍕', база: 'AN', файл: 'космос-пицца' },
+            'AN_COOKIE': { имя: 'Скопление Печенек', иконка: '🍪', база: 'AN', файл: 'космос-печенька' },
+            'AN_WEALTH': { имя: 'Чёрная дыра Богатства', иконка: '💰', база: 'AN', файл: 'космос-богатство' },
+            'AN_CAT': { имя: 'Газовый гигант из Котов', иконка: '🐱', база: 'AN', файл: 'космос-кот' },
+            'AN_SOCK': { имя: 'Туманность Потерянных Носков', иконка: '🧦', база: 'AN', файл: 'космос-носок' },
+            'AN_BACKROOM': { имя: 'Закулисная Планета', иконка: '🟨', база: 'AN', файл: 'космос-закулисье' },
+            'AN_MEME': { имя: 'Квазар Мемов', иконка: '😂', база: 'AN', файл: 'космос-мем' },
+            'AN_COFFEE': { имя: 'Звезда Кофеина', иконка: '☕', база: 'AN', файл: 'космос-кофе' },
+            'AN_GAME': { имя: 'Планета-Игровая консоль', иконка: '🎮', база: 'AN', файл: 'космос-игра' },
+            'AN_INTERNET': { имя: 'Червоточина Интернета', иконка: '🌐', база: 'AN', файл: 'космос-интернет' },
+            'AN_MUSIC': { имя: 'Пульсар Музыки', иконка: '🎵', база: 'AN', файл: 'космос-музыка' },
+            'AN_DIAMOND': { имя: 'Астероид из Алмазов', иконка: '💎', база: 'AN', файл: 'космос-алмаз' },
+            'AN_MEME2': { имя: 'Планета Смеха', иконка: '🤣', база: 'AN', файл: 'космос-смех' },
+            'AN_SLEEP': { имя: 'Туманность Сна', иконка: '😴', база: 'AN', файл: 'космос-сон' },
+            'AN_SOCKS2': { имя: 'Скопление Дыр от Носков', иконка: '🕳️', база: 'AN', файл: 'космос-дыра' },
+            'AN_LEGO': { имя: 'Астероид Лего', иконка: '🧱', база: 'AN', файл: 'космос-лего' },
+            'AN_GHOST': { имя: 'Планета Призраков', иконка: '👻', база: 'AN', файл: 'космос-призрак' },
+            'AN_BOOK': { имя: 'Галактика Знаний', иконка: '📚', база: 'AN', файл: 'космос-книги' },
+            'AN_PAINT': { имя: 'Мир Красок', иконка: '🎨', база: 'AN', файл: 'космос-краски' },
+            'AN_BUBBLE': { имя: 'Туманность Пузырей', иконка: '🫧', база: 'AN', файл: 'космос-пузыри' },
+            'AN_CLOCK': { имя: 'Звезда Времени', иконка: '⏳', база: 'AN', файл: 'космос-время' },
+            'AN_BREAD': { имя: 'Планета Хлеба', иконка: '🍞', база: 'AN', файл: 'космос-хлеб' },
+            'AN_PENGUIN': { имя: 'Ледяной мир Пингвинов', иконка: '🐧', база: 'AN', файл: 'космос-пингвин' },
+            'AN_SHARK': { имя: 'Туманность Акул', иконка: '🦈', база: 'AN', файл: 'космос-акула' },
+            'AN_CANDY': { имя: 'Квазар Конфет', иконка: '🍬', база: 'AN', файл: 'космос-конфета' },
+            
+            // --- РЕАЛЬНЫЕ ОБЪЕКТЫ ---
+            'RE_EARTH': { имя: 'Земля', иконка: '🌍', база: 'RE', файл: 'космос-земля' },
+            'RE_MARS': { имя: 'Марс', иконка: '🔴', база: 'RE', файл: 'космос-марс' },
+            'RE_JUPITER': { имя: 'Юпитер', иконка: '🟠', база: 'RE', файл: 'космос-юпитер' },
+            'RE_SATURN': { имя: 'Сатурн', иконка: '🪐', база: 'RE', файл: 'космос-сатурн' },
+            'RE_MILKYWAY': { имя: 'Млечный Путь', иконка: '🌌', база: 'RE', файл: 'космос-млечныйпуть' },
+            'RE_TON618': { имя: 'TON-618', иконка: '⚫', база: 'RE', файл: 'космос-ton618' },
+            'RE_SUN': { имя: 'Солнце', иконка: '☀️', база: 'RE', файл: 'космос-солнце' },
+            'RE_ANDROMEDA': { имя: 'Андромеда', иконка: '🌀', база: 'RE', файл: 'космос-андромеда' },
+            'RE_PROXIMA': { имя: 'Проксима Центавра', иконка: '🔴', база: 'RE', файл: 'космос-проксима' },
+            'RE_TRAPPIST': { имя: 'TRAPPIST-1', иконка: '🔴', база: 'RE', файл: 'космос-trappist' }
+        };
+
+        const РЕДКОСТИ = [
+            { id: 'обычная', имя: 'Обычная', шанс: 0.44 },
+            { id: 'необычная', имя: 'Необычная', шанс: 0.25 },
+            { id: 'редкая', имя: 'Редкая', шанс: 0.15 },
+            { id: 'эпическая', имя: 'Эпическая', шанс: 0.08 },
+            { id: 'легендарная', имя: 'Легендарная', шанс: 0.05 },
+            { id: 'мифическая', имя: 'Мифическая', шанс: 0.03 }
+        ];
+
+        const ХАРАКТЕРИСТИКИ = {
+            'PL': { масса: ['0.1', '1', '5', '10'], радиус: ['3000 км', '6371 км', '10000 км'], температура: ['-100°C', '0°C', '15°C', '100°C'], атмосфера: ['Азот', 'Кислород', 'Углекислый газ'], жизнь: ['Нет', 'Микробная', 'Разумная'] },
+            'ST': { масса: ['0.1', '1', '10', '50'], радиус: ['100 000 км', '1 млн км'], температура: ['3000°C', '5000°C', '10000°C', '50000°C'], атмосфера: ['Плазма'], жизнь: ['Невозможна'] },
+            'BH': { масса: ['10', '1000', '1 млн'], радиус: ['10 км', '1000 км'], температура: ['0 K (горизонт)'], атмосфера: ['Аккреционный диск'], жизнь: ['Невозможна'] },
+            'WH': { масса: ['Отрицательная'], радиус: ['10 км'], температура: ['Абсолютный ноль'], атмосфера: ['Выброс материи'], жизнь: ['Невозможна'] },
+            'NS': { масса: ['1.5', '2', '3'], радиус: ['10 км', '20 км'], температура: ['1 млн °C'], атмосфера: ['Магнитосфера'], жизнь: ['Невозможна'] },
+            'GA': { масса: ['1 млн', '1 млрд'], радиус: ['10 000 св. лет', '100 000 св. лет'], температура: ['Разная'], атмосфера: ['Межзвёздный газ'], жизнь: ['Миллионы миров'] },
+            'NB': { масса: ['1', '100'], радиус: ['1 св. год', '10 св. лет'], температура: ['-200°C', '-100°C'], атмосфера: ['Водород', 'Гелий', 'Спирт'], жизнь: ['Нет'] },
+            'AS': { масса: ['0.0001', '0.001'], радиус: ['1 км', '10 км'], температура: ['-150°C'], атмосфера: ['Отсутствует'], жизнь: ['Нет'] },
+            'CM': { масса: ['0.00001'], радиус: ['1 км', '5 км'], температура: ['-200°C'], атмосфера: ['Лёд и пыль'], жизнь: ['Нет'] },
+            'QS': { масса: ['1 млрд'], радиус: ['Размер системы'], температура: ['Миллионы °C'], атмосфера: ['Плазма'], жизнь: ['Невозможна'] },
+            'WD': { масса: ['0.5', '1'], радиус: ['5000 км'], температура: ['10 000°C', '100 000°C'], атмосфера: ['Водород'], жизнь: ['Невозможна'] },
+            'MN': { масса: ['0.01', '0.1'], радиус: ['500 км', '2000 км'], температура: ['-150°C'], атмосфера: ['Отсутствует'], жизнь: ['Нет'] },
+            'PG': { масса: ['50', '100'], радиус: ['50 000 км'], температура: ['-100°C'], атмосфера: ['Водород', 'Гелий'], жизнь: ['Нет'] },
+            'SC': { масса: ['1000', '1 млн'], радиус: ['10 св. лет', '100 св. лет'], температура: ['Разная'], атмосфера: ['Газ'], жизнь: ['Нет'] },
+            'AN': { масса: ['Бесконечная', 'Аномальная', '1 млн калорий', '0', 'Сломана'], радиус: ['Размером с духовку', 'Хрустящий', 'Мягкий', 'Бесконечный', 'Крошечный'], температура: ['Идеальная для чая', '200°C', 'Холодная', 'Горячая'], атмосфера: ['Сырный запах', 'Мурчание', 'Пиксели', 'Запах стирки', 'Шоколадная крошка'], жизнь: ['Пиццееды', 'Кошки', 'Геймеры', 'Интернет-пользователи', 'Нет'] },
+            'RE': { масса: ['1 M⊕', '317 M⊕', '1 M☉'], радиус: ['6371 км', '69 911 км', '1 св. год'], температура: ['-100°C', '15°C', '5000°C'], атмосфера: ['Азот', 'Водород', 'Плазма'], жизнь: ['Есть', 'Возможна', 'Нет'] }
+        };
+
+        const ФАКТЫ = {
+            'ST_O': ['Самая горячая и яркая звезда.', 'Живёт всего несколько миллионов лет.'],
+            'ST_M': ['Самая холодная и распространённая звезда.', 'Может жить триллионы лет.'],
+            'GA_S': ['Рукава закручены по спирали.', 'В центре — сверхмассивная чёрная дыра.'],
+            'GA_SB': ['Имеет яркую перемычку из звёзд в центре.'],
+            'GA_E': ['Состоит в основном из старых звёзд.', 'Почти не содержит газа.'],
+            'NB_REF': ['Светится голубым, отражая свет соседних звёзд.'],
+            'NB_DARK': ['Не светится, а поглощает свет.', 'Внутри могут рождаться новые звёзды.'],
+            'NS_PSR': ['Вращается сотни раз в секунду.', 'Излучает радиолучи как маяк.'],
+            'SC_GLOB': ['Содержит сотни тысяч старых звёзд.', 'Возраст — 12–14 миллиардов лет.'],
+            'PL_HJ': ['Газовый гигант, раскалённый докрасна.', 'Год длится всего несколько дней.'],
+            'BH': ['Поглощает всё, что подлетает слишком близко.'],
+            'QS': ['Светит ярче целой галактики.'],
+            'AN_PIZZA': ['Состоит из теста, сыра и колбасы.', 'Имеет идеальную гравитацию для удержания начинки.'],
+            'AN_COOKIE': ['Поверхность покрыта шоколадными кратерами.', 'Излучает запах ванили на 100 световых лет.'],
+            'AN_WEALTH': ['Затягивает всё в радиусе 10 галактик.', 'Выбрасывает обратно только монеты.'],
+            'AN_CAT': ['Состоит из 4 миллиардов котов.', 'Мурчит на частоте, вызывающей сон.'],
+            'AN_SOCK': ['Здесь пропадают все носки из стиральной машины.', 'Вращается вокруг планеты Стиральная Машина.'],
+            'AN_BACKROOM': ['Поверхность состоит из жёлтых обоев.', 'Имеет бесконечные комнаты.'],
+            'AN_MEME': ['Излучает мемы со скоростью света.', 'Имеет форму собаки Доге.'],
+            'AN_COFFEE': ['Состоит из чистого кофеина.', 'Ускоряет время вокруг себя.'],
+            'AN_GAME': ['Поверхность покрыта кнопками.', 'Требует обновления драйверов.'],
+            'AN_INTERNET': ['Излучает Wi-Fi сигналы.', 'Затягивает в социальные сети.'],
+            'AN_MUSIC': ['Излучает звуковые волны.', 'Все планеты вокруг танцуют.'],
+            'AN_DIAMOND': ['Состоит из 100% алмазов.', 'Ослепляет всех, кто на него смотрит.'],
+            'AN_MEME2': ['Атмосфера состоит из смеха.', 'Заражает всё вокруг смехом.'],
+            'AN_SLEEP': ['Излучает сон.', 'Планеты вокруг спят.'],
+            'AN_SOCKS2': ['Состоит из чёрных дыр от носков.', 'Поглощает носки.'],
+            'AN_LEGO': ['Состоит из деталей Лего.', 'Больше всего страдают ноги космонавтов.'],
+            'AN_GHOST': ['Обитают призраки.', 'Невидимые планеты вокруг.'],
+            'AN_BOOK': ['Содержит все знания вселенной.', 'Состоит из книг.'],
+            'AN_PAINT': ['Все планеты вокруг цветастые.', 'Состоит из красок.'],
+            'AN_BUBBLE': ['Состоит из мыльных пузырей.', 'Лопается при прикосновении.'],
+            'AN_CLOCK': ['Время течёт вспять.', 'Часы идут в обратную сторону.'],
+            'AN_BREAD': ['Поверхность покрыта хлебом.', 'Атмосфера из дрожжей.'],
+            'AN_PENGUIN': ['Обитают пингвины.', 'Очень холодно.'],
+            'AN_SHARK': ['В туманности плавают акулы.', 'Опасные хищники.'],
+            'AN_CANDY': ['Состоит из конфет.', 'Сладкий на вкус.'],
+            'RE_EARTH': ['Единственная известная планета с жизнью.', '70% поверхности — вода.'],
+            'RE_MARS': ['Красная планета.', 'Имеет самые высокие вулканы в Солнечной системе.'],
+            'RE_JUPITER': ['Самая большая планета Солнечной системы.', 'Имеет Большое Красное Пятно — гигантский шторм.'],
+            'RE_SATURN': ['Планета с самыми заметными кольцами.', 'Кольца состоят из льда и камня.'],
+            'RE_MILKYWAY': ['Наша родная галактика.', 'Содержит 100–400 миллиардов звёзд.'],
+            'RE_TON618': ['Одна из самых массивных чёрных дыр.', 'Её масса — 66 миллиардов солнечных.'],
+            'RE_SUN': ['Наша звезда.', 'Возраст — 4,6 миллиарда лет.'],
+            'RE_ANDROMEDA': ['Ближайшая к нам крупная галактика.', 'Столкнётся с Млечным Путём через 4 млрд лет.'],
+            'RE_PROXIMA': ['Ближайшая к Солнцу звезда.', 'Находится на расстоянии 4,2 световых года.'],
+            'RE_TRAPPIST': ['Система из 7 землеподобных планет.', 'Находится в 40 световых годах от нас.']
+        };
+
+        // ==========================================
+        // 2. СОСТОЯНИЕ
+        // ==========================================
+        let коллекция = [];
+        let корзина = [];
+        let текущийСорт = 'новые';
+        let текущийПоиск = '';
+        let достижения = {};
+        let счетчикУдалений = 0; // Для достижения "Мусорщик"
+        
+        let ежедневныеЗадания = [];
+        let датаЗаданий = '';
+
+        function проверитьОбновлениеЗаданий() {
+            const сегодня = new Date().toISOString().split('T')[0];
+            if (датаЗаданий !== сегодня) {
+                датаЗаданий = сегодня;
+                ежедневныеЗадания = [
+                    { текст: 'Сделай 20 сканирований', цель: 20, текущий: 0, тип: 'сканы', выполнено: false },
+                    { текст: 'Найди 3 карточки редкости Редкая и выше', цель: 3, текущий: 0, тип: 'редкие', выполнено: false },
+                    { текст: 'Открой 1 Аномалию', цель: 1, текущий: 0, тип: 'аномалии', выполнено: false }
+                ];
+                сохранитьЛокально();
+            }
+        }
+
+        function загрузитьЛокально() {
+            try {
+                const данные = localStorage.getItem('космос_коллекция');
+                if (данные) коллекция = JSON.parse(данные);
+                const корз = localStorage.getItem('космос_корзина');
+                if (корз) корзина = JSON.parse(корз);
+                const дост = localStorage.getItem('космос_достижения');
+                if (дост) достижения = JSON.parse(дост);
+                const счет = localStorage.getItem('космос_счетчик_удалений');
+                if (счет) счетчикУдалений = parseInt(счет) || 0;
+                const задачи = localStorage.getItem('космос_задания');
+                if (задачи) {
+                    const распарсенные = JSON.parse(задачи);
+                    ежедневныеЗадания = распарсенные.задания || [];
+                    датаЗаданий = распарсенные.дата || '';
+                }
+            } catch(e) {}
+        }
+
+        function сохранитьЛокально() {
+            try {
+                localStorage.setItem('космос_коллекция', JSON.stringify(коллекция));
+                localStorage.setItem('космос_корзина', JSON.stringify(корзина));
+                localStorage.setItem('космос_достижения', JSON.stringify(достижения));
+                localStorage.setItem('космос_счетчик_удалений', счетчикУдалений);
+                localStorage.setItem('космос_задания', JSON.stringify({ задания: ежедневныеЗадания, дата: датаЗаданий }));
+            } catch(e) {}
+        }
+
+        // ==========================================
+        // 3. ДОСТИЖЕНИЯ
+        // ==========================================
+        const СПИСОК_ДОСТИЖЕНИЙ = [
+            { id: 'first_scan', иконка: '🔭', название: 'Первый контакт', описание: 'Отсканируй 1 карточку', проверка: () => коллекция.length >= 1 },
+            { id: 'collector_10', иконка: '📦', название: 'Коллекционер', описание: 'Собери 10 карточек', проверка: () => коллекция.length >= 10 },
+            { id: 'collector_50', иконка: '📚', название: 'Библиотекарь', описание: 'Собери 50 карточек', проверка: () => коллекция.length >= 50 },
+            { id: 'anomaly_1', иконка: '🍕', название: 'Охотник за аномалиями', описание: 'Найди 1 аномалию', проверка: () => коллекция.some(o => o.база === 'AN') },
+            { id: 'real_1', иконка: '🌍', название: 'Землянин', описание: 'Найди реальный объект', проверка: () => коллекция.some(o => o.база === 'RE') },
+            { id: 'bh_1', иконка: '⚫', название: 'Повелитель тьмы', описание: 'Найди чёрную дыру', проверка: () => коллекция.some(o => o.база === 'BH') },
+            { id: 'trash_10', иконка: '🗑️', название: 'Мусорщик', описание: 'Удали 10 карточек (всего)', проверка: () => счетчикУдалений >= 10 }
+        ];
+
+        function проверитьДостижения() {
+            let новое = null;
+            СПИСОК_ДОСТИЖЕНИЙ.forEach(д => {
+                if (!достижения[д.id] && д.проверка()) {
+                    достижения[д.id] = true;
+                    if (!новое) новое = д;
+                }
+            });
+            if (новое) {
+                показатьУведомление(`🏆 Достижение: ${новое.название}!`);
+                сохранитьЛокально();
+            }
+        }
+
+        function отрисоватьДостижения() {
+            const конт = document.getElementById('достижения-контент');
+            конт.innerHTML = '';
+            СПИСОК_ДОСТИЖЕНИЙ.forEach(д => {
+                const div = document.createElement('div');
+                div.className = 'достижение ' + (достижения[д.id] ? 'получено' : '');
+                div.innerHTML = `
+                    <div class="иконка">${достижения[д.id] ? д.иконка : '🔒'}</div>
+                    <div class="текст">
+                        <div class="название">${д.название}</div>
+                        <div class="описание">${д.описание}</div>
+                    </div>
+                `;
+                конт.appendChild(div);
+            });
+        }
+
+        // ==========================================
+        // 4. ГЕНЕРАТОР
+        // ==========================================
+        function случайныйЭлемент(массив) { return массив[Math.floor(Math.random() * массив.length)]; }
+        function случайноеЧисло(мин, макс) { return Math.floor(Math.random() * (макс - мин + 1)) + мин; }
+
+        function сгенерироватьОбъект() {
+            let подтип;
+            let редкость;
+            let база;
+
+            const шансАномалии = 0.001;
+            const шансРеального = 0.0005;
+
+            const бросок = Math.random();
+            if (бросок < шансАномалии) {
+                const аномальные = Object.keys(ПОДТИПЫ).filter(k => k.startsWith('AN_'));
+                подтип = случайныйЭлемент(аномальные);
+                редкость = { id: 'аномальная', имя: 'Аномальная' };
+            } else if (бросок < шансАномалии + шансРеального) {
+                const реальные = Object.keys(ПОДТИПЫ).filter(k => k.startsWith('RE_'));
+                подтип = случайныйЭлемент(реальные);
+                редкость = { id: 'реальная', имя: 'Реальная' };
+            } else {
+                const обычные = Object.keys(ПОДТИПЫ).filter(k => !k.startsWith('AN_') && !k.startsWith('RE_'));
+                подтип = случайныйЭлемент(обычные);
+                const р = Math.random();
+                let накопление = 0;
+                редкость = РЕДКОСТИ[0];
+                for (const ред of РЕДКОСТИ) {
+                    накопление += ред.шанс;
+                    if (р <= накопление) { редкость = ред; break; }
+                }
+            }
+
+            const инфо = ПОДТИПЫ[подтип];
+            база = инфо.база;
+
+            // ИСПРАВЛЕНО: нормальные названия для аномалий и реальных
+            const сектор = String.fromCharCode(65 + случайноеЧисло(0, 25));
+            const класс = String.fromCharCode(65 + случайноеЧисло(0, 25));
+            const вес = String(случайноеЧисло(1, 99)).padStart(2, '0');
+            const время = String(случайноеЧисло(1, 99)).padStart(2, '0');
+            let название;
+            if (база === 'RE' || база === 'AN') {
+                название = инфо.имя; // Планета Пиццы, Земля и т.д.
+            } else {
+                название = `${сектор}-${подтип}-${вес}-${время}`;
+            }
+
+            const хар = ХАРАКТЕРИСТИКИ[база] || ХАРАКТЕРИСТИКИ['PL'];
+            const масса = случайныйЭлемент(хар.масса) + (база === 'PL' || база === 'MN' ? ' M⊕' : (база === 'AN' || база === 'RE' ? '' : ' M☉'));
+            const радиус = случайныйЭлемент(хар.радиус);
+            const температура = случайныйЭлемент(хар.температура);
+            const атмосфера = случайныйЭлемент(хар.атмосфера);
+            const жизнь = случайныйЭлемент(хар.жизнь);
+            const факт = случайныйЭлемент(ФАКТЫ[подтип] || ФАКТЫ[база] || ['Уникальный объект.']);
+
+            const цвета = ['#e53e3e', '#dd6b20', '#d69e2e', '#38a169', '#3182ce', '#805ad5', '#b83280', '#4a5568', '#a0aec0', '#ffffff'];
+            const цвет = случайныйЭлемент(цвета);
+
+            return {
+                id: Date.now() + Math.random().toString(36).substr(2, 5),
+                название, подтип, имяПодтипа: инфо.имя, иконка: инфо.иконка, база,
+                редкость: редкость.id, имяРедкости: редкость.имя,
+                масса, радиус, температура, атмосфера, жизнь, факт, цвет,
+                файл: инфо.файл, // <--- ВОТ ЭТА СТРОКА
+                вес: parseInt(вес), время: parseInt(время)
+            };
+        }
+
+        // ==========================================
+        // 5. ГРАФИКА (универсальная функция)
+        // ==========================================
+        function нарисоватьОбъектВКонтексте(ctx, obj, cx, cy, R) {
+            const sub = obj.подтип;
+            const base = obj.база;
+
+            if (sub === 'BH' || sub === 'WH') {
+                const isWhite = sub === 'WH';
+                ctx.shadowBlur = 30; ctx.shadowColor = isWhite ? '#fff' : '#ff8c00';
+                const grad = ctx.createRadialGradient(cx, cy, R*0.5, cx, cy, R*1.5);
+                grad.addColorStop(0, isWhite ? '#fff' : '#000');
+                grad.addColorStop(0.6, isWhite ? '#fff' : '#ff8c00');
+                grad.addColorStop(1, 'rgba(0,0,0,0)');
+                ctx.fillStyle = grad; ctx.beginPath(); ctx.arc(cx, cy, R*1.5, 0, Math.PI*2); ctx.fill();
+                ctx.shadowBlur = 0; ctx.fillStyle = isWhite ? '#fff' : '#000';
+                ctx.beginPath(); ctx.arc(cx, cy, R*0.6, 0, Math.PI*2); ctx.fill();
+            } else if (base === 'GA') {
+                ctx.save();
+                ctx.translate(cx, cy);
+                if (sub === 'GA_SB') { ctx.fillStyle = '#fff'; ctx.fillRect(-R*1.2, -R*0.1, R*2.4, R*0.2); }
+                ctx.rotate(Math.random() * Math.PI);
+                for (let i = 0; i < 300; i++) {
+                    const angle = i * 0.1;
+                    const r = (sub === 'GA_E') ? i * 0.3 : i * 0.4;
+                    ctx.fillStyle = `rgba(255,255,255,${1-i/300})`;
+                    ctx.beginPath(); ctx.arc(Math.cos(angle)*r, Math.sin(angle)*r, 1, 0, Math.PI*2); ctx.fill();
+                }
+                ctx.restore();
+            } else if (base === 'NB') {
+                ctx.globalAlpha = 0.4;
+                const clr = sub === 'NB_EM' ? '#e53e3e' : (sub === 'NB_REF' ? '#3182ce' : (sub === 'NB_PL' ? '#38a169' : (sub === 'NB_SNR' ? '#d69e2e' : '#4a5568')));
+                for (let i = 0; i < 20; i++) {
+                    const x = cx + (Math.random()-0.5)*R*2;
+                    const y = cy + (Math.random()-0.5)*R*2;
+                    const r = Math.random()*R*0.6;
+                    const g = ctx.createRadialGradient(x,y,0,x,y,r);
+                    g.addColorStop(0, clr); g.addColorStop(1, 'rgba(0,0,0,0)');
+                    ctx.fillStyle = g; ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2); ctx.fill();
+                }
+                ctx.globalAlpha = 1;
+            } else if (base === 'SC') {
+                for (let i = 0; i < (sub === 'SC_GLOB' ? 100 : 40); i++) {
+                    const angle = Math.random() * Math.PI * 2;
+                    const dist = sub === 'SC_GLOB' ? Math.random() * R : Math.random() * R * 1.5;
+                    const x = cx + Math.cos(angle) * dist;
+                    const y = cy + Math.sin(angle) * dist;
+                    ctx.fillStyle = `rgba(255,255,255,${Math.random()})`;
+                    ctx.beginPath(); ctx.arc(x, y, Math.random()*1.5+0.5, 0, Math.PI*2); ctx.fill();
+                }
+            } else if (base === 'AS') {
+                ctx.fillStyle = obj.цвет;
+                ctx.beginPath();
+                for (let i = 0; i < 12; i++) {
+                    const angle = (Math.PI*2/12)*i;
+                    const r = R * (0.7 + Math.random()*0.5);
+                    const x = cx + Math.cos(angle)*r, y = cy + Math.sin(angle)*r;
+                    if (i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+                }
+                ctx.closePath(); ctx.fill();
+            } else if (base === 'CM') {
+                ctx.fillStyle = obj.цвет; ctx.shadowBlur = 20; ctx.shadowColor = obj.цвет;
+                ctx.beginPath(); ctx.arc(cx - R*0.5, cy, R*0.4, 0, Math.PI*2); ctx.fill();
+                ctx.shadowBlur = 0;
+                const grad = ctx.createLinearGradient(cx - R*0.5, cy, cx + R*2, cy);
+                grad.addColorStop(0, obj.цвет); grad.addColorStop(1, 'rgba(0,0,0,0)');
+                ctx.fillStyle = grad; ctx.beginPath();
+                ctx.moveTo(cx - R*0.5, cy - R*0.2); ctx.lineTo(cx + R*2, cy - R*0.5);
+                ctx.lineTo(cx + R*2, cy + R*0.5); ctx.lineTo(cx - R*0.5, cy + R*0.2); ctx.fill();
+            } else if (base === 'QS') {
+                ctx.fillStyle = '#fff'; ctx.shadowBlur = 30; ctx.shadowColor = obj.цвет;
+                ctx.beginPath(); ctx.arc(cx, cy, R*0.3, 0, Math.PI*2); ctx.fill();
+                ctx.strokeStyle = obj.цвет; ctx.lineWidth = 2;
+                for (let i = 0; i < 8; i++) {
+                    const angle = (Math.PI/4)*i;
+                    ctx.beginPath(); ctx.moveTo(cx,cy); ctx.lineTo(cx+Math.cos(angle)*R*2, cy+Math.sin(angle)*R*2); ctx.stroke();
+                }
+                ctx.shadowBlur = 0;
+            } else if (sub === 'NS_PSR') {
+                ctx.fillStyle = '#fff'; ctx.shadowBlur = 30; ctx.shadowColor = '#a0aec0';
+                ctx.beginPath(); ctx.arc(cx, cy, R*0.3, 0, Math.PI*2); ctx.fill();
+                ctx.strokeStyle = 'rgba(160,174,192,0.8)'; ctx.lineWidth = 4;
+                ctx.beginPath(); ctx.moveTo(cx, cy-R*2); ctx.lineTo(cx, cy+R*2); ctx.stroke();
+                ctx.shadowBlur = 0;
+            } else if (sub === 'WD') {
+                const grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, R*0.5);
+                grad.addColorStop(0, '#fff'); grad.addColorStop(1, '#a0aec0');
+                ctx.fillStyle = grad; ctx.beginPath(); ctx.arc(cx, cy, R*0.5, 0, Math.PI*2); ctx.fill();
+            } else if (base === 'AN' || base === 'RE') {
+                // Используем локальные PNG-иконки
+                if (obj.файл) {
+                    const img = new Image();
+                    img.src = '../иконки/' + obj.файл + '.png';
+                    img.onload = () => {
+                        // Рисуем картинку (с сохранением пропорций)
+                        const размер = R * 2;
+                        ctx.drawImage(img, cx - R, cy - R, размер, размер);
+                    };
+                    img.onerror = () => {
+                        // Fallback: если картинки нет — рисуем цветной круг с буквой
+                        ctx.fillStyle = obj.цвет;
+                        ctx.beginPath();
+                        ctx.arc(cx, cy, R, 0, Math.PI * 2);
+                        ctx.fill();
+                        ctx.fillStyle = '#fff';
+                        ctx.font = `bold ${R}px Arial`;
+                        ctx.textAlign = 'center';
+                        ctx.textBaseline = 'middle';
+                        ctx.fillText(obj.имяПодтипа.charAt(0), cx, cy);
+                    };
+                } else {
+                    // Fallback, если файла нет в данных
+                    ctx.fillStyle = obj.цвет;
+                    ctx.beginPath();
+                    ctx.arc(cx, cy, R, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.fillStyle = '#fff';
+                    ctx.font = `bold ${R}px Arial`;
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText(obj.имяПодтипа.charAt(0), cx, cy);
+                }
+                
+                // Аура вокруг иконки
+                ctx.strokeStyle = obj.цвет;
+                ctx.lineWidth = 2;
+                ctx.beginPath(); ctx.arc(cx, cy, R * 1.1, 0, Math.PI * 2); ctx.stroke();
+            } else {
+                const grad = ctx.createRadialGradient(cx - R*0.3, cy - R*0.3, 0, cx, cy, R);
+                grad.addColorStop(0, '#fff'); grad.addColorStop(0.2, obj.цвет); grad.addColorStop(1, '#111');
+                ctx.fillStyle = grad; ctx.beginPath(); ctx.arc(cx, cy, R, 0, Math.PI*2); ctx.fill();
+                if (base === 'PL' || base === 'PG') {
+                    if (sub === 'PG' || sub === 'PL_HJ') {
+                        ctx.globalAlpha = 0.3;
+                        for (let i = -2; i < 3; i++) {
+                            ctx.fillStyle = '#000'; ctx.beginPath();
+                            ctx.ellipse(cx, cy + i*10, R, R*0.1, 0, 0, Math.PI*2); ctx.fill();
+                        }
+                        ctx.globalAlpha = 1;
+                    }
+                    if (Math.random() > 0.5) {
+                        ctx.strokeStyle = 'rgba(255,255,255,0.4)'; ctx.lineWidth = 3;
+                        ctx.beginPath(); ctx.ellipse(cx, cy, R*1.4, R*0.3, -0.3, 0, Math.PI*2); ctx.stroke();
+                    }
+                }
+                if (base === 'MN') {
+                    ctx.fillStyle = 'rgba(0,0,0,0.3)';
+                    for (let i = 0; i < 8; i++) {
+                        ctx.beginPath(); ctx.arc(cx+(Math.random()-0.5)*R*1.5, cy+(Math.random()-0.5)*R*1.5, Math.random()*R*0.2, 0, Math.PI*2); ctx.fill();
+                    }
+                }
+            }
+        }
+
+        function нарисоватьОбъект(canvas, obj) {
+            const ctx = canvas.getContext('2d');
+            const dpr = window.devicePixelRatio || 1;
+            const rect = canvas.getBoundingClientRect();
+            
+            canvas.width = rect.width * dpr;
+            canvas.height = rect.height * dpr;
+            
+            // ИСПРАВЛЕНО: сбрасываем трансформацию
+            ctx.setTransform(1, 0, 0, 1, 0, 0);
+            ctx.scale(dpr, dpr);
+            
+            const cx = rect.width / 2;
+            const cy = rect.height / 2;
+            const R = Math.min(cx, cy) * 0.6;
+
+            ctx.fillStyle = '#000';
+            ctx.fillRect(0, 0, rect.width, rect.height);
+            for (let i = 0; i < 30; i++) {
+                ctx.fillStyle = `rgba(255,255,255,${Math.random()*0.8})`;
+                ctx.beginPath(); ctx.arc(Math.random()*rect.width, Math.random()*rect.height, Math.random()*1.5, 0, Math.PI*2); ctx.fill();
+            }
+
+            нарисоватьОбъектВКонтексте(ctx, obj, cx, cy, R);
+        }
+
+        // ==========================================
+        // 6. ОТРИСОВКА ГАЛЕРЕИ
+        // ==========================================
+        const галерея = document.getElementById('галерея');
+
+        function отрисоватьГалерею() {
+            галерея.innerHTML = '';
+            
+            let отфильтрованные = коллекция.filter(obj => {
+                if (!текущийПоиск) return true;
+                const строка = текущийПоиск.toLowerCase();
+                return obj.название.toLowerCase().includes(строка) || 
+                       obj.имяПодтипа.toLowerCase().includes(строка) || 
+                       obj.имяРедкости.toLowerCase().includes(строка);
+            });
+
+            const порядокРедкости = { 'обычная': 1, 'необычная': 2, 'редкая': 3, 'эпическая': 4, 'легендарная': 5, 'мифическая': 6, 'аномальная': 7, 'реальная': 8 };
+            
+            отфильтрованные.sort((a, b) => {
+                if (текущийСорт === 'новые') return b.id.localeCompare(a.id);
+                if (текущийСорт === 'старые') return a.id.localeCompare(b.id);
+                if (текущийСорт === 'редкие') return порядокРедкости[b.редкость] - порядокРедкости[a.редкость];
+                if (текущийСорт === 'обычные') return порядокРедкости[a.редкость] - порядокРедкости[b.редкость];
+                if (текущийСорт === 'тип') return a.имяПодтипа.localeCompare(b.имяПодтипа);
+                return 0;
+            });
+
+            if (отфильтрованные.length === 0) {
+                галерея.innerHTML = '<div style="grid-column: 1/-1; text-align: center; color: #718096; padding: 40px;">Ничего не найдено. Сканируй ещё!</div>';
+                return;
+            }
+
+            отфильтрованные.forEach(obj => создатьКарточку(obj, галерея));
+        }
+
+        function создатьКарточку(obj, контейнер) {
+            const div = document.createElement('div');
+            div.className = 'карточка ' + obj.редкость;
+            div.id = 'card-' + obj.id;
+
+            const canvas = document.createElement('canvas');
+            div.appendChild(canvas);
+
+            const метка = document.createElement('div');
+            метка.className = 'редкость-метка';
+            метка.textContent = obj.имяРедкости;
+            div.appendChild(метка);
+
+            const название = document.createElement('div');
+            название.className = 'название';
+            название.textContent = obj.название;
+            div.appendChild(название);
+
+            const удалить = document.createElement('button');
+            удалить.className = 'удалить-кнопка';
+            удалить.innerHTML = '🗑️';
+            удалить.onclick = (e) => { e.stopPropagation(); удалитьКарточку(obj.id); };
+            div.appendChild(удалить);
+
+            const скачать = document.createElement('button');
+            скачать.className = 'скачать-кнопка';
+            скачать.innerHTML = '📸';
+            скачать.onclick = (e) => { e.stopPropagation(); скачатьКарточку(obj); };
+            div.appendChild(скачать);
+
+            const детали = document.createElement('div');
+            детали.className = 'детали';
+            детали.innerHTML = `
+                <div class="строка"><span class="лейбл">Тип</span><span class="значение">${obj.иконка} ${obj.имяПодтипа}</span></div>
+                <div class="строка"><span class="лейбл">Масса</span><span class="значение">${obj.масса}</span></div>
+                <div class="строка"><span class="лейбл">Радиус</span><span class="значение">${obj.радиус}</span></div>
+                <div class="строка"><span class="лейбл">Температура</span><span class="значение">${obj.температура}</span></div>
+                <div class="строка"><span class="лейбл">Атмосфера</span><span class="значение">${obj.атмосфера}</span></div>
+                <div class="строка"><span class="лейбл">Жизнь</span><span class="значение">${obj.жизнь}</span></div>
+                <div class="факт-блок">${obj.факт}</div>
+            `;
+            div.appendChild(детали);
+
+            div.addEventListener('click', () => {
+                if (div.classList.contains('раскрыта')) {
+                    div.classList.remove('раскрыта');
+                    setTimeout(() => нарисоватьОбъект(canvas, obj), 10);
+                } else {
+                    document.querySelectorAll('.карточка.раскрыта').forEach(c => c.classList.remove('раскрыта'));
+                    div.classList.add('раскрыта');
+                    setTimeout(() => нарисоватьОбъект(canvas, obj), 10);
+                }
+            });
+
+            контейнер.appendChild(div);
+
+// Привязываем объект к canvas для наблюдателя
+canvas._obj = obj;
+// Подписываемся на появление на экране
+наблюдательCanvas.observe(canvas);
+        }
+
+        function скачатьКарточку(obj) {
+            const tempCanvas = document.createElement('canvas');
+            tempCanvas.width = 400;
+            tempCanvas.height = 600;
+            const ctx = tempCanvas.getContext('2d');
+
+            ctx.fillStyle = '#0f1419';
+            ctx.fillRect(0, 0, 400, 600);
+
+            for (let i = 0; i < 100; i++) {
+                ctx.fillStyle = `rgba(255,255,255,${Math.random()*0.8})`;
+                ctx.beginPath();
+                ctx.arc(Math.random()*400, Math.random()*250, Math.random()*1.5, 0, Math.PI*2);
+                ctx.fill();
+            }
+
+            // Используем общую функцию рисования
+            нарисоватьОбъектВКонтексте(ctx, obj, 200, 125, 70);
+
+            ctx.fillStyle = '#fff';
+            ctx.font = 'bold 24px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText(obj.название, 200, 290);
+
+            ctx.font = '16px Arial';
+            ctx.fillStyle = '#90cdf4';
+            ctx.fillText(`${obj.иконка} ${obj.имяПодтипа}`, 200, 320);
+
+            ctx.textAlign = 'left';
+            const стр = [
+                ['Масса', obj.масса], ['Радиус', obj.радиус], ['Температура', obj.температура],
+                ['Атмосфера', obj.атмосфера], ['Жизнь', obj.жизнь]
+            ];
+            стр.forEach((s, i) => {
+                ctx.fillStyle = '#718096';
+                ctx.fillText(s[0], 40, 360 + i * 30);
+                ctx.fillStyle = '#e2e8f0';
+                ctx.textAlign = 'right';
+                ctx.fillText(s[1], 360, 360 + i * 30);
+                ctx.textAlign = 'left';
+            });
+
+            ctx.fillStyle = '#0f1419';
+            ctx.fillRect(40, 520, 320, 60);
+            ctx.fillStyle = '#cbd5e0';
+            ctx.font = 'italic 14px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText(obj.факт.substring(0, 40) + (obj.факт.length > 40 ? '...' : ''), 200, 555);
+
+            ctx.strokeStyle = obj.цвет || '#fff';
+            ctx.lineWidth = 4;
+            ctx.strokeRect(2, 2, 396, 596);
+
+            const link = document.createElement('a');
+            link.download = `космос_${obj.название}.png`;
+            link.href = tempCanvas.toDataURL('image/png');
+            link.click();
+            показатьУведомление('Карточка сохранена!');
+        }
+
+// Ленивая загрузка для canvas
+const наблюдательCanvas = new IntersectionObserver((entries, observer) => {
+    entries.forEach(entry => {
+        if (entry.isIntersecting) {
+            const canvas = entry.target;
+            const obj = canvas._obj; // Данные карточки
+            if (obj) {
+                нарисоватьОбъект(canvas, obj);
+                observer.unobserve(canvas); // Перестаём следить после отрисовки
+            }
+        }
+    });
+}, { rootMargin: '200px' }); // Начинаем рисовать за 200px до появления
+      
+        // ==========================================
+        // 7. УДАЛЕНИЕ И КОРЗИНА
+        // ==========================================
+        function удалитьКарточку(id) {
+            const индекс = коллекция.findIndex(o => o.id === id);
+            if (индекс === -1) return;
+            
+            const [obj] = коллекция.splice(индекс, 1);
+            корзина.push(obj);
+            if (корзина.length > 10) корзина.shift();
+            
+            счетчикУдалений++; // Считаем общее количество удалений
+            
+            сохранитьЛокально();
+            отрисоватьГалерею();
+            обновитьКорзинуUI();
+            проверитьДостижения();
+            показатьУведомление('Карточка в корзине');
+        }
+
+        function вернутьИзКорзины(id) {
+            const индекс = корзина.findIndex(o => o.id === id);
+            if (индекс === -1) return;
+            
+            const [obj] = корзина.splice(индекс, 1);
+            коллекция.push(obj);
+            
+            сохранитьЛокально();
+            отрисоватьГалерею();
+            обновитьКорзинуUI();
+            отрисоватьКорзину();
+            показатьУведомление('Карточка возвращена');
+        }
+
+        function обновитьКорзинуUI() {
+            const бейдж = document.getElementById('корзина-бейдж');
+            if (корзина.length > 0) {
+                бейдж.textContent = корзина.length;
+                бейдж.style.display = 'flex';
+            } else {
+                бейдж.style.display = 'none';
+            }
+        }
+
+        function отрисоватьКорзину() {
+            const конт = document.getElementById('корзина-контент');
+            if (корзина.length === 0) {
+                конт.innerHTML = '<div style="text-align:center;color:#718096;padding:20px;">Корзина пуста</div>';
+                return;
+            }
+            конт.innerHTML = '';
+            корзина.forEach(obj => {
+                const div = document.createElement('div');
+                div.className = 'корзина-элемент';
+                div.innerHTML = `
+                    <div class="инфо">
+                        <div style="color:#e2e8f0; font-weight:600;">${obj.название}</div>
+                        <div style="color:#718096; font-size:11px;">${obj.имяПодтипа} · ${obj.имяРедкости}</div>
+                    </div>
+                    <button class="корзина-кнопка-вернуть" data-id="${obj.id}">Вернуть</button>
+                `;
+                конт.appendChild(div);
+            });
+            конт.querySelectorAll('.корзина-кнопка-вернуть').forEach(btn => {
+                btn.onclick = () => вернутьИзКорзины(btn.dataset.id);
+            });
+        }
+
+        // ==========================================
+        // 8. СТАТИСТИКА
+        // ==========================================
+        function обновитьСтатистику() {
+            const конт = document.getElementById('стат-контент');
+            
+            const общаяМасса = коллекция.reduce((сумма, obj) => {
+                const масса = parseFloat(obj.масса) || 0;
+                return сумма + масса;
+            }, 0);
+
+            const поРедкости = {};
+            РЕДКОСТИ.forEach(р => поРедкости[р.id] = 0);
+            поРедкости['аномальная'] = 0;
+            поРедкости['реальная'] = 0;
+            коллекция.forEach(o => поРедкости[o.редкость]++);
+
+            const поТипам = {};
+            коллекция.forEach(o => {
+                поТипам[o.имяПодтипа] = (поТипам[o.имяПодтипа] || 0) + 1;
+            });
+            const самыйЧастыйТип = Object.entries(поТипам).sort((a,b) => b[1] - a[1])[0];
+
+            конт.innerHTML = `
+                <div class="стат-строка"><span class="стат-лейбл">Всего карточек</span><span class="стат-значение">${коллекция.length}</span></div>
+                <div class="стат-строка"><span class="стат-лейбл">Общая масса</span><span class="стат-значение">${общаяМасса.toFixed(2)} (усл. ед.)</span></div>
+                <div class="стат-строка"><span class="стат-лейбл">Обычных</span><span class="стат-значение">${поРедкости['обычная']}</span></div>
+                <div class="стат-строка"><span class="стат-лейбл">Необычных</span><span class="стат-значение">${поРедкости['необычная']}</span></div>
+                <div class="стат-строка"><span class="стат-лейбл">Редких</span><span class="стат-значение">${поРедкости['редкая']}</span></div>
+                <div class="стат-строка"><span class="стат-лейбл">Эпических</span><span class="стат-значение">${поРедкости['эпическая']}</span></div>
+                <div class="стат-строка"><span class="стат-лейбл">Легендарных</span><span class="стат-значение">${поРедкости['легендарная']}</span></div>
+                <div class="стат-строка"><span class="стат-лейбл">Мифических</span><span class="стат-значение">${поРедкости['мифическая']}</span></div>
+                <div class="стат-строка"><span class="стат-лейбл">Аномальных</span><span class="стат-значение" style="color:#f6e05e;">${поРедкости['аномальная']}</span></div>
+                <div class="стат-строка"><span class="стат-лейбл">Реальных</span><span class="стат-значение" style="color:#fff;">${поРедкости['реальная']}</span></div>
+                <div class="стат-строка"><span class="стат-лейбл">Самый частый тип</span><span class="стат-значение">${самыйЧастыйТип ? самыйЧастыйТип[0] + ' (' + самыйЧастыйТип[1] + ')' : '—'}</span></div>
+            `;
+        }
+
+        // ==========================================
+        // 9. ЕЖЕДНЕВНЫЕ ЗАДАНИЯ (СЛОТ)
+        // ==========================================
+        function обновитьПрогрессЗаданий(тип, значение = 1) {
+            let изменено = false;
+            ежедневныеЗадания.forEach(з => {
+                if (з.выполнено) return;
+                if (з.тип === тип) {
+                    з.текущий += значение;
+                    if (з.текущий >= з.цель) {
+                        з.выполнено = true;
+                        изменено = true;
+                    }
+                }
+            });
+            if (изменено) {
+                проверитьВсеЗаданияВыполнены();
+                сохранитьЛокально();
+            }
+        }
+
+        function проверитьВсеЗаданияВыполнены() {
+            const всеВыполнены = ежедневныеЗадания.every(з => з.выполнено);
+            if (всеВыполнены && ежедневныеЗадания.length > 0) {
+                if (!localStorage.getItem('космос_награда_' + датаЗаданий)) {
+                    localStorage.setItem('космос_награда_' + датаЗаданий, 'true');
+                    открытьСлот();
+                }
+            }
+        }
+
+        function открытьСлот() {
+            document.getElementById('слот-фон').classList.add('активна');
+            document.getElementById('слот-1').textContent = '❓';
+            document.getElementById('слот-2').textContent = '❓';
+            document.getElementById('слот-3').textContent = '❓';
+            document.getElementById('слот-кнопка').style.display = 'block';
+            document.getElementById('слот-кнопка').onclick = крутитьСлот;
+        }
+
+        function крутитьСлот() {
+            document.getElementById('слот-кнопка').style.display = 'none';
+            
+            const слоты = [
+                document.getElementById('слот-1'),
+                document.getElementById('слот-2'),
+                document.getElementById('слот-3')
+            ];
+            
+            слоты.forEach(s => s.classList.add('крутится'));
+            
+            let тик = 0;
+            const анимация = setInterval(() => {
+                слоты.forEach(s => {
+                    s.textContent = случайныйЭлемент(['⭐', '💎', '🔥', '🌌', '⚪']);
+                });
+                тик++;
+            }, 50);
+
+            setTimeout(() => {
+                clearInterval(анимация);
+                слоты.forEach(s => s.classList.remove('крутится'));
+                
+                const р = Math.random();
+                let редкость;
+                if (р < 0.333) редкость = 'эпическая';
+                else if (р < 0.666) редкость = 'легендарная';
+                else редкость = 'мифическая';
+
+                const obj = сгенерироватьОбъект();
+                obj.редкость = редкость;
+                obj.имяРедкости = редкость.charAt(0).toUpperCase() + редкость.slice(1);
+                
+                слоты.forEach(s => s.textContent = '🎉');
+                
+                setTimeout(() => {
+                    коллекция.push(obj);
+                    сохранитьЛокально();
+                    отрисоватьГалерею();
+                    проверитьДостижения();
+                    
+                    document.getElementById('слот-фон').classList.remove('активна');
+                    показатьУведомление(`🎉 Выпала карточка: ${obj.имяРедкости}!`);
+                    
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                }, 1000);
+            }, 2000);
+        }
+
+        // ==========================================
+        // 10. СОБЫТИЯ И UI
+        // ==========================================
+        function показатьУведомление(т) {
+            const у = document.getElementById('уведомление');
+            у.textContent = т; у.classList.add('активно');
+            setTimeout(() => у.classList.remove('активно'), 2000);
+        }
+
+        document.getElementById('btn-скан').addEventListener('click', () => {
+            const obj = сгенерироватьОбъект();
+            коллекция.push(obj);
+            сохранитьЛокально();
+            отрисоватьГалерею();
+            
+            обновитьПрогрессЗаданий('сканы', 1);
+            if (obj.редкость === 'редкая' || obj.редкость === 'эпическая' || obj.редкость === 'легендарная' || obj.редкость === 'мифическая' || obj.редкость === 'аномальная' || obj.редкость === 'реальная') {
+                обновитьПрогрессЗаданий('редкие', 1);
+            }
+            if (obj.база === 'AN') {
+                обновитьПрогрессЗаданий('аномалии', 1);
+            }
+            
+            проверитьДостижения();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+
+        document.getElementById('поиск-ввод').addEventListener('input', (e) => {
+            текущийПоиск = e.target.value;
+            отрисоватьГалерею();
+        });
+
+        function открытьМодалку(id) { document.getElementById(id).classList.add('активна'); }
+        function закрытьМодалку(id) { document.getElementById(id).classList.remove('активна'); }
+
+        document.getElementById('кнопка-стат').onclick = () => { обновитьСтатистику(); открытьМодалку('модалка-стат'); };
+        document.getElementById('кнопка-сорт').onclick = () => открытьМодалку('модалка-сорт');
+        document.getElementById('корзина-кнопка').onclick = () => { отрисоватьКорзину(); открытьМодалку('модалка-корзина'); };
+        document.getElementById('btn-достижения').onclick = () => { отрисоватьДостижения(); открытьМодалку('модалка-достижения'); };
+        document.getElementById('кнопка-задания').onclick = () => { отрисоватьЗадания(); открытьМодалку('модалка-задания'); };
+
+        document.querySelectorAll('.модалка-закрыть').forEach(btn => {
+            btn.onclick = () => закрытьМодалку('модалка-' + btn.dataset.закрыть);
+        });
+        document.querySelectorAll('.модалка-фон').forEach(fon => {
+            fon.addEventListener('click', (e) => {
+                if (e.target === fon) fon.classList.remove('активна');
+            });
+        });
+
+        document.querySelectorAll('.сорт-кнопка').forEach(btn => {
+            btn.onclick = () => {
+                document.querySelectorAll('.сорт-кнопка').forEach(b => b.classList.remove('активна'));
+                btn.classList.add('активна');
+                текущийСорт = btn.dataset.сорт;
+                отрисоватьГалерею();
+                закрытьМодалку('модалка-сорт');
+            };
+        });
+
+        document.getElementById('btn-сохр').onclick = () => {
+            const данные = JSON.stringify(коллекция);
+            const blob = new Blob([данные], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'космос_коллекция.json';
+            a.click();
+            URL.revokeObjectURL(url);
+            показатьУведомление('Файл скачан!');
+        };
+
+// Валидация загружаемых карточек
+function валиднаяКарточка(o) {
+    return o &&
+        typeof o.id === 'string' &&
+        typeof o.название === 'string' &&
+        typeof o.подтип === 'string' &&
+        typeof o.база === 'string' &&
+        typeof o.редкость === 'string' &&
+        typeof o.имяРедкости === 'string' &&
+        typeof o.имяПодтипа === 'string' &&
+        typeof o.масса === 'string' &&
+        typeof o.радиус === 'string' &&
+        typeof o.температура === 'string' &&
+        typeof o.атмосфера === 'string' &&
+        typeof o.жизнь === 'string' &&
+        typeof o.факт === 'string';
+}
+      
+        document.getElementById('btn-загр').onclick = () => document.getElementById('файл-загрузки').click();
+        document.getElementById('файл-загрузки').onchange = (e) => {
+    const файл = e.target.files[0];
+    if (!файл) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+        try {
+            const данные = JSON.parse(ev.target.result);
+            if (Array.isArray(данные)) {
+                const валидные = данные.filter(валиднаяКарточка);
+                if (валидные.length === 0) {
+                    throw new Error('В файле нет валидных карточек');
+                }
+                коллекция = валидные;
+                сохранитьЛокально();
+                отрисоватьГалерею();
+                показатьУведомление(`Загружено ${валидные.length} карточек!`);
+                if (валидные.length < данные.length) {
+                    показатьУведомление(`Пропущено ${данные.length - валидные.length} битых карточек`);
+                }
+            } else throw new Error('Неверный формат файла');
+        } catch(e) { alert('❌ Ошибка: ' + e.message); }
+    };
+    reader.readAsText(файл);
+};
+
+        document.getElementById('справка-кнопка').addEventListener('click', () => {
+            document.getElementById('справка-кнопка').classList.toggle('активна');
+            document.getElementById('справка-содержимое').classList.toggle('открыто');
+        });
+
+        function отрисоватьЗадания() {
+            const конт = document.getElementById('задания-контент');
+            конт.innerHTML = '';
+            ежедневныеЗадания.forEach(з => {
+                const div = document.createElement('div');
+                div.className = 'стат-строка';
+                div.innerHTML = `
+                    <div>
+                        <div style="color:#e2e8f0; font-weight:600; font-size:14px;">${з.текст}</div>
+                        <div style="color:#718096; font-size:12px; margin-top:4px;">${з.текущий} / ${з.цель}</div>
+                    </div>
+                    <div style="color:${з.выполнено ? '#38a169' : '#f6e05e'}; font-weight:700;">
+                        ${з.выполнено ? '✅' : '⏳'}
+                    </div>
+                `;
+                конт.appendChild(div);
+            });
+            if (ежедневныеЗадания.every(з => з.выполнено)) {
+                конт.innerHTML += '<div style="text-align:center;color:#38a169;padding:20px;font-weight:700;">🎉 Все задания выполнены! Награда получена.</div>';
+            }
+        }
+
+        // ==========================================
+        // 11. ЗАПУСК
+        // ==========================================
+        проверитьОбновлениеЗаданий();
+        загрузитьЛокально();
+        отрисоватьГалерею();
+        обновитьКорзинуUI();
+    </script>
+</body>
+</html>
