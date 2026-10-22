@@ -3,17 +3,25 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Кликер 5.0 - Античит</title>
+    <title>Кликер 9.0 - Мультивселенная</title>
     <link rel="icon" href="../ico.png">
     <link rel="stylesheet" href="../style.css">
     <style>
         * { -webkit-tap-highlight-color: transparent; outline: none; user-select: none; -webkit-user-select: none; }
 
-        .мир-переключатель { display: flex; gap: 8px; margin-bottom: 16px; }
-        .мир-кнопка { flex: 1; background: #1a202c; color: #718096; border: 2px solid #2d3748; padding: 10px 4px; border-radius: 10px; font-weight: 700; cursor: pointer; transition: all 0.2s; font-family: inherit; font-size: 13px; }
+        .мир-переключатель { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 16px; }
+        .мир-кнопка { flex: 1 1 30%; background: #1a202c; color: #718096; border: 2px solid #2d3748; padding: 8px 2px; border-radius: 8px; font-weight: 700; cursor: pointer; transition: all 0.2s; font-family: inherit; font-size: 13px; }
+        .мир-кнопка:disabled { opacity: 0.3; cursor: not-allowed; }
+        
         .мир-кнопка.активен-1 { background: #744210; color: #f6e05e; border-color: #d69e2e; }
         .мир-кнопка.активен-2 { background: #2a4365; color: #90cdf4; border-color: #4299e1; }
         .мир-кнопка.активен-3 { background: #44337a; color: #e9d8fd; border-color: #805ad5; }
+        .мир-кнопка.активен-4 { background: #742a2a; color: #feb2b2; border-color: #e53e3e; }
+        .мир-кнопка.активен-5 { background: #22543d; color: #9ae6b4; border-color: #48bb78; }
+        .мир-кнопка.активен-6 { background: #7b341e; color: #fbd38d; border-color: #ed8936; }
+        .мир-кнопка.активен-7 { background: #44337a; color: #d6bcfa; border-color: #9f7aea; }
+        .мир-кнопка.активен-8 { background: #2c5282; color: #bee3f8; border-color: #63b3ed; }
+        .мир-кнопка.активен-9 { background: #1a202c; color: #ffffff; border-color: #e2e8f0; box-shadow: 0 0 15px rgba(255,255,255,0.5); }
 
         .печенька-зона { display: flex; justify-content: center; margin: 20px 0; position: relative; height: 140px; align-items: center; }
         #объект-клика { font-size: 100px; cursor: pointer; transition: transform 0.05s; text-shadow: 0 0 20px rgba(246, 224, 94, 0.4); z-index: 2; position: relative; }
@@ -61,143 +69,25 @@
         .уведомление.активно { opacity: 1; }
 
         /* КАПЧА */
-        .капча-фон {
-            position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 2000;
-            display: none; flex-direction: column;
-        }
+        .капча-фон { position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 2000; display: none; flex-direction: column; }
         .капча-фон.активна { display: flex; }
-        
-        .капча-топ {
-            height: 25vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 10px;
-            pointer-events: none;
-        }
-
-        .капча-вопрос {
-            color: white; 
-            font-size: 22px;
-            font-weight: 700; 
-            text-align: center;
-            background: #1a202c; 
-            padding: 15px 20px; 
-            border-radius: 12px; 
-            border: 2px solid #e53e3e;
-            white-space: nowrap;
-            max-width: 95vw;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-        
-        .капча-низ {
-            flex-grow: 1;
-            position: relative;
-            pointer-events: auto;
-            /* Отступ снизу, чтобы кнопки не липли к краю экрана */
-            margin-bottom: 50px; 
-        }
-
-        .капча-ответ {
-            position: absolute; 
-            padding: 15px 25px; 
-            font-size: 22px; 
-            font-weight: 700;
-            background: #38a169; 
-            color: white; 
-            border: none; 
-            border-radius: 12px;
-            cursor: pointer; 
-            transition: all 0.2s; 
-            box-shadow: 0 5px 15px rgba(0,0,0,0.5);
-            min-width: 70px;
-            text-align: center;
-        }
+        .капча-топ { height: 25vh; display: flex; justify-content: center; align-items: center; padding: 10px; pointer-events: none; }
+        .капча-вопрос { color: white; font-size: 22px; font-weight: 700; text-align: center; background: #1a202c; padding: 15px 20px; border-radius: 12px; border: 2px solid #e53e3e; white-space: nowrap; max-width: 95vw; overflow: hidden; text-overflow: ellipsis; }
+        .капча-низ { flex-grow: 1; position: relative; pointer-events: auto; margin-bottom: 50px; }
+        .капча-ответ { position: absolute; padding: 15px 25px; font-size: 22px; font-weight: 700; background: #38a169; color: white; border: none; border-radius: 12px; cursor: pointer; transition: all 0.2s; box-shadow: 0 5px 15px rgba(0,0,0,0.5); min-width: 70px; text-align: center; }
         .капча-ответ:hover { background: #2f855a; }
     </style>
 </head>
 <body>
     <div class="header">
         <a href="../игры.html" class="back-btn">← Назад</a>
-        <span class="badge purple">🖱️ Кликер 5.0</span>
+        <span class="badge purple">🖱️ Кликер 9.0</span>
     </div>
 
-    <h1>🍪 Кликер 5.0 (Античит)</h1>
+    <h1>🍪 Кликер 9.0 (Мультивселенная)</h1>
 
-    <div class="мир-переключатель">
-        <button class="мир-кнопка активен-1" id="btn-мир-1">🍪 Мир 1</button>
-        <button class="мир-кнопка" id="btn-мир-2">💎 Мир 2</button>
-        <button class="мир-кнопка" id="btn-мир-3">🥟 Мир 3</button>
-    </div>
-
-    <!-- МИР 1 -->
-    <div id="мир-1" style="display:block;">
-        <div class="статистика">
-            <div class="стат-блок"><div class="label">Печеньки</div><div class="value" id="счёт-1">0</div></div>
-            <div class="стат-блок"><div class="label">В секунду</div><div class="value" id="сек-1">0</div></div>
-            <div class="стат-блок"><div class="label">За клик</div><div class="value" id="клик-1">1</div></div>
-            <div class="стат-блок"><div class="label">Бонус от Мира 2</div><div class="value" id="бонус-1">x1</div></div>
-        </div>
-
-        <div class="печенька-зона" id="зона-клика"><div id="объект-клика">🍪</div></div>
-
-        <div class="вкладки">
-            <button class="вкладка активна" data-мир="1" data-вкладка="ручная">🖱️ Клик</button>
-            <button class="вкладка" data-мир="1" data-вкладка="авто">⚙️ Авто</button>
-            <button class="вкладка" data-мир="1" data-вкладка="синергия">✨ Синергия</button>
-        </div>
-
-        <div class="вкладка-содержимое активна" data-мир="1" data-вкладка="ручная" id="у-1-ручная"></div>
-        <div class="вкладка-содержимое" data-мир="1" data-вкладка="авто" id="у-1-авто"></div>
-        <div class="вкладка-содержимое" data-мир="1" data-вкладка="синергия" id="у-1-синергия"></div>
-    </div>
-
-    <!-- МИР 2 -->
-    <div id="мир-2" style="display:none;">
-        <div class="статистика">
-            <div class="стат-блок"><div class="label">У тебя печенек</div><div class="value" id="счёт-2">0</div></div>
-            <div class="стат-блок"><div class="label">Курс обмена</div><div class="value" id="сек-2">1 000 🍪 = 1 💎</div></div>
-            <div class="стат-блок"><div class="label">Бонус к Миру 1</div><div class="value" id="клик-2">x1</div></div>
-            <div class="стат-блок"><div class="label">Бонус от Мира 3</div><div class="value" id="кристалл-клик">x1</div></div>
-        </div>
-        <p style="color:#718096; text-align:center; font-size:14px; margin-bottom:20px;">
-            Ты платишь печеньками. Автоматически конвертируются в кристаллы для покупки.
-        </p>
-
-        <div class="вкладки">
-            <button class="вкладка активна" data-мир="2" data-вкладка="ручная">💎 Добыча</button>
-            <button class="вкладка" data-мир="2" data-вкладка="авто">✨ Улучшения</button>
-            <button class="вкладка" data-мир="2" data-вкладка="синергия">🌍 Глобальные</button>
-        </div>
-
-        <div class="вкладка-содержимое активна" data-мир="2" data-вкладка="ручная" id="у-2-ручная"></div>
-        <div class="вкладка-содержимое" data-мир="2" data-вкладка="авто" id="у-2-авто"></div>
-        <div class="вкладка-содержимое" data-мир="2" data-вкладка="синергия" id="у-2-синергия"></div>
-    </div>
-
-    <!-- МИР 3 -->
-    <div id="мир-3" style="display:none;">
-        <div class="статистика">
-            <div class="стат-блок"><div class="label">У тебя печенек</div><div class="value" id="счёт-3">0</div></div>
-            <div class="стат-блок"><div class="label">Курс обмена</div><div class="value" id="сек-3">1 000 000 🍪 = 1 🥟</div></div>
-            <div class="стат-блок"><div class="label">Бонус к Миру 2</div><div class="value" id="клик-3">x1</div></div>
-            <div class="стат-блок"><div class="label">Бонус к Миру 1</div><div class="value" id="кристалл-клик-3">x1</div></div>
-        </div>
-        <p style="color:#718096; text-align:center; font-size:14px; margin-bottom:20px;">
-            Ты платишь печеньками. Автоматически конвертируются в пельмени для покупки.
-        </p>
-
-        <div class="вкладки">
-            <button class="вкладка активна" data-мир="3" data-вкладка="ручная">🥟 Добыча</button>
-            <button class="вкладка" data-мир="3" data-вкладка="авто">✨ Улучшения</button>
-            <button class="вкладка" data-мир="3" data-вкладка="синергия">🌌 Абсолют</button>
-        </div>
-
-        <div class="вкладка-содержимое активна" data-мир="3" data-вкладка="ручная" id="у-3-ручная"></div>
-        <div class="вкладка-содержимое" data-мир="3" data-вкладка="авто" id="у-3-авто"></div>
-        <div class="вкладка-содержимое" data-мир="3" data-вкладка="синергия" id="у-3-синергия"></div>
-    </div>
+    <div class="мир-переключатель" id="мир-переключатель"></div>
+    <div id="мир-контейнер"></div>
 
     <div class="кнопки-сохранения">
         <button class="кнопка-сейва сохр" id="btn-сохранить">💾 Скачать сейв</button>
@@ -208,7 +98,6 @@
     <button class="кнопка-сброс" id="кнопкаСброса">🗑️ Полный сброс</button>
     <div class="уведомление" id="уведомление"></div>
 
-    <!-- Окно Капчи -->
     <div class="капча-фон" id="капча-фон">
         <div class="капча-топ">
             <div class="капча-вопрос" id="капча-вопрос">2 + 2 = ?</div>
@@ -217,7 +106,6 @@
     </div>
 
     <script>
-        // 1. СЕКРЕТНЫЙ КЛЮЧ
         const _k = [71, 51, 110, 48, 95, 67, 108, 49, 99, 107, 95, 87, 52, 114, 95, 50, 48, 50, 54, 95, 53, 48];
         const СЕКРЕТ = _k.map(c => String.fromCharCode(c)).join('');
 
@@ -230,39 +118,49 @@
             return (h >>> 0).toString(16);
         }
 
-        // 2. СОСТОЯНИЕ
+        const МИРЫ = [
+            { id: 1, эмодзи: '🍪', ценаВхода: 0 },
+            { id: 2, эмодзи: '💎', ценаВхода: 1e6 },
+            { id: 3, эмодзи: '🥟', ценаВхода: 1e9 },
+            { id: 4, эмодзи: '🍕', ценаВхода: 1e12 },
+            { id: 5, эмодзи: '🍔', ценаВхода: 1e15 },
+            { id: 6, эмодзи: '🍩', ценаВхода: 1e18 },
+            { id: 7, эмодзи: '🍫', ценаВхода: 1e21 },
+            { id: 8, эмодзи: '🍿', ценаВхода: 1e24 },
+            { id: 9, эмодзи: '🍽️', ценаВхода: 1e27 }
+        ];
+
         let печеньки = 0;
-        let всегоКликов = 0;
+        let текущийМир = 1;
         
+        // ГЛОБАЛЬНЫЙ МНОЖИТЕЛЬ (влияет на всё)
+        let глобальныйМножитель = 1; 
+        
+        // Базовые показатели (до умножения)
+        let базовыйКлик = 1;
+        let базовоеАвто = 0;
+
+        // Для миров
         let историяКликов = [];
         let подозрительныеКлики = 0;
         let заблокирован = false;
         let последнийКлик = 0;
 
-        let множительКликМир1 = 1;
-        let множительАвтоМир1 = 1;
-        let курс_1_к_2 = 1000; 
-        let курс_2_к_3 = 1000000;
-
-        // 4. УЛУЧШЕНИЯ
-        const У1 = {
+        // Улучшения для каждого мира
+        let У1 = {
             ручная: [
                 { назв: 'Крепкий палец', опис: '+1', база: 15, шаг: 15, бонус: 1, куплено: 0 },
                 { назв: 'Ловкая рука', опис: '+5', база: 100, шаг: 100, бонус: 5, куплено: 0 },
                 { назв: 'Магическая перчатка', опис: '+25', база: 500, шаг: 500, бонус: 25, куплено: 0 },
                 { назв: 'Мультипалец', опис: '+100', база: 5000, шаг: 5000, бонус: 100, куплено: 0 },
-                { назв: 'Рука богов', опис: '+500', база: 50000, шаг: 50000, бонус: 500, куплено: 0 },
-                { назв: 'Титаническая длань', опис: '+2500', база: 500000, шаг: 500000, бонус: 2500, куплено: 0 },
-                { назв: 'Космический кулак', опис: '+10000', база: 5000000, шаг: 5000000, бонус: 10000, куплено: 0 }
+                { назв: 'Рука богов', опис: '+500', база: 50000, шаг: 50000, бонус: 500, куплено: 0 }
             ],
             авто: [
-                { назв: 'Бабушка', опис: '+1', база: 50, шаг: 50, бонус: 1, куплено: 0 },
-                { назв: 'Пекарня', опис: '+5', база: 500, шаг: 500, бонус: 5, куплено: 0 },
-                { назв: 'Фабрика', опис: '+25', база: 5000, шаг: 5000, бонус: 25, куплено: 0 },
-                { назв: 'Завод', опис: '+100', база: 50000, шаг: 50000, бонус: 100, куплено: 0 },
-                { назв: 'Корпорация', опис: '+500', база: 500000, шаг: 500000, бонус: 500, куплено: 0 },
-                { назв: 'Империя', опис: '+2500', база: 5000000, шаг: 5000000, бонус: 2500, куплено: 0 },
-                { назв: 'Галактика', опис: '+10000', база: 50000000, шаг: 50000000, бонус: 10000, куплено: 0 }
+                { назв: 'Бабушка', опис: '+1/сек', база: 50, шаг: 50, бонус: 1, куплено: 0 },
+                { назв: 'Пекарня', опис: '+5/сек', база: 500, шаг: 500, бонус: 5, куплено: 0 },
+                { назв: 'Фабрика', опис: '+25/сек', база: 5000, шаг: 5000, бонус: 25, куплено: 0 },
+                { назв: 'Завод', опис: '+100/сек', база: 50000, шаг: 50000, бонус: 100, куплено: 0 },
+                { назв: 'Корпорация', опис: '+500/сек', база: 500000, шаг: 500000, бонус: 500, куплено: 0 }
             ],
             синергия: [
                 { назв: 'Золотая печенька', опис: '×2 к клику', база: 100000, шаг: 0, тип: 'мк', зн: 2, куплено: 0, макс: 1 },
@@ -271,44 +169,32 @@
             ]
         };
 
-        const У2 = {
-            ручная: [
-                { назв: 'Осколок', опис: 'Улучшает курс (-10%)', база: 10000, шаг: 0, тип: 'курс12', зн: 0.9, куплено: 0, макс: 5 },
-                { назв: 'Кристалл', опис: 'Улучшает курс (-20%)', база: 100000, шаг: 0, тип: 'курс12', зн: 0.8, куплено: 0, макс: 5 },
-                { назв: 'Друза', опис: 'Улучшает курс (-30%)', база: 1000000, шаг: 0, тип: 'курс12', зн: 0.7, куплено: 0, макс: 5 }
-            ],
-            авто: [
-                { назв: 'Шахта', опис: '×2 к добыче 💎', база: 100000, шаг: 0, тип: 'мд', зн: 2, куплено: 0, макс: 1 },
-                { назв: 'Дракон', опис: '×3 к добыче 💎', база: 2000000, шаг: 0, тип: 'мд', зн: 3, куплено: 0, макс: 1 }
-            ],
-            синергия: [
-                { назв: 'Связь миров', опис: '×2 к печенькам', база: 5000000, шаг: 0, тип: 'бонус1', зн: 2, куплено: 0, макс: 1 },
-                { назв: 'Абсолют', опис: '×5 к печенькам', база: 500000000, шаг: 0, тип: 'бонус1', зн: 5, куплено: 0, макс: 1 }
-            ]
-        };
+        // Локальные множители от синергии
+        let множительКликМир1 = 1;
+        let множительАвтоМир1 = 1;
 
-        const У3 = {
-            ручная: [
-                { назв: 'Тесто', опис: 'Улучшает курс (-10%)', база: 10000000, шаг: 0, тип: 'курс23', зн: 0.9, куплено: 0, макс: 5 },
-                { назв: 'Начинка', опис: 'Улучшает курс (-20%)', база: 100000000, шаг: 0, тип: 'курс23', зн: 0.8, куплено: 0, макс: 5 },
-                { назв: 'Пельмень', опис: 'Улучшает курс (-30%)', база: 1000000000, шаг: 0, тип: 'курс23', зн: 0.7, куплено: 0, макс: 5 }
-            ],
-            авто: [
-                { назв: 'Пароварка', опис: '×2 к добыче 🥟', база: 100000000, шаг: 0, тип: 'мп', зн: 2, куплено: 0, макс: 1 },
-                { назв: 'Бабушкин рецепт', опис: '×3 к добыче 🥟', база: 2000000000, шаг: 0, тип: 'мп', зн: 3, куплено: 0, макс: 1 }
-            ],
-            синергия: [
-                { назв: 'Пищевая цепочка', опис: '×2 к 💎', база: 5000000000, шаг: 0, тип: 'бонус2', зн: 2, куплено: 0, макс: 1 },
-                { назв: 'Космический обед', опис: '×5 к 💎', база: 500000000000, шаг: 0, тип: 'бонус2', зн: 5, куплено: 0, макс: 1 },
-                { назв: 'Творец Вселенной', опис: '×2 ко всему', база: 10000000000000, шаг: 0, тип: 'бонус1', зн: 2, куплено: 0, макс: 1 }
-            ]
-        };
-
-        let бонус1 = 1; 
-        let бонус2 = 1; 
+        // Улучшения для остальных 8 миров (Бусты и Снижение цен)
+        let улучшенияМиров = {};
+        МИРЫ.forEach((м, i) => {
+            if (i === 0) return;
+            const множительЦены = Math.pow(1000, i);
+            улучшенияМиров[м.id] = {
+                ручная: [
+                    { назв: 'Осколок', опис: 'Улучшает курс (-10%)', база: 10000 * множительЦены, шаг: 0, тип: 'курс', зн: 0.9, куплено: 0, макс: 5 },
+                    { назв: 'Кристалл', опис: 'Улучшает курс (-20%)', база: 100000 * множительЦены, шаг: 0, тип: 'курс', зн: 0.8, куплено: 0, макс: 5 }
+                ],
+                авто: [
+                    { назв: 'Базовый буст', опис: 'Прибавляет +1 к глобальному множителю', база: 100000 * множительЦены, шаг: 100000 * множительЦены, прибавка: 1, куплено: 0, макс: 10 },
+                    { назв: 'Мощный буст', опис: 'Прибавляет +5 к глобальному множителю', база: 1000000 * множительЦены, шаг: 1000000 * множительЦены, прибавка: 5, куплено: 0, макс: 10 }
+                ],
+                синергия: [
+                    { назв: 'Глобальный х2', опис: 'Умножает множитель на 2', база: 5000000 * множительЦены, шаг: 0, тип: 'глоб_мк', зн: 2, куплено: 0, макс: 1 }
+                ]
+            };
+        });
 
         function формат(ч) {
-            if (!isFinite(ч)) return 'БЕСКОНЕЧНОСТЬ НЕ ПРЕДЕЛ!!!';
+            if (!isFinite(ч)) return '∞';
             if (ч < 1000) {
                 if (ч > 0 && ч < 1) return ч.toFixed(2);
                 return Math.floor(ч).toString();
@@ -321,97 +207,224 @@
         }
 
         function ценаУ(у) { return у.база + (у.куплено * у.шаг); }
-        function заКлик1() {
-            let б = 1;
-            У1.ручная.forEach(у => б += у.бонус * у.куплено);
-            return б * множительКликМир1 * бонус1;
+        
+        function рассчитатьКлик() {
+            let база = 1;
+            У1.ручная.forEach(у => база += у.бонус * у.куплено);
+            return база * множительКликМир1 * глобальныйМножитель;
         }
-        function вСекунду1() {
-            let б = 0;
-            У1.авто.forEach(у => б += у.бонус * у.куплено);
-            return б * множительАвтоМир1 * бонус1;
-        }
-
-        function обновить() {
-            document.getElementById('счёт-1').textContent = формат(печеньки);
-            document.getElementById('сек-1').textContent = формат(вСекунду1());
-            document.getElementById('клик-1').textContent = формат(заКлик1());
-            document.getElementById('бонус-1').textContent = 'x' + бонус1.toFixed(1);
-
-            document.getElementById('счёт-2').textContent = формат(печеньки);
-            document.getElementById('сек-2').textContent = формат(курс_1_к_2) + ' 🍪 = 1 💎';
-            document.getElementById('клик-2').textContent = 'x' + бонус1.toFixed(1);
-            document.getElementById('кристалл-клик').textContent = 'x' + бонус2.toFixed(1);
-
-            document.getElementById('счёт-3').textContent = формат(печеньки);
-            document.getElementById('сек-3').textContent = формат(курс_2_к_3) + ' 🍪 = 1 🥟';
-            document.getElementById('клик-3').textContent = 'x' + бонус2.toFixed(1);
-            document.getElementById('кристалл-клик-3').textContent = 'x' + бонус1.toFixed(1);
-
-            рисоватьУлучшения(1, У1.ручная, 'у-1-ручная', 'печеньки');
-            рисоватьУлучшения(1, У1.авто, 'у-1-авто', 'печеньки');
-            рисоватьУлучшения(1, У1.синергия, 'у-1-синергия', 'печеньки');
-            
-            рисоватьУлучшения(2, У2.ручная, 'у-2-ручная', 'кристаллы');
-            рисоватьУлучшения(2, У2.авто, 'у-2-авто', 'кристаллы');
-            рисоватьУлучшения(2, У2.синергия, 'у-2-синергия', 'кристаллы');
-            
-            рисоватьУлучшения(3, У3.ручная, 'у-3-ручная', 'пельмени');
-            рисоватьУлучшения(3, У3.авто, 'у-3-авто', 'пельмени');
-            рисоватьУлучшения(3, У3.синергия, 'у-3-синергия', 'пельмени');
-
-            if (печеньки >= 1000000) document.getElementById('btn-мир-2').disabled = false;
-            if (печеньки >= 1000000000) document.getElementById('btn-мир-3').disabled = false;
+        
+        function рассчитатьАвто() {
+            let база = 0;
+            У1.авто.forEach(у => база += у.бонус * у.куплено);
+            return база * множительАвтоМир1 * глобальныйМножитель;
         }
 
-        function рисоватьУлучшения(мир, список, ид, валюта) {
-            const конт = document.getElementById(ид);
-            if (!конт) return;
+        function инициализироватьИнтерфейс() {
+            const перекл = document.getElementById('мир-переключатель');
+            const конт = document.getElementById('мир-контейнер');
+            перекл.innerHTML = '';
             конт.innerHTML = '';
-            
-            список.forEach(у => {
-                if (у.макс && у.куплено >= у.макс) return;
-                
-                const ценаВПеченьках = ценаУ(у);
-                let отображаемаяЦена = ценаВПеченьках;
-                if (валюта === 'кристаллы') отображаемаяЦена = ценаВПеченьках / курс_1_к_2;
-                if (валюта === 'пельмени') отображаемаяЦена = ценаВПеченьках / (курс_1_к_2 * курс_2_к_3);
 
-                const дост = печеньки >= ценаВПеченьках;
-                
-                const div = document.createElement('div');
-                div.className = 'улучшение ' + (дост ? 'доступно' : 'недоступно');
-                const иконка = валюта === 'печеньки' ? '🍪' : (валюта === 'кристаллы' ? '💎' : '🥟');
-                
-                div.innerHTML = `<div><div class="назв">${у.назв}</div><div class="опис">${у.опис}</div></div>
-                                 <div class="цена">${иконка} ${формат(отображаемаяЦена)}<br><span style="font-size:10px;color:#718096;">Куплено: ${у.куплено}${у.макс?'/'+у.макс:''}</span></div>`;
-                
-                if (дост) div.onclick = () => купить(мир, у);
-                конт.appendChild(div);
+            МИРЫ.forEach(м => {
+                const кн = document.createElement('button');
+                кн.className = 'мир-кнопка';
+                кн.id = 'btn-мир-' + м.id;
+                кн.innerHTML = `${м.эмодзи} Мир ${м.id}`;
+                кн.onclick = () => переключитьМир(м.id);
+                перекл.appendChild(кн);
+
+                const divМир = document.createElement('div');
+                divМир.id = 'мир-' + м.id;
+                divМир.style.display = 'none';
+
+                divМир.innerHTML = `
+                    <div class="статистика">
+                        <div class="стат-блок"><div class="label">Печеньки</div><div class="value" id="счёт-${м.id}">0</div></div>
+                        <div class="стат-блок"><div class="label">Глоб. множитель</div><div class="value" id="бонус-${м.id}">x${формат(глобальныйМножитель)}</div></div>
+                        <div class="стат-блок"><div class="label">За клик</div><div class="value" id="клик-${м.id}">0</div></div>
+                        <div class="стат-блок"><div class="label">В секунду</div><div class="value" id="сек-${м.id}">0</div></div>
+                    </div>
+                `;
+
+                if (м.id === 1) {
+                    divМир.innerHTML += `
+                        <div class="печенька-зона" id="зона-клика"><div id="объект-клика">🍪</div></div>
+                        <div class="вкладки">
+                            <button class="вкладка активна" data-мир="1" data-вкладка="ручная">🖱️ Клик</button>
+                            <button class="вкладка" data-мир="1" data-вкладка="авто">⚙️ Авто</button>
+                            <button class="вкладка" data-мир="1" data-вкладка="синергия">✨ Синергия</button>
+                        </div>
+                        <div class="вкладка-содержимое активна" data-мир="1" data-вкладка="ручная" id="у-1-ручная"></div>
+                        <div class="вкладка-содержимое" data-мир="1" data-вкладка="авто" id="у-1-авто"></div>
+                        <div class="вкладка-содержимое" data-мир="1" data-вкладка="синергия" id="у-1-синергия"></div>
+                    `;
+                } else {
+                    divМир.innerHTML += `
+                        <div class="печенька-зона"><div style="font-size:100px; text-shadow: 0 0 20px rgba(246,224,94,0.4);">${м.эмодзи}</div></div>
+                        <div class="вкладки">
+                            <button class="вкладка активна" data-мир="${м.id}" data-вкладка="ручная">💎 Курс</button>
+                            <button class="вкладка" data-мир="${м.id}" data-вкладка="авто">🌌 Бусты</button>
+                            <button class="вкладка" data-мир="${м.id}" data-вкладка="синергия">✨ Множители</button>
+                        </div>
+                        <div class="вкладка-содержимое активна" data-мир="${м.id}" data-вкладка="ручная" id="у-${м.id}-ручная"></div>
+                        <div class="вкладка-содержимое" data-мир="${м.id}" data-вкладка="авто" id="у-${м.id}-авто"></div>
+                        <div class="вкладка-содержимое" data-мир="${м.id}" data-вкладка="синергия" id="у-${м.id}-синергия"></div>
+                    `;
+                }
+                конт.appendChild(divМир);
             });
-            if (конт.innerHTML === '') конт.innerHTML = '<div style="text-align:center;color:#718096;padding:20px;">Все куплено!</div>';
+
+            const зонаКлика = document.getElementById('зона-клика');
+            if (зонаКлика) {
+                document.getElementById('объект-клика').addEventListener('click', (e) => {
+                    if (!e.isTrusted || заблокирован || текущийМир !== 1) return;
+
+                    const сейчас = Date.now();
+                    if (сейчас - последнийКлик < 50) {
+                        подозрительныеКлики++;
+                        if (подозрительныеКлики > 10) показатьКапчу();
+                        return;
+                    }
+                    последнийКлик = сейчас;
+
+                    историяКликов.push(сейчас);
+                    if (историяКликов.length > 1) {
+                        const разница = сейчас - историяКликов[историяКликов.length - 2];
+                        if (разница === 50 || разница === 100 || разница === 10) подозрительныеКлики += 2;
+                    }
+                    while (историяКликов.length > 0 && историяКликов[0] < сейчас - 1000) {
+                        историяКликов.shift();
+                    }
+                    if (историяКликов.length > 15) подозрительныеКлики++;
+                    if (подозрительныеКлики >= 15) {
+                        показатьКапчу();
+                        return;
+                    }
+
+                    const прибавка = рассчитатьКлик();
+                    печеньки += прибавка;
+                    
+                    const rect = зонаКлика.getBoundingClientRect();
+                    создатьЦифру(e.clientX - rect.left - 20, e.clientY - rect.top - 20, формат(прибавка));
+                    обновить();
+                });
+            }
+
+            // Вкладки
+            document.querySelectorAll('.вкладка[data-мир]').forEach(вкл => {
+                вкл.addEventListener('click', function() {
+                    const м = this.dataset.мир;
+                    const к = this.dataset.вкладка;
+                    document.querySelectorAll(`.вкладка[data-мир="${м}"]`).forEach(в => в.classList.remove('активна'));
+                    document.querySelectorAll(`.вкладка-содержимое[data-мир="${м}"]`).forEach(с => с.classList.remove('активна'));
+                    this.classList.add('активна');
+                    document.getElementById(`у-${м}-${к}`).classList.add('активна');
+                });
+            });
         }
 
-        function купить(мир, у) {
+        function переключитьМир(id) {
+            текущийМир = id;
+            МИРЫ.forEach(м => {
+                document.getElementById('мир-' + м.id).style.display = (м.id === id) ? 'block' : 'none';
+                const btn = document.getElementById('btn-мир-' + м.id);
+                btn.className = (м.id === id) ? 'мир-кнопка активен-' + м.id : 'мир-кнопка';
+            });
+            обновить();
+        }
+
+        function купить(мирId, тип, индекс) {
+            let у;
+            if (мирId === 1) {
+                у = У1[тип][индекс];
+            } else {
+                у = улучшенияМиров[мирId][тип][индекс];
+            }
+            
+            if (у.макс && у.куплено >= у.макс) return;
             const цена = ценаУ(у);
             if (печеньки < цена) return;
             
             печеньки -= цена;
             у.куплено++;
             
-            if (у.тип === 'мк') множительКликМир1 *= у.зн;
-            if (у.тип === 'ма') множительАвтоМир1 *= у.зн;
-            if (у.тип === 'курс12') курс_1_к_2 *= у.зн;
-            if (у.тип === 'курс23') курс_2_к_3 *= у.зн;
-            if (у.тип === 'бонус1') бонус1 *= у.зн;
-            if (у.тип === 'бонус2') бонус2 *= у.зн;
+            // Применяем эффекты
+            if (мирId === 1) {
+                if (у.тип === 'мк') множительКликМир1 *= у.зн;
+                if (у.тип === 'ма') множительАвтоМир1 *= у.зн;
+            } else {
+                if (у.прибавка) глобальныйМножитель += у.прибавка;
+                if (у.тип === 'глоб_мк') глобальныйМножитель *= у.зн;
+            }
 
             показатьУведомление(`Куплено: ${у.назв}`);
             обновить();
             сохранитьВПамять();
         }
 
-        // 7. АНТИКЛИКЕР
+        function обновить() {
+            МИРЫ.forEach(м => {
+                const элСчёт = document.getElementById('счёт-' + м.id);
+                if (элСчёт) элСчёт.textContent = формат(печеньки);
+                
+                const элБонус = document.getElementById('бонус-' + м.id);
+                if (элБонус) элБонус.textContent = 'x' + формат(глобальныйМножитель);
+
+                const элКлик = document.getElementById('клик-' + м.id);
+                if (элКлик) элКлик.textContent = формат(рассчитатьКлик());
+
+                const элСек = document.getElementById('сек-' + м.id);
+                if (элСек) элСек.textContent = формат(рассчитатьАвто());
+
+                const btn = document.getElementById('btn-мир-' + м.id);
+                if (btn) btn.disabled = (печеньки < м.ценаВхода && м.id !== 1);
+            });
+
+            if (текущийМир === 1) {
+                рисоватьСписок(У1.ручная, 'у-1-ручная', 1, 'ручная');
+                рисоватьСписок(У1.авто, 'у-1-авто', 1, 'авто');
+                рисоватьСписок(У1.синергия, 'у-1-синергия', 1, 'синергия');
+            } else {
+                const ум = улучшенияМиров[текущийМир];
+                рисоватьСписок(ум.ручная, `у-${текущийМир}-ручная`, текущийМир, 'ручная');
+                рисоватьСписок(ум.авто, `у-${текущийМир}-авто`, текущийМир, 'авто');
+                рисоватьСписок(ум.синергия, `у-${текущийМир}-синергия`, текущийМир, 'синергия');
+            }
+        }
+
+        function рисоватьСписок(список, ид, мирId, тип) {
+            const конт = document.getElementById(ид);
+            if (!конт) return;
+            конт.innerHTML = '';
+            
+            список.forEach((у, i) => {
+                if (у.макс && у.куплено >= у.макс) return;
+                
+                const цена = ценаУ(у);
+                const дост = печеньки >= цена;
+                
+                const div = document.createElement('div');
+                div.className = 'улучшение ' + (дост ? 'доступно' : 'недоступно');
+                
+                div.innerHTML = `
+                    <div>
+                        <div class="назв">${у.назв}</div>
+                        <div class="опис">${у.опис}</div>
+                    </div>
+                    <div class="цена">
+                        🍪 ${формат(цена)}<br>
+                        <span style="font-size:10px;color:#718096;">Куплено: ${у.куплено}${у.макс?'/'+у.макс:''}</span>
+                    </div>
+                `;
+                
+                if (дост) div.onclick = () => купить(мирId, тип, i);
+                конт.appendChild(div);
+            });
+            if (конт.innerHTML === '') конт.innerHTML = '<div style="text-align:center;color:#718096;padding:20px;">Все куплено!</div>';
+        }
+
+        // Антиклик и капча (без изменений)
         function создатьЦифру(x, y, текст) {
             const div = document.createElement('div');
             div.className = 'вылетающая-цифра';
@@ -422,55 +435,9 @@
             setTimeout(() => div.remove(), 800);
         }
 
-        document.getElementById('объект-клика').addEventListener('click', (e) => {
-            if (!e.isTrusted) return;
-            if (заблокирован) return;
-
-            const сейчас = Date.now();
-            
-            if (сейчас - последнийКлик < 50) {
-                подозрительныеКлики++;
-                if (подозрительныеКлики > 10) показатьКапчу();
-                return;
-            }
-            последнийКлик = сейчас;
-
-            историяКликов.push(сейчас);
-            if (историяКликов.length > 1) {
-                const разница = сейчас - историяКликов[историяКликов.length - 2];
-                if (разница === 50 || разница === 100 || разница === 10) подозрительныеКлики += 2;
-            }
-
-            while (историяКликов.length > 0 && историяКликов[0] < сейчас - 1000) {
-                историяКликов.shift();
-            }
-
-            if (историяКликов.length > 15) подозрительныеКлики++;
-
-            if (подозрительныеКлики >= 15) {
-                показатьКапчу();
-                return;
-            }
-
-            const прибавка = заКлик1();
-            печеньки += прибавка;
-            всегоКликов++;
-
-            const rect = document.getElementById('зона-клика').getBoundingClientRect();
-            создатьЦифру(e.clientX - rect.left - 20, e.clientY - rect.top - 20, формат(прибавка));
-
-            обновить();
-        });
-
-        // 8. КАПЧА
         let текущийВопрос = 0;
-
         function показатьКапчу() {
-            заблокирован = true;
-            подозрительныеКлики = 0;
-            историяКликов = [];
-            текущийВопрос = 0;
-            
+            заблокирован = true; подозрительныеКлики = 0; историяКликов = []; текущийВопрос = 0;
             document.getElementById('капча-фон').classList.add('активна');
             сгенерироватьВопрос();
         }
@@ -483,207 +450,114 @@
                 показатьУведомление('Проверка пройдена! Ты человек.');
                 return;
             }
-
             document.querySelectorAll('.капча-ответ').forEach(b => b.remove());
-
             const a = Math.floor(Math.random() * 10) + 1;
             const b = Math.floor(Math.random() * 10) + 1;
-            const isPlus = Math.random() > 0.5;
-            
             let вопрос, ответ;
-            if (isPlus) {
-                вопрос = `${a} + ${b}`;
-                ответ = a + b;
-            } else {
-                if (a < b) { вопрос = `${b} - ${a}`; ответ = b - a; }
-                else { вопрос = `${a} - ${b}`; ответ = a - b; }
-            }
+            if (Math.random() > 0.5) { вопрос = `${a} + ${b}`; ответ = a + b; }
+            else { if (a < b) { вопрос = `${b} - ${a}`; ответ = b - a; } else { вопрос = `${a} - ${b}`; ответ = a - b; } }
 
             document.getElementById('капча-вопрос').textContent = `Вопрос ${текущийВопрос + 1}/3: ${вопрос} = ?`;
-
             const варианты = [ответ];
             while (варианты.length < 3) {
                 const ложь = ответ + Math.floor(Math.random() * 10) - 5;
-                if (ложь !== ответ && ложь >= 0 && !варианты.includes(ложь)) {
-                    варианты.push(ложь);
-                }
+                if (ложь !== ответ && ложь >= 0 && !варианты.includes(ложь)) варианты.push(ложь);
             }
             варианты.sort(() => Math.random() - 0.5);
 
             const контейнер = document.getElementById('капча-низ');
-
             варианты.forEach(число => {
                 const btn = document.createElement('button');
                 btn.className = 'капча-ответ';
                 btn.textContent = число;
-                
                 переместитьКнопку(btn, контейнер);
-
                 btn.onclick = (e) => {
                     if (!e.isTrusted) return;
-                    if (число === ответ) {
-                        текущийВопрос++;
-                        сгенерироватьВопрос();
-                    } else {
-                        показатьУведомление('❌ Неправильно! Начинаем заново.');
-                        текущийВопрос = 0;
-                        сгенерироватьВопрос();
-                    }
+                    if (число === ответ) { текущийВопрос++; сгенерироватьВопрос(); }
+                    else { показатьУведомление('❌ Неправильно! Начинаем заново.'); текущийВопрос = 0; сгенерироватьВопрос(); }
                 };
-
-                btn.addEventListener('mouseenter', () => {
-                    переместитьКнопку(btn, контейнер);
-                });
-
+                btn.addEventListener('mouseenter', () => переместитьКнопку(btn, контейнер));
                 контейнер.appendChild(btn);
             });
         }
 
         function переместитьКнопку(btn, контейнер) {
             const rect = контейнер.getBoundingClientRect();
-            // Чтобы кнопка не вылезала за пределы
-            const maxX = rect.width - 100;
-            const maxY = rect.height - 60;
-            
-            const x = Math.max(10, Math.random() * maxX);
-            const y = Math.max(10, Math.random() * maxY);
-            
-            btn.style.left = x + 'px';
-            btn.style.top = y + 'px';
+            btn.style.left = Math.max(10, Math.random() * (rect.width - 100)) + 'px';
+            btn.style.top = Math.max(10, Math.random() * (rect.height - 60)) + 'px';
         }
-
-        // 9. АВТОДОХОД
-        setInterval(() => {
-            печеньки += вСекунду1();
-            обновить();
-        }, 1000);
-
-        setInterval(сохранитьВПамять, 10000);
-
-        // 10. ИНТЕРФЕЙС
-        document.getElementById('btn-мир-1').onclick = () => {
-            document.getElementById('мир-1').style.display = 'block';
-            document.getElementById('мир-2').style.display = 'none';
-            document.getElementById('мир-3').style.display = 'none';
-            document.getElementById('btn-мир-1').className = 'мир-кнопка активен-1';
-            document.getElementById('btn-мир-2').className = 'мир-кнопка';
-            document.getElementById('btn-мир-3').className = 'мир-кнопка';
-        };
-
-        document.getElementById('btn-мир-2').onclick = () => {
-            if (печеньки < 1000000) return;
-            document.getElementById('мир-1').style.display = 'none';
-            document.getElementById('мир-2').style.display = 'block';
-            document.getElementById('мир-3').style.display = 'none';
-            document.getElementById('btn-мир-1').className = 'мир-кнопка';
-            document.getElementById('btn-мир-2').className = 'мир-кнопка активен-2';
-            document.getElementById('btn-мир-3').className = 'мир-кнопка';
-        };
-
-        document.getElementById('btn-мир-3').onclick = () => {
-            if (печеньки < 1000000000) return;
-            document.getElementById('мир-1').style.display = 'none';
-            document.getElementById('мир-2').style.display = 'none';
-            document.getElementById('мир-3').style.display = 'block';
-            document.getElementById('btn-мир-1').className = 'мир-кнопка';
-            document.getElementById('btn-мир-2').className = 'мир-кнопка';
-            document.getElementById('btn-мир-3').className = 'мир-кнопка активен-3';
-        };
-
-        document.querySelectorAll('.вкладка[data-мир]').forEach(вкл => {
-            вкл.addEventListener('click', function() {
-                const м = this.dataset.мир;
-                const к = this.dataset.вкладка;
-                document.querySelectorAll(`.вкладка[data-мир="${м}"]`).forEach(в => в.classList.remove('активна'));
-                document.querySelectorAll(`.вкладка-содержимое[data-мир="${м}"]`).forEach(с => с.classList.remove('активна'));
-                this.classList.add('активна');
-                document.querySelector(`.вкладка-содержимое[data-мир="${м}"][data-вкладка="${к}"]`).classList.add('активна');
-            });
-        });
 
         let тм;
         function показатьУведомление(т) {
             const у = document.getElementById('уведомление');
-            у.textContent = т;
-            у.classList.add('активно');
-            clearTimeout(тм);
-            тм = setTimeout(() => у.classList.remove('активно'), 2000);
+            у.textContent = т; у.classList.add('активно');
+            clearTimeout(тм); тм = setTimeout(() => у.classList.remove('активно'), 2000);
         }
 
-        // 11. СОХРАНЕНИЕ
-        const КЛЮЧ_СЕЙВА = 'кликер_5_0_сейв';
+        const КЛЮЧ_СЕЙВА = 'кликер_9_0_сейв';
 
         function собратьДанные() {
             return {
-                п: печеньки, вк: всегоКликов,
-                м1: множительКликМир1, м2: множительАвтоМир1,
-                к12: курс_1_к_2, к23: курс_2_к_3,
-                б1: бонус1, б2: бонус2,
-                у1: { р: У1.ручная.map(x=>x.куплено), а: У1.авто.map(x=>x.куплено), с: У1.синергия.map(x=>x.куплено) },
-                у2: { р: У2.ручная.map(x=>x.куплено), а: У2.авто.map(x=>x.куплено), с: У2.синергия.map(x=>x.куплено) },
-                у3: { р: У3.ручная.map(x=>x.куплено), а: У3.авто.map(x=>x.куплено), с: У3.синергия.map(x=>x.куплено) }
+                п: печеньки, 
+                гм: глобальныйМножитель,
+                мк: множительКликМир1, 
+                ма: множительАвтоМир1,
+                м1: { р: У1.ручная.map(x=>x.куплено), а: У1.авто.map(x=>x.куплено), с: У1.синергия.map(x=>x.куплено) },
+                у: улучшенияМиров
             };
         }
 
         function сохранитьВПамять() {
-            const д = собратьДанные();
-            const стр = JSON.stringify(д);
-            const подп = хэш(стр + СЕКРЕТ);
+            const д = собратьДанные(); const стр = JSON.stringify(д); const подп = хэш(стр + СЕКРЕТ);
             localStorage.setItem(КЛЮЧ_СЕЙВА, btoa(unescape(encodeURIComponent(стр))) + '.' + подп);
         }
 
         function применитьДанные(д) {
-            печеньки = д.п; всегоКликов = д.вк;
-            множительКликМир1 = д.м1; множительАвтоМир1 = д.м2;
-            курс_1_к_2 = д.к12; курс_2_к_3 = д.к23 || 1000000;
-            бонус1 = д.б1; бонус2 = д.б2;
+            печеньки = д.п || 0;
+            глобальныйМножитель = д.гм || 1;
+            множительКликМир1 = д.мк || 1;
+            множительАвтоМир1 = д.ма || 1;
             
-            д.у1.р.forEach((v,i)=>У1.ручная[i].куплено=v);
-            д.у1.а.forEach((v,i)=>У1.авто[i].куплено=v);
-            д.у1.с.forEach((v,i)=>У1.синергия[i].куплено=v);
-            
-            д.у2.р.forEach((v,i)=>У2.ручная[i].куплено=v);
-            д.у2.а.forEach((v,i)=>У2.авто[i].куплено=v);
-            д.у2.с.forEach((v,i)=>У2.синергия[i].куплено=v);
-
-            if (д.у3) {
-                д.у3.р.forEach((v,i)=>У3.ручная[i].куплено=v);
-                д.у3.а.forEach((v,i)=>У3.авто[i].куплено=v);
-                д.у3.с.forEach((v,i)=>У3.синергия[i].куплено=v);
+            if (д.м1) {
+                д.м1.р.forEach((v,i)=> { if(У1.ручная[i]) У1.ручная[i].куплено = v; });
+                д.м1.а.forEach((v,i)=> { if(У1.авто[i]) У1.авто[i].куплено = v; });
+                д.м1.с.forEach((v,i)=> { if(У1.синергия[i]) У1.синергия[i].куплено = v; });
+            }
+            if (д.у) {
+                for (let key in д.у) {
+                    if (улучшенияМиров[key]) {
+                        // Восстанавливаем ручные, авто и синергии для каждого мира
+                        for (let t in улучшенияМиров[key]) {
+                            if (д.у[key][t]) {
+                                д.у[key][t].forEach((сохрУ, i) => {
+                                    if (улучшенияМиров[key][t][i]) улучшенияМиров[key][t][i].куплено = сохрУ.куплено;
+                                });
+                            }
+                        }
+                    }
+                }
             }
             обновить();
         }
 
         document.getElementById('btn-сохранить').onclick = () => {
-            const д = собратьДанные();
-            const стр = JSON.stringify(д);
-            const подп = хэш(стр + СЕКРЕТ);
+            const д = собратьДанные(); const стр = JSON.stringify(д); const подп = хэш(стр + СЕКРЕТ);
             const код = btoa(unescape(encodeURIComponent(стр))) + '.' + подп;
-            
-            const blob = new Blob([код], { type: 'text/plain' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = 'кликер_сейв.txt';
-            a.click();
-            URL.revokeObjectURL(url);
+            const blob = new Blob([код], { type: 'text/plain' }); const url = URL.createObjectURL(blob);
+            const a = document.createElement('a'); a.href = url; a.download = 'кликер_сейв.txt'; a.click(); URL.revokeObjectURL(url);
             показатьУведомление('Файл скачан!');
         };
 
         document.getElementById('btn-загрузить').onclick = () => document.getElementById('файл-загрузки').click();
-
         document.getElementById('файл-загрузки').onchange = (e) => {
-            const файл = e.target.files[0];
-            if (!файл) return;
+            const файл = e.target.files[0]; if (!файл) return;
             const reader = new FileReader();
             reader.onload = (ev) => {
                 try {
-                    const очищенный = ev.target.result.replace(/[^\x20-\x7E]/g, '').trim();
-                    const ч = очищенный.split('.');
-                    
-                    if (ч.length !== 2) throw new Error('Формат файла неверный');
+                    const ч = ev.target.result.replace(/[^\x20-\x7E]/g, '').trim().split('.');
+                    if (ч.length !== 2) throw new Error('Формат неверный');
                     const стр = decodeURIComponent(escape(atob(ч[0])));
-                    if (хэш(стр + СЕКРЕТ) !== ч[1]) throw new Error('Подпись не совпадает! (Возможно, сейв от старой версии)');
+                    if (хэш(стр + СЕКРЕТ) !== ч[1]) throw new Error('Подпись не совпадает!');
                     применитьДанные(JSON.parse(стр));
                     показатьУведомление('Прогресс загружен!');
                 } catch(e) { alert('❌ ' + e.message); }
@@ -692,14 +566,11 @@
         };
 
         document.getElementById('кнопкаСброса').onclick = () => {
-            if (confirm('Полный сброс?')) {
-                localStorage.removeItem(КЛЮЧ_СЕЙВА);
-                location.reload();
-            }
+            if (confirm('Полный сброс?')) { localStorage.removeItem(КЛЮЧ_СЕЙВА); location.reload(); }
         };
 
-        // СТАРТ
         (function() {
+            инициализироватьИнтерфейс();
             const сейв = localStorage.getItem(КЛЮЧ_СЕЙВА);
             if (сейв) {
                 try {
@@ -710,7 +581,11 @@
                     }
                 } catch(e) {}
             }
+            переключитьМир(1);
             обновить();
+            
+            setInterval(() => { печеньки += рассчитатьАвто(); обновить(); }, 1000);
+            setInterval(сохранитьВПамять, 10000);
         })();
     </script>
 </body>
