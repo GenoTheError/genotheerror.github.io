@@ -10,6 +10,113 @@
     <meta name="robots" content="index, follow">
     <link rel="icon" href="ico.png">
     <link rel="stylesheet" href="style.css">
+    <style>
+        /* КАСТОМНЫЙ ПЛЕЕР */
+        .музыка-плеер {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            background: #0a0a0a;
+            border: 1px solid #1a1a1a;
+            border-radius: 16px;
+            padding: 12px 16px;
+            box-shadow: 0 0 25px rgba(0, 0, 0, 0.5);
+        }
+        .плеер-кнопка {
+            flex-shrink: 0;
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: #ffffff;
+            color: #0a0a0a;
+            border: none;
+            font-size: 18px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.1s, background 0.2s;
+            padding: 0;
+        }
+        .плеер-кнопка:active {
+            transform: scale(0.92);
+        }
+        .плеер-кнопка.играет {
+            background: #e2e8f0;
+        }
+        .плеер-инфо {
+            flex: 1;
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .плеер-название {
+            color: #ffffff;
+            font-size: 14px;
+            font-weight: 600;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .плеер-полоса {
+            height: 6px;
+            background: #2a2a2a;
+            border-radius: 3px;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+        .плеер-заполнение {
+            height: 100%;
+            width: 0%;
+            background: #ffffff;
+            border-radius: 3px;
+            transition: width 0.05s linear;
+        }
+        .плеер-время {
+            display: flex;
+            justify-content: space-between;
+            color: #888888;
+            font-size: 11px;
+            font-family: 'Courier New', monospace;
+            font-weight: 600;
+        }
+        .плеер-громкость {
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .плеер-громкость-кнопка {
+            background: transparent;
+            border: none;
+            color: #ffffff;
+            font-size: 16px;
+            cursor: pointer;
+            padding: 0;
+            width: 24px;
+        }
+        .плеер-громкость-полоса {
+            width: 50px;
+            height: 4px;
+            background: #2a2a2a;
+            border-radius: 2px;
+            cursor: pointer;
+            overflow: hidden;
+        }
+        .плеер-громкость-заполнение {
+            height: 100%;
+            background: #ffffff;
+            border-radius: 2px;
+        }
+        
+        @media (max-width: 500px) {
+            .плеер-громкость {
+                display: none;
+            }
+        }
+    </style>
 </head>
 <body>
     <div class="header">
@@ -65,18 +172,112 @@
     
     <h2>📷 Фотографии</h2>
     <div class="photos" data-photo-base="фото/троллфейс" data-count="10"></div>
+
     <h2>🎵 Музыка</h2>
-<div class="card" style="text-align: center;">
-    <audio id="плеер" controls style="width: 100%; max-width: 400px;">
-        <source src="фото/троллфейс.mp3" type="audio/mpeg">
-        Твой браузер не поддерживает аудио.
-    </audio>
-    <p style="color: #a0aec0; font-size: 13px; margin-top: 10px;">
-        Троллфейс-трек
-    </p>
-</div>
+    <div class="card" style="padding: 16px;">
+        <div class="музыка-плеер">
+            <button class="плеер-кнопка" id="плеерИграть">▶</button>
+            <div class="плеер-инфо">
+                <div class="плеер-название">Троллфейс-трек</div>
+                <div class="плеер-полоса" id="плеерПолоса">
+                    <div class="плеер-заполнение" id="плеерЗаполнение"></div>
+                </div>
+                <div class="плеер-время">
+                    <span id="плеерТекущее">0:00</span>
+                    <span id="плеерДлительность">0:00</span>
+                </div>
+            </div>
+            <div class="плеер-громкость">
+                <button class="плеер-громкость-кнопка" id="плеерГромкость">🔊</button>
+                <div class="плеер-громкость-полоса" id="плеерГромкостьПолоса">
+                    <div class="плеер-громкость-заполнение" id="плеерГромкостьЗаполнение" style="width: 100%;"></div>
+                </div>
+            </div>
+        </div>
+        <audio id="аудио" src="музыка/троллфейс.mp3" preload="metadata"></audio>
+    </div>
+
     <div class="footer">База Знаний GenoTheError • Троллфейс</div>
     <div class="lightbox" id="lightbox"><span class="close-hint">✕ Закрыть (клик или ESC)</span><img src="" alt="" id="lightboxImg"></div>
     <script src="photos.js"></script>
+    <script>
+        const аудио = document.getElementById('аудио');
+        const кнопка = document.getElementById('плеерИграть');
+        const полоса = document.getElementById('плеерПолоса');
+        const заполнение = document.getElementById('плеерЗаполнение');
+        const текущее = document.getElementById('плеерТекущее');
+        const длительность = document.getElementById('плеерДлительность');
+        const громкостьКнопка = document.getElementById('плеерГромкость');
+        const громкостьПолоса = document.getElementById('плеерГромкостьПолоса');
+        const громкостьЗаполнение = document.getElementById('плеерГромкостьЗаполнение');
+        
+        function форматВремени(сек) {
+            if (isNaN(сек)) return '0:00';
+            const м = Math.floor(сек / 60);
+            const с = Math.floor(сек % 60);
+            return м + ':' + (с < 10 ? '0' : '') + с;
+        }
+        
+        кнопка.addEventListener('click', () => {
+            if (аудио.paused) {
+                аудио.play();
+                кнопка.textContent = '⏸';
+                кнопка.classList.add('играет');
+            } else {
+                аудио.pause();
+                кнопка.textContent = '▶';
+                кнопка.classList.remove('играет');
+            }
+        });
+        
+        аудио.addEventListener('loadedmetadata', () => {
+            длительность.textContent = форматВремени(аудио.duration);
+        });
+        
+        аудио.addEventListener('timeupdate', () => {
+            if (аудио.duration) {
+                const процент = (аудио.currentTime / аудио.duration) * 100;
+                заполнение.style.width = процент + '%';
+            }
+            текущее.textContent = форматВремени(аудио.currentTime);
+        });
+        
+        аудио.addEventListener('ended', () => {
+            кнопка.textContent = '▶';
+            кнопка.classList.remove('играет');
+            заполнение.style.width = '0%';
+            текущее.textContent = '0:00';
+        });
+        
+        полоса.addEventListener('click', (e) => {
+            const rect = полоса.getBoundingClientRect();
+            const процент = (e.clientX - rect.left) / rect.width;
+            if (аудио.duration) {
+                аудио.currentTime = процент * аудио.duration;
+            }
+        });
+        
+        let громкостьДо = 1;
+        громкостьКнопка.addEventListener('click', () => {
+            if (аудио.volume > 0) {
+                громкостьДо = аудио.volume;
+                аудио.volume = 0;
+                громкостьКнопка.textContent = '🔇';
+                громкостьЗаполнение.style.width = '0%';
+            } else {
+                аудио.volume = громкостьДо;
+                громкостьКнопка.textContent = '🔊';
+                громкостьЗаполнение.style.width = (громкостьДо * 100) + '%';
+            }
+        });
+        
+        громкостьПолоса.addEventListener('click', (e) => {
+            const rect = громкостьПолоса.getBoundingClientRect();
+            const процент = (e.clientX - rect.left) / rect.width;
+            аудио.volume = Math.max(0, Math.min(1, процент));
+            громкостьЗаполнение.style.width = (аудио.volume * 100) + '%';
+            громкостьКнопка.textContent = аудио.volume === 0 ? '🔇' : '🔊';
+        });
+    </script>
 </body>
 </html>
