@@ -1977,40 +1977,67 @@
         });
 
         document.getElementById('btn-сохр').onclick = () => {
-            const данные = JSON.stringify(коллекция);
-            const blob = new Blob([данные], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = 'космос_коллекция.json';
-            a.click();
-            URL.revokeObjectURL(url);
-            показатьУведомление('Файл скачан!');
-        };
+    const данные = {
+        коллекция: коллекция,
+        сейф: сейф,
+        ресурсы: ресурсы,
+        улучшения: улучшения,
+        достижения: достижения,
+        счетчикУдалений: счетчикУдалений,
+        ежедневныеЗадания: ежедневныеЗадания,
+        датаЗаданий: датаЗаданий
+    };
+    
+    const blob = new Blob([JSON.stringify(данные, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'космос_сейв.json';
+    a.click();
+    URL.revokeObjectURL(url);
+    показатьУведомление('Файл скачан!');
+};
 
         document.getElementById('btn-загр').onclick = () => document.getElementById('файл-загрузки').click();
         document.getElementById('файл-загрузки').onchange = (e) => {
-            const файл = e.target.files[0];
-            if (!файл) return;
-            const reader = new FileReader();
-            reader.onload = (ev) => {
-                try {
-                    const данные = JSON.parse(ev.target.result);
-                    if (Array.isArray(данные)) {
-                        const валидные = данные.filter(валиднаяКарточка);
-                        if (валидные.length === 0) throw new Error('В файле нет валидных карточек');
-                        коллекция = валидные;
-                        сохранитьЛокально();
-                        отрисоватьГалерею();
-                        показатьУведомление(`Загружено ${валидные.length} карточек!`);
-                        if (валидные.length < данные.length) {
-                            показатьУведомление(`Пропущено ${данные.length - валидные.length} битых карточек`);
-                        }
-                    } else throw new Error('Неверный формат файла');
-                } catch(e) { alert('❌ Ошибка: ' + e.message); }
-            };
-            reader.readAsText(файл);
-        };
+    const файл = e.target.files[0];
+    if (!файл) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+        try {
+            const данные = JSON.parse(ev.target.result);
+            
+            // Загружаем всё, что есть в файле
+            if (Array.isArray(данные)) {
+                // Старый формат (только коллекция)
+                коллекция = данные.filter(валиднаяКарточка);
+            } else if (данные.коллекция) {
+                // Новый формат (всё вместе)
+                коллекция = (данные.коллекция || []).filter(валиднаяКарточка);
+                сейф = данные.сейф || [];
+                ресурсы = данные.ресурсы || { масса: 0, энергия: 0, объём: 0, кристаллы: 0 };
+                улучшения = данные.улучшения || { шансАномалии: 0, множительРесурсов: 0, размерСейфа: 0, множительМагазина: 0 };
+                достижения = данные.достижения || {};
+                счетчикУдалений = данные.счетчикУдалений || 0;
+                ежедневныеЗадания = данные.ежедневныеЗадания || [];
+                датаЗаданий = данные.датаЗаданий || '';
+            } else {
+                throw new Error('Неверный формат файла');
+            }
+            
+            // Пересчитываем сейф и сохраняем
+            МАКС_СЕЙФ = 10 + (улучшения.размерСейфа || 0);
+            сохранитьЛокально();
+            отрисоватьГалерею();
+            обновитьРесурсыUI();
+            обновитьСейфUI();
+            проверитьДостижения();
+            
+            показатьУведомление('Сейв загружен!');
+        } catch(e) { alert('❌ Ошибка: ' + e.message); }
+    };
+    reader.readAsText(файл);
+};
 
         document.getElementById('справка-кнопка').addEventListener('click', () => {
             document.getElementById('справка-кнопка').classList.toggle('активна');
