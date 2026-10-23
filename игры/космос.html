@@ -623,59 +623,56 @@
         }
 
         function загрузитьЛокально() {
-            try {
-                const данные = localStorage.getItem('космос_коллекция');
-                if (данные) коллекция = JSON.parse(данные);
-                const корз = localStorage.getItem('космос_корзина');
-                if (корз) корзина = JSON.parse(корз);
-                const дост = localStorage.getItem('космос_достижения');
-                if (дост) достижения = JSON.parse(дост);
-                const счет = localStorage.getItem('космос_счетчик_удалений');
-                if (счет) счетчикУдалений = parseInt(счет) || 0;
-                const задачи = localStorage.getItem('космос_задания');
-                if (задачи) {
-                    const распарсенные = JSON.parse(задачи);
-                    ежедневныеЗадания = распарсенные.задания || [];
-                    датаЗаданий = распарсенные.дата || '';
-                }
-                
-                // РЕСУРСЫ И МАГАЗИН
-                const рес = localStorage.getItem('космос_ресурсы');
-                if (рес) {
-                    const сохранённые = JSON.parse(рес);
-                    ресурсы = Object.assign({ масса: 0, энергия: 0, объём: 0, кристаллы: 0 }, сохранённые);
-                    Object.keys(ресурсы).forEach(к => {
-                        if (isNaN(ресурсы[к])) ресурсы[к] = 0;
-                    });
-                }
-                const маг = localStorage.getItem('космос_магазин');
-                if (маг) {
-                    const распарсенныйМагазин = JSON.parse(маг);
-                    магазин = распарсенныйМагазин.товары || [];
-                    датаМагазина = распарсенныйМагазин.дата || '';
-                }
-
-                // СЕЙФ И УЛУЧШЕНИЯ
-                const сейфДанные = localStorage.getItem('космос_сейф');
-                if (сейфДанные) сейф = JSON.parse(сейфДанные);
-                const улучшенияДанные = localStorage.getItem('космос_улучшения');
-                if (улучшенияДанные) улучшения = JSON.parse(улучшенияДанные);
-            } catch(e) {}
+    try {
+        const данные = localStorage.getItem('космос_коллекция');
+        if (данные) коллекция = JSON.parse(данные);
+        const корз = localStorage.getItem('космос_корзина');
+        if (корз) корзина = JSON.parse(корз);
+        const дост = localStorage.getItem('космос_достижения');
+        if (дост) достижения = JSON.parse(дост);
+        const счет = localStorage.getItem('космос_счетчик_удалений');
+        if (счет) счетчикУдалений = parseInt(счет) || 0;
+        const задачи = localStorage.getItem('космос_задания');
+        if (задачи) {
+            const распарсенные = JSON.parse(задачи);
+            ежедневныеЗадания = распарсенные.задания || [];
+            датаЗаданий = распарсенные.дата || '';
         }
+        
+        const рес = localStorage.getItem('космос_ресурсы');
+        if (рес) {
+            const сохранённые = JSON.parse(рес);
+            ресурсы = Object.assign({ масса: 0, энергия: 0, объём: 0, кристаллы: 0 }, сохранённые);
+            Object.keys(ресурсы).forEach(к => { if (isNaN(ресурсы[к])) ресурсы[к] = 0; });
+        }
+        
+        const маг = localStorage.getItem('космос_магазин');
+        if (маг) {
+            const распарсенныйМагазин = JSON.parse(маг);
+            магазин = распарсенныйМагазин.товары || [];
+            датаМагазина = распарсенныйМагазин.дата || '';
+        }
+        
+        // НОВОЕ:
+        const сейфДанные = localStorage.getItem('космос_сейф');
+        if (сейфДанные) сейф = JSON.parse(сейфДанные);
+        
+    } catch(e) {}
+}
 
         function сохранитьЛокально() {
-            try {
-                localStorage.setItem('космос_коллекция', JSON.stringify(коллекция));
-                localStorage.setItem('космос_корзина', JSON.stringify(корзина));
-                localStorage.setItem('космос_достижения', JSON.stringify(достижения));
-                localStorage.setItem('космос_счетчик_удалений', счетчикУдалений);
-                localStorage.setItem('космос_задания', JSON.stringify({ задания: ежедневныеЗадания, дата: датаЗаданий }));
-                localStorage.setItem('космос_ресурсы', JSON.stringify(ресурсы));
-                localStorage.setItem('космос_магазин', JSON.stringify({ товары: магазин, дата: датаМагазина }));
-                localStorage.setItem('космос_сейф', JSON.stringify(сейф));
-                localStorage.setItem('космос_улучшения', JSON.stringify(улучшения));
-            } catch(e) {}
-        }
+    try {
+        localStorage.setItem('космос_коллекция', JSON.stringify(коллекция));
+        localStorage.setItem('космос_корзина', JSON.stringify(корзина));
+        localStorage.setItem('космос_достижения', JSON.stringify(достижения));
+        localStorage.setItem('космос_счетчик_удалений', счетчикУдалений);
+        localStorage.setItem('космос_задания', JSON.stringify({ задания: ежедневныеЗадания, дата: датаЗаданий }));
+        localStorage.setItem('космос_ресурсы', JSON.stringify(ресурсы));
+        localStorage.setItem('космос_магазин', JSON.stringify({ товары: магазин, дата: датаМагазина }));
+        // НОВОЕ:
+        localStorage.setItem('космос_сейф', JSON.stringify(сейф));
+    } catch(e) {}
+}
 
         // ==========================================
         // 3. ДОСТИЖЕНИЯ
