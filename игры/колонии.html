@@ -1,0 +1,788 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Колонии — Космос</title>
+    <link rel="icon" href="../ico.png">
+    <link rel="stylesheet" href="../style.css">
+    <style>
+      #звёздный-фон {
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    background: transparent;
+}
+        * { -webkit-tap-highlight-color: transparent; outline: none; user-select: none; -webkit-user-select: none; box-sizing: border-box; }
+        body { background: #050508; color: #e2e8f0; font-family: 'Inter', sans-serif; padding: 20px; padding-bottom: 80px; }
+        
+        /* ТУЛБАР */
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .header h1 { color: #fff; font-size: 20px; margin: 0; text-shadow: 0 0 15px rgba(144, 205, 244, 0.5); flex: 1; text-align: center; }
+        .btn-иконка { background: #1a202c; padding: 8px 12px; border-radius: 8px; color: #a0aec0; text-decoration: none; font-size: 18px; border: 1px solid #2d3748; cursor: pointer; font-family: inherit; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
+        .btn-иконка:hover { border-color: #4299e1; color: #fff; }
+        
+        .кошелёк { text-align: center; font-size: 22px; font-weight: 800; color: #f6e05e; margin-bottom: 20px; text-shadow: 0 0 10px rgba(246,224,94,0.3); }
+
+        /* СЕТКА ПЛАНЕТ */
+        .планеты-сетка { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 12px; max-width: 1000px; margin: 0 auto; }
+        
+        .планета-карточка { background: #0f1419; border: 2px solid #2d3748; border-radius: 12px; padding: 15px; cursor: pointer; transition: all 0.2s; text-align: center; position: relative; overflow: hidden; }
+        .планета-карточка:hover { transform: translateY(-2px); }
+        
+        /* Рамки редкости */
+        .планета-карточка.обычная { border-color: #4a5568; }
+        .планета-карточка.необычная { border-color: #38a169; box-shadow: 0 0 10px rgba(56, 161, 105, 0.3); }
+        .планета-карточка.редкая { border-color: #3182ce; box-shadow: 0 0 15px rgba(49, 130, 206, 0.4); }
+        .планета-карточка.эпическая { border-color: #805ad5; box-shadow: 0 0 20px rgba(128, 90, 213, 0.5); }
+        .планета-карточка.легендарная { border-color: #d69e2e; box-shadow: 0 0 25px rgba(214, 158, 46, 0.6); }
+        .планета-карточка.мифическая { border-color: #e53e3e; box-shadow: 0 0 30px rgba(229, 62, 62, 0.7); animation: пульс-миф 2s infinite alternate; }
+        .планета-карточка.аномальная { border-color: #f6e05e; box-shadow: 0 0 30px rgba(246, 224, 94, 0.8); animation: пульс-аном 2s infinite alternate; }
+        .планета-карточка.реальная { border-color: #ffffff; box-shadow: 0 0 30px rgba(255, 255, 255, 0.9); animation: пульс-реал 2s infinite alternate; }
+        
+        @keyframes пульс-миф { from { box-shadow: 0 0 20px rgba(229, 62, 62, 0.5); } to { box-shadow: 0 0 40px rgba(229, 62, 62, 1); } }
+        @keyframes пульс-аном { from { box-shadow: 0 0 20px rgba(246, 224, 94, 0.5); } to { box-shadow: 0 0 40px rgba(246, 224, 94, 1); } }
+        @keyframes пульс-реал { from { box-shadow: 0 0 20px rgba(255, 255, 255, 0.5); } to { box-shadow: 0 0 40px rgba(255, 255, 255, 1); } }
+
+        .планета-карточка .название { font-weight: 700; font-size: 14px; color: #e2e8f0; margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .планета-карточка .тип { font-size: 11px; color: #718096; }
+        .планета-карточка .статус { font-size: 11px; margin-top: 5px; font-weight: 600; }
+        .планета-карточка .иконка-планеты { font-size: 36px; margin-bottom: 6px; filter: drop-shadow(0 0 10px rgba(255,255,255,0.2)); }
+
+        /* ЭКРАН КОЛОНИИ */
+        #экран-колонии { display: none; max-width: 600px; margin: 0 auto; }
+        .колония-шапка { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid #2d3748; }
+        .колония-шапка h2 { margin: 0; color: #fff; font-size: 20px; }
+        .колония-закрыть { background: #e53e3e; color: white; border: none; padding: 8px 16px; border-radius: 8px; font-family: inherit; cursor: pointer; font-weight: 600; }
+
+        .вкладки { display: flex; gap: 6px; margin-bottom: 20px; }
+        .вкладка { flex: 1; background: #2d3748; color: #a0aec0; border: none; padding: 10px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit; transition: all 0.2s; }
+        .вкладка.активна { background: #4299e1; color: white; }
+
+        .вкладка-контент { display: none; }
+        .вкладка-контент.активна { display: block; }
+
+        /* ИНФО О ПЛАНЕТЕ */
+        .инфо-планета { background: #0f1419; border: 1px solid #2d3748; border-radius: 12px; padding: 15px; margin-bottom: 20px; }
+        .инфо-строка { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #1a202c; font-size: 13px; }
+        .инфо-строка:last-child { border-bottom: none; }
+        .инфо-лейбл { color: #718096; }
+        .инфо-значение { color: #90cdf4; font-weight: 600; }
+        .опасность { padding: 10px; border-radius: 8px; margin-top: 10px; font-size: 13px; font-weight: 600; text-align: center; }
+        .опасность.безопасно { background: rgba(56, 161, 105, 0.2); color: #68d391; border: 1px solid #38a169; }
+        .опасность.опасно { background: rgba(229, 62, 62, 0.2); color: #fc8181; border: 1px solid #e53e3e; }
+
+        /* ШАХТЫ */
+        .шахта-строка { background: #0f1419; border: 1px solid #2d3748; border-radius: 10px; padding: 15px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+        .шахта-инфо { flex: 1; }
+        .шахта-инфо .название { color: #e2e8f0; font-weight: 700; font-size: 15px; margin-bottom: 4px; }
+        .шахта-инфо .добыча-строка { color: #a0aec0; font-size: 12px; margin-bottom: 2px; }
+        .шахта-инфо .будущая { color: #38a169; font-size: 12px; margin-bottom: 6px; }
+        .шахта-инфо .запас-строка { color: #718096; font-size: 11px; }
+        .шахта-кнопка { background: #38a169; color: white; border: none; padding: 10px 15px; border-radius: 8px; font-family: inherit; cursor: pointer; font-weight: 600; white-space: nowrap; }
+        .шахта-кнопка:disabled { background: #4a5568; cursor: not-allowed; }
+
+        /* РЫНОК */
+        .рынок-строка { background: #0f1419; border: 1px solid #2d3748; border-radius: 10px; padding: 12px 15px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
+        .рынок-инфо { flex: 1; }
+        .рынок-название { color: #e2e8f0; font-weight: 600; margin-bottom: 4px; }
+        .рынок-цена-строка { color: #f6e05e; font-size: 12px; font-weight: 600; margin-bottom: 4px; }
+        .рынок-добыто { color: #718096; font-size: 11px; }
+        .рынок-кнопка { background: #3182ce; color: white; border: none; padding: 8px 14px; border-radius: 6px; font-family: inherit; cursor: pointer; font-size: 12px; font-weight: 600; }
+        .рынок-кнопка:hover { background: #4299e1; }
+
+        /* АНИМАЦИЯ ВЫЛЕТА */
+        .вылет-суммы { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); color: #38a169; font-size: 32px; font-weight: 800; z-index: 2000; pointer-events: none; animation: вылет 1.5s ease-out forwards; text-shadow: 0 0 10px rgba(56, 161, 105, 0.8); }
+        @keyframes вылет { 0% { opacity: 1; transform: translate(-50%, -50%) scale(1); } 100% { opacity: 0; transform: translate(-50%, -150%) scale(1.5); } }
+
+        .уведомление { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #38a169; color: white; padding: 10px 20px; border-radius: 20px; font-weight: 600; z-index: 1000; opacity: 0; transition: opacity 0.3s; pointer-events: none; text-align: center; }
+        .уведомление.активно { opacity: 1; }
+    </style>
+</head>
+<body>
+  <canvas id="звёздный-фон"></canvas>
+    <div class="header">
+        <a href="космос.html" class="btn-иконка">🌌</a>
+        <h1>Колонии</h1>
+        <button class="btn-иконка" id="открыть-рынок">💰</button>
+    </div>
+
+    <!-- Экран со списком планет -->
+    <div id="экран-списка">
+        <div class="кошелёк">Баланс: <span id="кошелёк-баланс">$0</span></div>
+        <div class="планеты-сетка" id="планеты-сетка"></div>
+        <div id="нет-планет" style="text-align:center; color:#718096; padding:40px; display:none;">В сейве нет планет. Отсканируй их в «Космосе» и положи в сейф!</div>
+    </div>
+
+    <!-- Экран колонии -->
+    <div id="экран-колонии">
+        <div class="колония-шапка">
+            <h2 id="колония-название">Планета</h2>
+            <button class="колония-закрыть" onclick="закрытьКолонию()">Назад</button>
+        </div>
+        
+        <div class="вкладки">
+            <button class="вкладка активна" data-вкладка="шахты">⛏️ Шахты</button>
+            <button class="вкладка" data-вкладка="инфо">ℹ️ Инфо</button>
+        </div>
+
+        <div class="вкладка-контент активна" id="контент-шахты"></div>
+        <div class="вкладка-контент" id="контент-инфо"></div>
+    </div>
+
+    <!-- Модалка общего рынка -->
+    <div class="модалка-фон" id="модалка-рынок" style="position:fixed; inset:0; background:rgba(0,0,0,0.85); z-index:1000; display:none; align-items:center; justify-content:center; padding:20px;">
+        <div class="модалка" style="background:#1a202c; border:2px solid #2d3748; border-radius:16px; width:100%; max-width:400px; max-height:80vh; display:flex; flex-direction:column; overflow:hidden;">
+            <div class="модалка-шапка" style="padding:15px 20px; border-bottom:1px solid #2d3748; display:flex; justify-content:space-between; align-items:center; background:#0f1419;">
+                <h2 style="margin:0; font-size:18px; color:#fff;">💰 Общий рынок</h2>
+                <button class="модалка-закрыть" id="закрыть-рынок" style="background:transparent; border:none; color:#718096; font-size:20px; cursor:pointer;">✕</button>
+            </div>
+          <details style="padding: 12px 20px; border-bottom: 1px solid #2d3748; background: #0f1419; cursor: pointer;">
+    <summary style="color: #90cdf4; font-size: 13px; font-weight: 600; outline: none; list-style: none; display: flex; align-items: center; gap: 6px;">
+        📖 Хорошая цена (нажми, чтобы раскрыть)
+    </summary>
+    <div id="справка-цены" style="padding-top: 10px; font-size: 12px; color: #a0aec0; line-height: 1.8;"></div>
+</details>
+            <div class="модалка-контент" id="общий-рынок-контент" style="padding:20px; overflow-y:auto;"></div>
+        </div>
+    </div>
+
+    <div class="уведомление" id="уведомление"></div>
+
+    <script>
+        'use strict';
+
+        // ==========================================
+        // 1. БАЗА РЕСУРСОВ
+        // ==========================================
+        const ВСЕ_РЕСУРСЫ = {
+            'камень': { иконка: '🪨', база: 2, тип: 'твёрдый' },
+            'железо': { иконка: '⚙️', база: 5, тип: 'твёрдый' },
+            'золото': { иконка: '🪙', база: 10, тип: 'твёрдый' },
+            'алмазы': { иконка: '💎', база: 25, тип: 'твёрдый' },
+            'вода': { иконка: '💧', база: 1, тип: 'жидкий' },
+            'лёд': { иконка: '❄️', база: 3, тип: 'твёрдый' },
+            'соль': { иконка: '🧂', база: 2, тип: 'твёрдый' },
+            'нефть': { иконка: '🛢️', база: 8, тип: 'жидкий' },
+            'обсидиан': { иконка: '⬛', база: 12, тип: 'твёрдый' },
+            'сера': { иконка: '🟡', база: 4, тип: 'твёрдый' },
+            'метан': { иконка: '💨', база: 6, тип: 'газ' },
+            'аммиак': { иконка: '🧪', база: 7, тип: 'жидкий' },
+            'уран': { иконка: '☢️', база: 30, тип: 'твёрдый' }
+        };
+
+        const ТИПЫ_ПЛАНЕТ = {
+            'PL_ROCK': { тип: 'Каменистая', ресурсы: ['камень', 'железо', 'золото', 'уран'] },
+            'PL_OC': { тип: 'Океаническая', ресурсы: ['вода', 'лёд', 'соль', 'нефть'] },
+            'PL_IC': { тип: 'Ледяная', ресурсы: ['лёд', 'метан', 'аммиак', 'вода'] },
+            'PL_HJ': { тип: 'Лавовая', ресурсы: ['обсидиан', 'сера', 'железо', 'золото'] },
+            'PL_SE': { тип: 'Суперземля', ресурсы: ['камень', 'железо', 'золото', 'вода'] }
+        };
+
+        // Названия шахт для разных типов ресурсов
+        const НАЗВАНИЯ_ШАХТ = {
+            'твёрдый': '⛏️ Шахта',
+            'жидкий': '🚰 Водозаборник',
+            'газ': '💨 Газоуловитель'
+        };
+
+        // ==========================================
+        // 2. СОСТОЯНИЕ
+        // ==========================================
+        let сейвКлюч = 'демо'; 
+        let планеты = []; 
+        let данныеКолоний = {}; 
+        let текущаяПланета = null;
+        let курс = {}; 
+        let общийБаланс = 0;
+
+        // ==========================================
+        // 3. ФОРМАТИРОВАНИЕ
+        // ==========================================
+        function форматДенег(число) {
+            return Math.floor(число).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+        }
+
+        function форматК(число) {
+            if (число >= 1000) return (число / 1000).toFixed(1) + 'К';
+            return Math.floor(число);
+        }
+
+        // ==========================================
+        // 4. ЦЕНА ШАХТЫ
+        // ==========================================
+        function ценаШахты(ресурс, уровень) {
+            const база = ВСЕ_РЕСУРСЫ[ресурс].база * 100;
+            return Math.floor(база + уровень * база * 0.5);
+        }
+
+        // ==========================================
+        // 5. ПРИГОДНОСТЬ ПЛАНЕТЫ
+        // ==========================================
+        function проверитьПригодность(планета) {
+            const масса = parseFloat(планета.масса) || 0;
+            const темп = parseFloat(планета.температура) || 0;
+            const радиус = parseFloat(планета.радиус) || 0;
+            const атмосфера = планета.атмосфера || '';
+            
+            const проблемы = [];
+            let уровеньОпасности = 0; // 0 - безопасно, 1 - нужен скафандр, 2 - невозможно
+            
+            if (темп < -100 || темп > 100) {
+                проблемы.push(`Экстремальная температура (${планета.температура})`);
+                уровеньОпасности = 1;
+            }
+            if (масса > 50) {
+                проблемы.push(`Высокая гравитация (${планета.масса})`);
+                уровеньОпасности = 1;
+            }
+            if (радиус < 0.1) {
+                проблемы.push(`Слишком маленькая планета (${планета.радиус})`);
+                уровеньОпасности = 2;
+            }
+            if (атмосфера === 'Плазма') {
+                проблемы.push('Плазменная атмосфера');
+                уровеньОпасности = 2;
+            }
+            
+            return { уровеньОпасности, проблемы };
+        }
+
+        // ==========================================
+        // 6. ЗАГРУЗКА И ГЕНЕРАЦИЯ
+        // ==========================================
+        function загрузитьИгру() {
+            const сейвСтрока = localStorage.getItem('космос_сейф');
+            let естьРеальныеДанные = false;
+
+            if (сейвСтрока) {
+                try {
+                    const сейв = JSON.parse(сейвСтрока);
+                    планеты = сейв.filter(o => o.база === 'PL');
+                    if (планеты.length > 0) {
+                        сейвКлюч = 'реальный';
+                        естьРеальныеДанные = true;
+                    }
+                } catch(e) {}
+            }
+
+            // Проверяем, есть ли уже сохранённые данные под ключом 'реальный'
+            if (!естьРеальныеДанные && localStorage.getItem('колонии_данные_реальный')) {
+                сейвКлюч = 'реальный';
+                естьРеальныеДанные = true;
+            }
+
+            // Если реальных данных нет — только тогда демо
+            if (!естьРеальныеДанные) {
+                сгенерироватьДемо();
+                сейвКлюч = 'демо';
+            }
+
+            const данныеСтрока = localStorage.getItem('колонии_данные_' + сейвКлюч);
+            if (данныеСтрока) данныеКолоний = JSON.parse(данныеСтрока);
+            else данныеКолоний = {};
+
+            // Загружаем баланс
+            const балансСтрока = localStorage.getItem('колонии_баланс_' + сейвКлюч);
+            const флагСтарта = localStorage.getItem('колонии_старт_' + сейвКлюч);
+
+            if (балансСтрока) {
+                общийБаланс = parseInt(балансСтрока, 10) || 0;
+                // Если баланс 0 и старт ещё не выдавался — даём 10000
+                if (общийБаланс === 0 && !флагСтарта) {
+                    общийБаланс = 10000;
+                    localStorage.setItem('колонии_старт_' + сейвКлюч, '1');
+                    сохранитьБаланс();
+                }
+            } else {
+                общийБаланс = 10000; // Новый игрок — стартовый капитал
+                localStorage.setItem('колонии_старт_' + сейвКлюч, '1');
+                сохранитьБаланс();
+            }
+
+            const курсСтрока = localStorage.getItem('колонии_курс_' + сейвКлюч);
+            if (курсСтрока) курс = JSON.parse(курсСтрока);
+            else сгенерироватьКурс();
+
+            планеты.forEach(п => {
+                if (!данныеКолоний[п.id]) сгенерироватьКолонию(п);
+            });
+            
+            сохранитьДанные();
+            сохранитьБаланс();
+            отрисоватьСписокПланет();
+            обновитьКошелёк();
+        }
+
+        function сгенерироватьДемо() {
+            планеты = [
+                { id: 'demo1', название: 'A-PL_ROCK-12-34', подтип: 'PL_ROCK', имяПодтипа: 'Каменистая планета', иконка: '🪨', редкость: 'обычная', имяРедкости: 'Обычная', масса: '5 M⊕', радиус: '10000 км', температура: '15°C', атмосфера: 'Азот', жизнь: 'Нет' },
+                { id: 'demo2', название: 'B-PL_OC-56-78', подтип: 'PL_OC', имяПодтипа: 'Океанический мир', иконка: '🌊', редкость: 'редкая', имяРедкости: 'Редкая', масса: '2 M⊕', радиус: '8000 км', температура: '0°C', атмосфера: 'Кислород', жизнь: 'Микробная' },
+                { id: 'demo3', название: 'C-PL_HJ-90-12', подтип: 'PL_HJ', имяПодтипа: 'Горячий Юпитер', иконка: '🔥', редкость: 'легендарная', имяРедкости: 'Легендарная', масса: '50 M⊕', радиус: '50000 км', температура: '500°C', атмосфера: 'Плазма', жизнь: 'Невозможна' }
+            ];
+        }
+
+        function сгенерироватьКолонию(планета) {
+            const инфо = ТИПЫ_ПЛАНЕТ[планета.подтип] || ТИПЫ_ПЛАНЕТ['PL_ROCK'];
+            const возможныеРесурсы = инфо.ресурсы;
+            
+            let колРесурсов = 1;
+            if (планета.редкость === 'необычная') колРесурсов = 2;
+            if (планета.редкость === 'редкая') колРесурсов = 3;
+            if (планета.редкость === 'эпическая') колРесурсов = 4;
+            if (планета.редкость === 'легендарная' || планета.редкость === 'мифическая') колРесурсов = 5;
+            
+            const перемешанные = [...возможныеРесурсы].sort(() => Math.random() - 0.5);
+            const выбранные = перемешанные.slice(0, колРесурсов);
+            
+            const ресурсы = {};
+            выбранные.forEach(р => {
+                let запас = 10;
+                if (планета.редкость === 'обычная') запас = 10 + Math.floor(Math.random() * 40);
+                else if (планета.редкость === 'необычная') запас = 50 + Math.floor(Math.random() * 100);
+                else if (планета.редкость === 'редкая') запас = 100 + Math.floor(Math.random() * 400);
+                else if (планета.редкость === 'эпическая') запас = 500 + Math.floor(Math.random() * 1000);
+                else if (планета.редкость === 'легендарная' || планета.редкость === 'мифическая') запас = 1000 + Math.floor(Math.random() * 5000);
+                
+                ресурсы[р] = { запас, добыто: 0 };
+            });
+
+            const шахты = {};
+            данныеКолоний[планета.id] = { ресурсы, шахты };
+            сохранитьДанные();
+        }
+
+        function сгенерироватьКурс() {
+            курс = {};
+            Object.keys(ВСЕ_РЕСУРСЫ).forEach(р => курс[р] = ВСЕ_РЕСУРСЫ[р].база);
+            сохранитьКурс();
+        }
+
+        // ==========================================
+        // 7. СОХРАНЕНИЕ
+        // ==========================================
+        function сохранитьДанные() {
+            localStorage.setItem('колонии_данные_' + сейвКлюч, JSON.stringify(данныеКолоний));
+        }
+
+        function сохранитьКурс() {
+            localStorage.setItem('колонии_курс_' + сейвКлюч, JSON.stringify(курс));
+        }
+
+        function сохранитьБаланс() {
+            localStorage.setItem('колонии_баланс_' + сейвКлюч, String(общийБаланс));
+        }
+
+        // ==========================================
+        // 8. ОТРИСОВКА
+        // ==========================================
+        function обновитьКошелёк() {
+            document.getElementById('кошелёк-баланс').textContent = '$' + форматДенег(общийБаланс);
+        }
+
+        function отрисоватьСписокПланет() {
+            const сетка = document.getElementById('планеты-сетка');
+            сетка.innerHTML = '';
+            
+            if (планеты.length === 0) {
+                document.getElementById('нет-планет').style.display = 'block';
+                return;
+            }
+            
+            планеты.forEach(п => {
+                const данные = данныеКолоний[п.id];
+                if (!данные) return;
+                
+                const пригодность = проверитьПригодность(п);
+                let статус = '✅ Пригодна';
+                let цвет = '#38a169';
+                if (пригодность.уровеньОпасности === 1) { статус = '⚠️ Нужен скафандр'; цвет = '#d69e2e'; }
+                if (пригодность.уровеньОпасности === 2) { статус = '❌ Необитаема'; цвет = '#e53e3e'; }
+                
+                const div = document.createElement('div');
+                div.className = 'планета-карточка ' + п.редкость;
+                div.innerHTML = `
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
+                        <span style="font-size:10px; font-weight:800; color:#fff; text-transform:uppercase; background:rgba(0,0,0,0.5); padding:2px 5px; border-radius:4px;">${п.имяРедкости}</span>
+                    </div>
+                    <div class="иконка-планеты">${п.иконка || '🪐'}</div>
+                    <div class="название">${п.название}</div>
+                    <div class="тип">${п.имяПодтипа}</div>
+                    <div class="статус" style="color:${цвет};">${статус}</div>
+                `;
+                div.onclick = () => открытьКолонию(п.id);
+                сетка.appendChild(div);
+            });
+        }
+
+        function открытьКолонию(id) {
+            текущаяПланета = планеты.find(п => п.id === id);
+            if (!текущаяПланета) return;
+            
+            document.getElementById('экран-списка').style.display = 'none';
+            document.getElementById('экран-колонии').style.display = 'block';
+            document.getElementById('колония-название').textContent = текущаяПланета.название;
+            
+            отрисоватьШахты();
+            отрисоватьИнфо();
+        }
+
+        function закрытьКолонию() {
+            document.getElementById('экран-списка').style.display = 'block';
+            document.getElementById('экран-колонии').style.display = 'none';
+            текущаяПланета = null;
+            обновитьКошелёк();
+            отрисоватьСписокПланет();
+        }
+
+        function отрисоватьШахты() {
+            const конт = document.getElementById('контент-шахты');
+            конт.innerHTML = '';
+            if (!текущаяПланета) return;
+            const данные = данныеКолоний[текущаяПланета.id];
+            if (!данные) return;
+            
+            const пригодность = проверитьПригодность(текущаяПланета);
+            if (пригодность.уровеньОпасности === 2) {
+                конт.innerHTML = '<div style="text-align:center; color:#e53e3e; padding:40px; font-size:16px; font-weight:600;">❌ Эта планета необитаема. Добыча невозможна.</div>';
+                return;
+            }
+            
+            Object.keys(данные.ресурсы).forEach(р => {
+                const рес = данные.ресурсы[р];
+                const шахта = данные.шахты[р] || { уровень: 0 };
+                
+                const текДобыча = 5 * шахта.уровень;
+                const будДобыча = 5 * (шахта.уровень + 1);
+                const стоимость = ценаШахты(р, шахта.уровень);
+                const хватает = общийБаланс >= стоимость;
+                
+                const типРесурса = ВСЕ_РЕСУРСЫ[р].тип;
+                const названиеШахты = НАЗВАНИЯ_ШАХТ[типРесурса] || '⛏️ Шахта';
+                
+                const div = document.createElement('div');
+                div.className = 'шахта-строка';
+                div.innerHTML = `
+                    <div class="шахта-инфо">
+                        <div class="название">${ВСЕ_РЕСУРСЫ[р].иконка} ${р} (${шахта.уровень} ур.)</div>
+                        <div class="добыча-строка">${названиеШахты}: +${текДобыча}/мин</div>
+                        <div class="будущая">Далее: +${будДобыча}/мин</div>
+                        <div class="запас-строка">Запас: ${рес.запас} | Добыто: ${рес.добыто}</div>
+                    </div>
+                    <button class="шахта-кнопка" data-ресурс="${р}" ${!хватает || шахта.уровень >= 3 ? 'disabled' : ''}>
+                        ${шахта.уровень >= 3 ? 'МАКС' : `$${форматК(стоимость)}`}
+                    </button>
+                `;
+                конт.appendChild(div);
+            });
+            
+            конт.querySelectorAll('.шахта-кнопка').forEach(btn => {
+                btn.onclick = () => купитьШахту(btn.dataset.ресурс);
+            });
+        }
+
+        function отрисоватьИнфо() {
+            const конт = document.getElementById('контент-инфо');
+            if (!текущаяПланета) return;
+            
+            const п = текущаяПланета;
+            const пригодность = проверитьПригодность(п);
+            
+            let статусHTML = '';
+            if (пригодность.уровеньОпасности === 0) {
+                статусHTML = '<div class="опасность безопасно">✅ Планета пригодна для жизни и добычи</div>';
+            } else if (пригодность.уровеньОпасности === 1) {
+                статусHTML = `<div class="опасность опасно">⚠️ Требуется скафандр: ${пригодность.проблемы.join(', ')}</div>`;
+            } else {
+                статусHTML = `<div class="опасность опасно">❌ Необитаема: ${пригодность.проблемы.join(', ')}</div>`;
+            }
+            
+            конт.innerHTML = `
+                <div class="инфо-планета">
+                    <div class="инфо-строка"><span class="инфо-лейбл">Название</span><span class="инфо-значение">${п.название}</span></div>
+                    <div class="инфо-строка"><span class="инфо-лейбл">Тип</span><span class="инфо-значение">${п.имяПодтипа}</span></div>
+                    <div class="инфо-строка"><span class="инфо-лейбл">Редкость</span><span class="инфо-значение">${п.имяРедкости}</span></div>
+                    <div class="инфо-строка"><span class="инфо-лейбл">Масса</span><span class="инфо-значение">${п.масса}</span></div>
+                    <div class="инфо-строка"><span class="инфо-лейбл">Радиус</span><span class="инфо-значение">${п.радиус}</span></div>
+                    <div class="инфо-строка"><span class="инфо-лейбл">Температура</span><span class="инфо-значение">${п.температура}</span></div>
+                    <div class="инфо-строка"><span class="инфо-лейбл">Атмосфера</span><span class="инфо-значение">${п.атмосфера}</span></div>
+                    <div class="инфо-строка"><span class="инфо-лейбл">Жизнь</span><span class="инфо-значение">${п.жизнь}</span></div>
+                </div>
+                ${статусHTML}
+            `;
+        }
+
+        // ==========================================
+        // 9. ЛОГИКА
+        // ==========================================
+        function купитьШахту(ресурс) {
+            if (!текущаяПланета) return;
+            const данные = данныеКолоний[текущаяПланета.id];
+            const шахта = данные.шахты[ресурс] || { уровень: 0 };
+            const стоимость = ценаШахты(ресурс, шахта.уровень);
+            
+            if (общийБаланс < стоимость) {
+                показатьУведомление('Недостаточно денег!');
+                return;
+            }
+            
+            общийБаланс -= стоимость;
+            данные.шахты[ресурс] = { уровень: шахта.уровень + 1 };
+            
+            сохранитьДанные();
+            сохранитьБаланс();
+            отрисоватьШахты();
+            обновитьКошелёк();
+            показатьУведомление(`Шахта ${ресурса} улучшена!`);
+        }
+
+        // ==========================================
+        // 10. ОБЩИЙ РЫНОК
+        // ==========================================
+        function отрисоватьОбщийРынок() {
+            const конт = document.getElementById('общий-рынок-контент');
+            конт.innerHTML = '';
+            
+            const всеРесурсы = {};
+            Object.keys(данныеКолоний).forEach(id => {
+                const данные = данныеКолоний[id];
+                Object.keys(данные.ресурсы).forEach(р => {
+                    if (!всеРесурсы[р]) всеРесурсы[р] = { добыто: 0, запас: 0 };
+                    всеРесурсы[р].добыто += данные.ресурсы[р].добыто;
+                    всеРесурсы[р].запас += данные.ресурсы[р].запас;
+                });
+            });
+            
+            if (Object.keys(всеРесурсы).length === 0) {
+                конт.innerHTML = '<div style="text-align:center; color:#718096; padding:20px;">Нет ресурсов</div>';
+                return;
+            }
+            
+            Object.keys(всеРесурсы).forEach(р => {
+                const рес = всеРесурсы[р];
+                const цена = курс[р] || ВСЕ_РЕСУРСЫ[р].база;
+                const сумма = Math.floor(рес.добыто * цена);
+                
+                // Определяем тренд (сравниваем с базовой ценой)
+                const база = ВСЕ_РЕСУРСЫ[р].база;
+                let тренд = '➡️';
+                if (цена > база * 1.1) тренд = '📈';
+                else if (цена < база * 0.9) тренд = '📉';
+                
+                const div = document.createElement('div');
+                div.className = 'рынок-строка';
+                div.innerHTML = `
+                    <div class="рынок-инфо">
+                        <div class="рынок-название">${ВСЕ_РЕСУРСЫ[р].иконка} ${р} ${тренд}</div>
+                        <div class="рынок-цена-строка">Цена: ${форматДенег(цена)}$ | Всего: ${форматДенег(сумма)}$</div>
+                        <div class="рынок-добыто">Добыто: ${рес.добыто}</div>
+                    </div>
+                    <button class="рынок-кнопка" data-ресурс="${р}">Продать всё</button>
+                `;
+                конт.appendChild(div);
+            });
+            
+            конт.querySelectorAll('.рынок-кнопка').forEach(btn => {
+                btn.onclick = () => продатьВсё(btn.dataset.ресурс);
+            });
+        }
+
+        function продатьВсё(ресурс) {
+            let сумма = 0;
+            Object.keys(данныеКолоний).forEach(id => {
+                const данные = данныеКолоний[id];
+                if (данные.ресурсы[ресурс]) {
+                    const цена = курс[ресурс] || ВСЕ_РЕСУРСЫ[ресурс].база;
+                    сумма += Math.floor(данные.ресурсы[ресурс].добыто * цена);
+                    данные.ресурсы[ресурс].добыто = 0;
+                }
+            });
+            
+            if (сумма === 0) {
+                показатьУведомление('Нечего продавать!');
+                return;
+            }
+            
+            общийБаланс += сумма;
+            
+            сохранитьДанные();
+            сохранитьБаланс();
+            отрисоватьОбщийРынок();
+            обновитьКошелёк();
+            показатьУведомление(`Продано на $${форматДенег(сумма)}!`);
+            
+            if (текущаяПланета) отрисоватьШахты();
+            
+            const увед = document.createElement('div');
+            увед.className = 'вылет-суммы';
+            увед.textContent = `+$${форматДенег(сумма)}`;
+            document.body.appendChild(увед);
+            setTimeout(() => увед.remove(), 1500);
+        }
+
+        // ==========================================
+        // 11. ТАЙМЕРЫ
+        // ==========================================
+        setInterval(() => {
+            Object.keys(курс).forEach(р => {
+                const база = ВСЕ_РЕСУРСЫ[р].база;
+                let новый = курс[р] + (Math.random() - 0.5) * база * 0.2;
+                if (новый < база * 0.5) новый = база * 0.5;
+                if (новый > база * 2) новый = база * 2;
+                курс[р] = Math.round(новый);
+            });
+            сохранитьКурс();
+            if (document.getElementById('модалка-рынок').style.display === 'flex') отрисоватьОбщийРынок();
+        }, 60000);
+
+        setInterval(() => {
+            let изменено = false;
+            Object.keys(данныеКолоний).forEach(id => {
+                const данные = данныеКолоний[id];
+                Object.keys(данные.шахты).forEach(р => {
+                    const шахта = данные.шахты[р];
+                    if (шахта && шахта.уровень > 0) {
+                        const добыча = 5 * шахта.уровень;
+                        if (данные.ресурсы[р]) {
+                            данные.ресурсы[р].добыто += добыча;
+                            if (данные.ресурсы[р].добыто > данные.ресурсы[р].запас) {
+                                данные.ресурсы[р].добыто = данные.ресурсы[р].запас;
+                            }
+                            изменено = true;
+                        }
+                    }
+                });
+            });
+            if (изменено) {
+                сохранитьДанные();
+                if (document.getElementById('модалка-рынок').style.display === 'flex') отрисоватьОбщийРынок();
+                // Обновляем шахты, если открыта колония
+                if (текущаяПланета && document.getElementById('экран-колонии').style.display === 'block') {
+                    отрисоватьШахты();
+                }
+            }
+        }, 60000);
+
+        // ==========================================
+        // 12. УВЕДОМЛЕНИЯ И КНОПКИ
+        // ==========================================
+        let тм;
+        function показатьУведомление(т) {
+            const у = document.getElementById('уведомление');
+            у.textContent = т; у.classList.add('активно');
+            clearTimeout(тм); тм = setTimeout(() => у.classList.remove('активно'), 2000);
+        }
+
+        document.querySelectorAll('.вкладка').forEach(вкл => {
+            вкл.addEventListener('click', function() {
+                const вкладка = this.dataset.вкладка;
+                document.querySelectorAll('.вкладка').forEach(в => в.classList.remove('активна'));
+                document.querySelectorAll('.вкладка-контент').forEach(к => к.classList.remove('активна'));
+                this.classList.add('активна');
+                document.getElementById('контент-' + вкладка).classList.add('активна');
+                if (вкладка === 'шахты') отрисоватьШахты();
+                if (вкладка === 'инфо') отрисоватьИнфо();
+            });
+        });
+
+        document.getElementById('открыть-рынок').onclick = () => {
+    отрисоватьОбщийРынок();
+    заполнитьСправкуЦен();
+    document.getElementById('модалка-рынок').style.display = 'flex';
+};
+        document.getElementById('закрыть-рынок').onclick = () => {
+            document.getElementById('модалка-рынок').style.display = 'none';
+        };
+
+        // ==========================================
+        // 13. ЗАПУСК
+        // ==========================================
+      // ==========================================
+// ЛЕТЯЩИЕ ЗВЁЗДЫ НА ФОНЕ
+// ==========================================
+(function() {
+    const canvas = document.getElementById('звёздный-фон');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    let width = canvas.width = window.innerWidth;
+    let height = canvas.height = window.innerHeight;
+    
+    window.addEventListener('resize', () => {
+        width = canvas.width = window.innerWidth;
+        height = canvas.height = window.innerHeight;
+    });
+    
+    const звёзды = [];
+    const КОЛИЧЕСТВО = 150;
+    
+    for (let i = 0; i < КОЛИЧЕСТВО; i++) {
+        звёзды.push({
+            x: Math.random() * width - width / 2,
+            y: Math.random() * height - height / 2,
+            z: Math.random() * width
+        });
+    }
+    
+    function анимация() {
+        ctx.fillStyle = 'rgba(5, 5, 8, 0.3)';
+        ctx.fillRect(0, 0, width, height);
+        
+        const cx = width / 2;
+        const cy = height / 2;
+        
+        звёзды.forEach(з => {
+            const x = cx + (з.x / з.z) * width;
+            const y = cy + (з.y / з.z) * height;
+            
+            if (x < 0 || x > width || y < 0 || y > height) {
+                з.x = Math.random() * width - width / 2;
+                з.y = Math.random() * height - height / 2;
+                з.z = width;
+                return;
+            }
+            
+            const размер = Math.max(0.3, (1 - з.z / width) * 2.5);
+            const яркость = Math.max(0.2, 1 - з.z / width);
+            
+            ctx.fillStyle = `rgba(255, 255, 255, ${яркость})`;
+            ctx.beginPath();
+            ctx.arc(x, y, размер, 0, Math.PI * 2);
+            ctx.fill();
+            
+            з.z -= 2;
+            if (з.z < 1) {
+                з.x = Math.random() * width - width / 2;
+                з.y = Math.random() * height - height / 2;
+                з.z = width;
+            }
+        });
+        
+        requestAnimationFrame(анимация);
+    }
+    
+    анимация();
+})();
+      function заполнитьСправкуЦен() {
+    const конт = document.getElementById('справка-цены');
+    if (!конт) return;
+    
+    const хорошиеЦены = {};
+    Object.keys(ВСЕ_РЕСУРСЫ).forEach(р => {
+        хорошиеЦены[р] = Math.floor(ВСЕ_РЕСУРСЫ[р].база * 1.5);
+    });
+    
+    let html = '';
+    Object.keys(хорошиеЦены).forEach(р => {
+        html += `<div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+            <span>${ВСЕ_РЕСУРСЫ[р].иконка} ${р}</span>
+            <span style="color: #f6e05e; font-weight: 600;">от ${форматДенег(хорошиеЦены[р])}$</span>
+        </div>`;
+    });
+    
+    конт.innerHTML = html;
+}
+        загрузитьИгру();
+    </script>
+</body>
+</html>
